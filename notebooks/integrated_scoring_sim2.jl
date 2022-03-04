@@ -63,7 +63,8 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bdd77f47-b5ff-4855-b3c4-1fcd5fe31777
 begin
 	SCAN_NUMBER = 1
-	VENDER = "135"
+	VENDER = "120"
+	TYPE = "integrated_scoring"
 	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
 end
 
@@ -1045,12 +1046,12 @@ md"""
 """
 
 # ╔═╡ f0974424-139b-4db8-8a85-56716a193ad9
-if ~isdir(string(cd(pwd, "..") , "/output/", VENDER))
-	mkdir(string(cd(pwd, "..") , "/output/", VENDER))
+if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output/", TYPE))
 end
 
 # ╔═╡ 68135e69-97d9-455b-b4e7-f7b0287d0629
-output_path = string(cd(pwd, "..") , "/output/", VENDER, "/", scan, ".csv")
+output_path = string(cd(pwd, "..") , "/output/", TYPE, "/", scan, ".csv")
 
 # ╔═╡ 2ce24b1c-f9a5-4d0c-a18b-069a317592e7
 CSV.write(output_path, df)
