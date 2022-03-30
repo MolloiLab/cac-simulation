@@ -90,7 +90,7 @@ begin
 			calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header)
 	
 			# Segment Calcium Inserts
-			mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts(
+			mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
 		            dcm_array, masked_array, header, slice_CCI, center_insert
 			)
 		
@@ -103,7 +103,6 @@ begin
 			
 			# Score Large Inserts
 			arr = masked_array[:, :, 4:6]
-			single_arr = masked_array[:, :, slice_CCI]
 			
 			## High Density
 			mask_L_HD_3D = Array{Bool}(undef, size(arr))
@@ -168,7 +167,7 @@ begin
 			for z in 1:size(arr, 3)
 				mask_S_HD_3D[:, :, z] = mask_S_HD
 			end
-			dilated_mask_S_HD = dilate(dilate(dilate(dilate(dilate((mask_S_HD_3D))))))
+			dilated_mask_S_HD = dilate((dilate(dilate(dilate((mask_S_HD_3D))))))
 			overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
 			agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
 			
@@ -177,7 +176,7 @@ begin
 			for z in 1:size(arr, 3)
 				mask_S_MD_3D[:, :, z] = mask_S_MD
 			end
-			dilated_mask_S_MD = dilate(dilate(dilate(dilate(dilate(mask_S_MD_3D)))))
+			dilated_mask_S_MD = dilate((dilate(dilate(dilate(mask_S_MD_3D)))))
 			overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
 			agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
 			
@@ -186,7 +185,7 @@ begin
 			for z in 1:size(arr, 3)
 				mask_S_LD_3D[:, :, z] = mask_S_LD
 			end
-			dilated_mask_S_LD = dilate(dilate(dilate(dilate(dilate(mask_S_LD_3D)))))
+			dilated_mask_S_LD = dilate((dilate(dilate(dilate(mask_S_LD_3D)))))
 			overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
 			agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
 			
