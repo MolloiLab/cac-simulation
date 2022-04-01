@@ -18,6 +18,7 @@ begin
 		Pkg.add("CSV")
 		Pkg.add("DataFrames")
 		Pkg.add("GLM")
+		Pkg.add("Noise")
 		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
 		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
 		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
@@ -32,6 +33,7 @@ begin
 	using CSV
 	using DataFrames
 	using GLM
+	using Noise
 	using DICOM
 	using DICOMUtils
 	using PhantomSegmentation
@@ -63,7 +65,7 @@ end;
 venders = ["80", "100", "120", "135"]
 
 # ╔═╡ 83eba315-f05c-4e0b-82b9-63677be271ea
-kernels = [0, 3, 5]
+kernels = [0, 1, 2]
 
 # ╔═╡ 40454c15-d8fa-4530-8b74-39a934afc257
 begin
@@ -77,10 +79,8 @@ begin
 			pth = dcm_path_list[SCAN_NUMBER]
 			scan = basename(pth)
 			header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
-			if kern != 0
-				for z in size(dcm_array, 3)
-					dcm_array[:, :, z] = imfilter(dcm_array[:, :, z], Kernel.gaussian(kern))
-				end
+			for z in size(dcm_array, 3)
+				dcm_array[:, :, z] = Noise.mult_gauss(dcm_array[:, :, z], kern)
 			end
 		
 			# Segment Heart

@@ -29,6 +29,7 @@ begin
 		Pkg.add("CSV")
 		Pkg.add("DataFrames")
 		Pkg.add("GLM")
+		Pkg.add("Noise")
 		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
 		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
 		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
@@ -44,6 +45,7 @@ begin
 	using CSV
 	using DataFrames
 	using GLM
+	using Noise
 	using DICOM
 	using DICOMUtils
 	using PhantomSegmentation
@@ -63,8 +65,8 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
 	SCAN_NUMBER = 1
-	VENDER = "135"
-	kern = 5
+	VENDER = "80"
+	kern = 1
 	TYPE = "integrated_scoring"
 	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
 end
@@ -94,7 +96,7 @@ begin
 	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
 	if kern != 0
 		for z in size(dcm_array, 3)
-			dcm_array[:, :, z] = imfilter(dcm_array[:, :, z], Kernel.gaussian(kern))
+			dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], kern)
 		end
 	end
 end;
