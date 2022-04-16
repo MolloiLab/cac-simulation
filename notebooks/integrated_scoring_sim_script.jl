@@ -57,7 +57,7 @@ end
 # ╔═╡ 26110c25-c288-4e5a-a3d1-260ca0c15a84
 begin
 	TYPE = "integrated_scoring"
-	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/"
+	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images"
 end;
 
 # ╔═╡ 442943d0-9a1e-46ff-a924-91b5537a9b6a
@@ -70,7 +70,7 @@ kernels = [0, 1, 2]
 sizes = ["small"]
 
 # ╔═╡ 6e98101e-f052-4b19-9915-429166605ced
-densities = ["normal"]
+densities = ["low", "normal"]
 
 # ╔═╡ 40454c15-d8fa-4530-8b74-39a934afc257
 begin
@@ -86,6 +86,7 @@ begin
 					pth = dcm_path_list[SCAN_NUMBER]
 					scan = basename(pth)
 					header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
+					@info header
 					for z in size(dcm_array, 3)
 						dcm_array[:, :, z] = Noise.mult_gauss(dcm_array[:, :, z], kern)
 					end
@@ -248,70 +249,134 @@ begin
 					s_bkg_S_LD = mean(single_arr[single_ring_mask_S_LD])
 					alg_S_LD = Integrated(arr[mask_S_LD_3D])
 					mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_ld, alg_S_LD)
-					
-					# Results
-					density_array = [0, 200, 400, 800]
-					inserts = [
-						"Low Density",
-						"Medium Density",
-						"High Density"
-					]
-					volume_gt = [
-						7.065,
-						63.585,
-						176.625
-					]
-					ground_truth_mass_large = [
-						volume_gt[3] * density_array[2] * 1e-3,
-						volume_gt[3] * density_array[3] * 1e-3,
-						volume_gt[3] * density_array[4] * 1e-3
-					] # mg
-					
-					calculated_mass_large = [
-						mass_l_ld,
-						mass_l_md,
-						mass_l_hd
-					]
-					ground_truth_mass_medium = [
-						volume_gt[2] * density_array[2] * 1e-3,
-						volume_gt[2] * density_array[3] * 1e-3,
-						volume_gt[2] * density_array[4] * 1e-3
-					]
-					calculated_mass_medium = [
-						mass_m_ld,
-						mass_m_md,
-						mass_m_hd
-					]
-					ground_truth_mass_small = [
-						volume_gt[1] * density_array[2] * 1e-3,
-						volume_gt[1] * density_array[3] * 1e-3,
-						volume_gt[1] * density_array[4] * 1e-3
-					]
-					calculated_mass_small = [
-						mass_s_ld,
-						mass_s_md,
-						mass_s_hd
-					]
-					
-					df = DataFrame(
-						kern = kern,
-						size = size_,
-						density = density,
-						scan = scan,
-						inserts = inserts,
-						ground_truth_mass_large = ground_truth_mass_large,
-						calculated_mass_large = calculated_mass_large,
-						ground_truth_mass_medium = ground_truth_mass_medium,
-						calculated_mass_medium = calculated_mass_medium,
-						ground_truth_mass_small = ground_truth_mass_small,
-						calculated_mass_small = calculated_mass_small
-					)
-					push!(dfs, df)
+
+					if density == "low"
+						# Results
+						density_array = [0, 25, 50, 100]
+						inserts = [
+							"Low Density",
+							"Medium Density",
+							"High Density"
+						]
+						volume_gt = [
+							7.065,
+							63.585,
+							176.625
+						]
+						ground_truth_mass_large = [
+							volume_gt[3] * density_array[2] * 1e-3,
+							volume_gt[3] * density_array[3] * 1e-3,
+							volume_gt[3] * density_array[4] * 1e-3
+						] # mg
+						
+						calculated_mass_large = [
+							mass_l_ld,
+							mass_l_md,
+							mass_l_hd
+						]
+						ground_truth_mass_medium = [
+							volume_gt[2] * density_array[2] * 1e-3,
+							volume_gt[2] * density_array[3] * 1e-3,
+							volume_gt[2] * density_array[4] * 1e-3
+						]
+						calculated_mass_medium = [
+							mass_m_ld,
+							mass_m_md,
+							mass_m_hd
+						]
+						ground_truth_mass_small = [
+							volume_gt[1] * density_array[2] * 1e-3,
+							volume_gt[1] * density_array[3] * 1e-3,
+							volume_gt[1] * density_array[4] * 1e-3
+						]
+						calculated_mass_small = [
+							mass_s_ld,
+							mass_s_md,
+							mass_s_hd
+						]
+						
+						df = DataFrame(
+							kern = kern,
+							size = size_,
+							density = density,
+							scan = scan,
+							inserts = inserts,
+							ground_truth_mass_large = ground_truth_mass_large,
+							calculated_mass_large = calculated_mass_large,
+							ground_truth_mass_medium = ground_truth_mass_medium,
+							calculated_mass_medium = calculated_mass_medium,
+							ground_truth_mass_small = ground_truth_mass_small,
+							calculated_mass_small = calculated_mass_small
+						)
+						push!(dfs, df)
+					else
+						# Results
+						density_array = [0, 200, 400, 800]
+						inserts = [
+							"Low Density",
+							"Medium Density",
+							"High Density"
+						]
+						volume_gt = [
+							7.065,
+							63.585,
+							176.625
+						]
+						ground_truth_mass_large = [
+							volume_gt[3] * density_array[2] * 1e-3,
+							volume_gt[3] * density_array[3] * 1e-3,
+							volume_gt[3] * density_array[4] * 1e-3
+						] # mg
+						
+						calculated_mass_large = [
+							mass_l_ld,
+							mass_l_md,
+							mass_l_hd
+						]
+						ground_truth_mass_medium = [
+							volume_gt[2] * density_array[2] * 1e-3,
+							volume_gt[2] * density_array[3] * 1e-3,
+							volume_gt[2] * density_array[4] * 1e-3
+						]
+						calculated_mass_medium = [
+							mass_m_ld,
+							mass_m_md,
+							mass_m_hd
+						]
+						ground_truth_mass_small = [
+							volume_gt[1] * density_array[2] * 1e-3,
+							volume_gt[1] * density_array[3] * 1e-3,
+							volume_gt[1] * density_array[4] * 1e-3
+						]
+						calculated_mass_small = [
+							mass_s_ld,
+							mass_s_md,
+							mass_s_hd
+						]
+						
+						df = DataFrame(
+							kern = kern,
+							size = size_,
+							density = density,
+							scan = scan,
+							inserts = inserts,
+							ground_truth_mass_large = ground_truth_mass_large,
+							calculated_mass_large = calculated_mass_large,
+							ground_truth_mass_medium = ground_truth_mass_medium,
+							calculated_mass_medium = calculated_mass_medium,
+							ground_truth_mass_small = ground_truth_mass_small,
+							calculated_mass_small = calculated_mass_small
+						)
+						push!(dfs, df)
+					end
 				end
 			end
 		end
 	end
 end
+
+# ╔═╡ 12e1c176-bee2-42ea-9dc2-b8ef107d9890
+
 
 # ╔═╡ 1b95b391-cad0-4aad-8885-fd0c79cd94c1
 md"""
@@ -343,6 +408,7 @@ end
 # ╠═57656cb2-146a-43ec-abbb-1b5a6a1f3afb
 # ╠═6e98101e-f052-4b19-9915-429166605ced
 # ╠═40454c15-d8fa-4530-8b74-39a934afc257
+# ╠═12e1c176-bee2-42ea-9dc2-b8ef107d9890
 # ╟─1b95b391-cad0-4aad-8885-fd0c79cd94c1
 # ╠═cc20b566-f645-4ae5-8fe2-19ba5697aa6c
 # ╠═bb622f09-0da5-4c38-a7d3-de898af42490
