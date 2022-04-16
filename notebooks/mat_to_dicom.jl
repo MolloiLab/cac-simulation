@@ -45,10 +45,10 @@ file_inserts = file + 3
 
 # ╔═╡ c1fde068-612a-45c2-a116-d6af918c721a
 begin
-	ENERGY = 120
+	ENERGY = 135
 	ROD = string("QRM", ENERGY, "rod.mat")
 	VESSEL = string("QRM", ENERGY, "vessels.mat")
-	BASE_PATH = "/Users/daleblack/Desktop/QRM images/"
+	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/small/normal density/"
 end
 
 # ╔═╡ 2ae4e5ff-3cfd-4c80-a59a-e91c52480ecf
@@ -71,7 +71,7 @@ heatmap(transpose(array1), colormap=:grays)
 begin
 	path2 = string(BASE_PATH, VESSEL)
 	vars2 = matread(path2)
-	array2 = vars2[string("s", ENERGY)]
+	array2 = vars2[string("v", ENERGY)]
 	array2 = Int16.(round.(array2))
 end;
 
@@ -99,7 +99,7 @@ end;
 
 # ╔═╡ 4062b5d4-9fe7-41f5-92e3-fb19cb6a1274
 begin
-	output_root = string("/Users/daleblack/Google Drive/Datasets/Simulated/", ENERGY)
+	output_root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/small/normal density/", ENERGY)
 	if !isdir(output_root)
 		mkdir(output_root)
 	end
