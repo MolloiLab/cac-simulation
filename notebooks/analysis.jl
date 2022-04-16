@@ -189,7 +189,7 @@ begin
 	axInt5_small = Axis(fInt5_small[1, 1])
 
 	scatter!(df_i_canon5[!, :ground_truth_mass_small], df_i_canon5[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 6], [0, 6], label="Unity")
+	lines!([0, 8], [0, 8], label="Unity")
 	
 	axInt5_small.title = "IHU Mass vs Known Mass (Small)"
 	axInt5_small.ylabel = "Calculated Mass (mg)"
@@ -344,7 +344,7 @@ begin
 	axAgat3_small = Axis(fAgat3_small[1, 1])
 
 	scatter!(df_a_canon3[!, :ground_truth_mass_small], df_a_canon3[!, :calculated_mass_small], label="Mass: Small Inserts", color=:red)
-	lines!([0, 8], [0, 8], label="Unity Line")
+	lines!([0, 10], [0, 10], label="Unity Line")
 	
 	axAgat3_small.title = "AS Mass vs Known Mass (Small)"
 	axAgat3_small.ylabel = "Calculated Mass (mg)"
@@ -393,7 +393,7 @@ begin
 	axAgat5_small = Axis(fAgat5_small[1, 1])
 
 	scatter!(df_a_canon5[!, :ground_truth_mass_small], df_a_canon5[!, :calculated_mass_small], label="Mass: Small Inserts", color=:red)
-	lines!([0, 8], [0, 8], label="Unity Line")
+	lines!([0, 12], [0, 12], label="Unity Line")
 	
 	axAgat5_small.title = "AS Mass vs Known Mass (Small)"
 	axAgat5_small.ylabel = "Calculated Mass (mg)"
