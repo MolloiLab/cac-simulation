@@ -57,7 +57,9 @@ end
 # ╔═╡ 26110c25-c288-4e5a-a3d1-260ca0c15a84
 begin
 	TYPE = "integrated_scoring"
-	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
+	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/"
+	SIZE = "small"
+	DENSITY = "normal"
 	SCAN_NUMBER = 1
 end;
 
@@ -74,7 +76,7 @@ begin
 		for vender in venders
 			SCAN_NUMBER = 1
 			VENDER = vender
-			root_path = string(BASE_PATH, VENDER)
+			root_path = string(BASE_PATH, "/", SIZE, "/", DENSITY, "/", VENDER)
 			dcm_path_list = dcm_list_builder(root_path)
 			pth = dcm_path_list[SCAN_NUMBER]
 			scan = basename(pth)
@@ -288,6 +290,8 @@ begin
 			
 			df = DataFrame(
 				kern = kern,
+				size = SIZE,
+				density = DENSITY,
 				scan = scan,
 				inserts = inserts,
 				ground_truth_mass_large = ground_truth_mass_large,
