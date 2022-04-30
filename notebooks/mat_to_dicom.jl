@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 52c184d2-9a5e-11ec-0e10-976cdfa5f253
+# ╠═╡ show_logs = false
 begin
 	let
 		using Pkg
@@ -40,6 +41,19 @@ TableOfContents()
 # ╔═╡ 1417f262-16f4-41f7-bed6-c895fb49fa80
 file = 3
 
+# ╔═╡ 075c1ec9-94a0-49d5-ac5b-8df8a48ef38b
+begin
+	# density = "low"
+	density = "normal"
+end
+
+# ╔═╡ d2429957-942e-42b5-a782-86298abd1bf8
+begin
+	# _size = "small"
+	# _size = "medium"
+	_size = "large"
+end
+
 # ╔═╡ 3c5bfe99-3098-43b6-9d0e-0b3ed5884dea
 file_inserts = file + 3
 
@@ -48,7 +62,7 @@ begin
 	ENERGY = 135
 	ROD = string("QRM", ENERGY, "rod.mat")
 	VESSEL = string("QRM", ENERGY, "vessels.mat")
-	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/small/low/"
+	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", density, "/")
 end
 
 # ╔═╡ 2ae4e5ff-3cfd-4c80-a59a-e91c52480ecf
@@ -57,10 +71,18 @@ md"""
 """
 
 # ╔═╡ 0fab4688-9f2c-4df6-9cff-d3f9086e7a4b
-begin
+try
 	path = string(BASE_PATH, ROD)
 	vars1 = matread(path)
+	global array1
 	array1 = vars1[string("r", ENERGY)]
+	array1 = Int16.(round.(array1))
+catch
+	BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", "normal/")
+	path = string(BP, ROD)
+	vars1 = matread(path)
+	global array1
+	array1 = vars1[string("I")]
 	array1 = Int16.(round.(array1))
 end;
 
@@ -68,15 +90,29 @@ end;
 heatmap(transpose(array1), colormap=:grays)
 
 # ╔═╡ 506a5e6b-94ed-4502-af57-0092eba7d817
-begin
+try
 	path2 = string(BASE_PATH, VESSEL)
 	vars2 = matread(path2)
+	# @info vars2
 	array2 = vars2[string("v", ENERGY, "_r")]
+	array2 = Int16.(round.(array2))
+catch
+	BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", "normal/")
+	path = string(BP, ROD)
+	vars2 = matread(path)
+	global array2
+	array2 = vars2[string("I")]
 	array2 = Int16.(round.(array2))
 end;
 
 # ╔═╡ 65c27fd3-3959-4d87-a120-2be6a221ca87
 heatmap(transpose(array2), colormap=:grays)
+
+# ╔═╡ bd5a4aac-5da7-42b4-8756-ff79b6ffa883
+# begin
+# 	size(array2, 1)
+# 	size(array2, 2)
+# end
 
 # ╔═╡ 42bdac01-ab21-43ea-928e-04231f0428ba
 md"""
@@ -99,7 +135,7 @@ end;
 
 # ╔═╡ 4062b5d4-9fe7-41f5-92e3-fb19cb6a1274
 begin
-	output_root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/small/low/", ENERGY)
+	output_root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", _size, "/", density, "/", ENERGY)
 	if !isdir(output_root)
 		mkdir(output_root)
 	end
@@ -136,20 +172,6 @@ md"""
 ## Check DICOM image(s)
 """
 
-# ╔═╡ 719a8d5c-ef3a-4859-9fc9-7c02c911c71d
-# begin
-# 	pth_root = "/Users/daleblack/Google Drive/Datasets/Simulated/"
-# 	pth = string(pth_root, "combined")
-# 	if ~isdir(pth)
-# 		mkdir(pth)
-# 	end
-	
-# 	pth_inserts = string(pth_root, inserts)
-# 	files_inserts = readdir(pth_inserts)
-# 	for i in files_inserts
-# 		string(pth_inserts, )
-# end
-
 # ╔═╡ 93d48ee0-83e6-46cd-8567-16273bc269f9
 dcmdir_combined = dcmdir_parse(output_root);
 
@@ -166,6 +188,8 @@ heatmap(transpose(vol_combined[:, :, c]), colormap=:grays)
 # ╠═52c184d2-9a5e-11ec-0e10-976cdfa5f253
 # ╠═5abcc458-7733-4ce4-a56f-bb7cb8882540
 # ╠═1417f262-16f4-41f7-bed6-c895fb49fa80
+# ╠═075c1ec9-94a0-49d5-ac5b-8df8a48ef38b
+# ╠═d2429957-942e-42b5-a782-86298abd1bf8
 # ╠═3c5bfe99-3098-43b6-9d0e-0b3ed5884dea
 # ╠═c1fde068-612a-45c2-a116-d6af918c721a
 # ╟─2ae4e5ff-3cfd-4c80-a59a-e91c52480ecf
@@ -173,6 +197,7 @@ heatmap(transpose(vol_combined[:, :, c]), colormap=:grays)
 # ╠═2cd3beb0-ce9f-461e-803c-59eb20b02dee
 # ╠═506a5e6b-94ed-4502-af57-0092eba7d817
 # ╠═65c27fd3-3959-4d87-a120-2be6a221ca87
+# ╠═bd5a4aac-5da7-42b4-8756-ff79b6ffa883
 # ╟─42bdac01-ab21-43ea-928e-04231f0428ba
 # ╠═7ef29728-2fd5-4c70-ae42-4d35ce6b45da
 # ╠═a70027f1-5fbf-4e9d-8d09-4dd8718fc081
@@ -183,7 +208,6 @@ heatmap(transpose(vol_combined[:, :, c]), colormap=:grays)
 # ╠═3371dd16-6a49-430f-afad-7d94c9bc63ad
 # ╠═b822d070-167e-4ce4-a876-57ba142e2751
 # ╟─f78c8cb1-6f5a-439a-873f-68c71c95516f
-# ╠═719a8d5c-ef3a-4859-9fc9-7c02c911c71d
 # ╠═93d48ee0-83e6-46cd-8567-16273bc269f9
 # ╠═81f0b564-52ff-4078-85a7-765375ad99f0
 # ╟─a79b50b9-7efb-49b8-8970-ecce09a284d4

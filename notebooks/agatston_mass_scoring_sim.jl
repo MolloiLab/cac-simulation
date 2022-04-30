@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ f5acf58b-8436-4b0b-a170-746ba5475c10
+# ╠═╡ show_logs = false
 begin
 	let
 		using Pkg
@@ -60,7 +61,7 @@ md"""
 begin
 	SCAN_NUMBER = 1
 	VENDER = "135"
-	kern = 5
+	kern = 0
 	TYPE = "agatston"
 	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
 end
@@ -317,6 +318,12 @@ alg = Agatston()
 
 # ╔═╡ d9f7f897-7525-4667-a414-3111296bc27f
 agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
+
+# ╔═╡ cb7c19d8-a222-4b0f-92a5-105827d4f5b1
+alg2 = SpatiallyWeighted()
+
+# ╔═╡ dcf6a967-aec9-4fa4-98fc-86e728876acf
+μ, σ = 160, 30
 
 # ╔═╡ d390e652-23a9-455d-87a0-3f8c54e2bb09
 md"""
@@ -851,6 +858,8 @@ end
 # ╠═2d2d2600-dd70-4325-9032-4467882aff73
 # ╠═73121968-a17a-4dcd-bbe5-96c0a04b5cb9
 # ╠═d9f7f897-7525-4667-a414-3111296bc27f
+# ╠═cb7c19d8-a222-4b0f-92a5-105827d4f5b1
+# ╠═dcf6a967-aec9-4fa4-98fc-86e728876acf
 # ╟─d390e652-23a9-455d-87a0-3f8c54e2bb09
 # ╠═fcc751cd-120c-4c6f-828d-cf070b3466fa
 # ╟─96d09c06-e499-4390-b101-d663af7e5d75

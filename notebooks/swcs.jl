@@ -1,10 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 2a9b41e8-bab2-11ec-3294-ddf4409d19b6
+# ╠═╡ show_logs = false
 begin
 	let
 		using Pkg
@@ -18,6 +19,7 @@ begin
 		Pkg.add("CairoMakie")
 		Pkg.add("Noise")
 		Pkg.add("Distributions")
+		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
 	end
 	
 	using PlutoUI
@@ -28,116 +30,11 @@ begin
 	using CairoMakie
 	using Noise
 	using Distributions
+	using CalciumScoring
 end
 
 # ╔═╡ abc5db86-a240-46a4-8114-6aa7b7445317
 TableOfContents()
-
-# ╔═╡ c538773a-ed7d-42ee-bd2c-f2e792d369b7
-md"""
-## Create arrays
-"""
-
-# ╔═╡ 47d01a99-7aab-4810-90d7-160dc7081519
-array_calcium = [
-	10 30 135 145 5 150 100 80 9
-	9 40 135 130 5 150 190 80 9
-	10 100 100 130 5 9 0 80 18
-	4 40 135 -10 5 150 100 0 9
-	10 0 189 130 5 150 40 80 22
-]
-
-# ╔═╡ 1e6d27ee-943c-464f-912a-207edf61a3df
-CairoMakie.heatmap(transpose(array_calcium))
-
-# ╔═╡ 680787bc-797e-4454-8450-2cb0495efe0c
-array_calibration = ones(10, 10) .* 200;
-
-# ╔═╡ 60041821-dcbc-4cb6-b000-86379d01a815
-noisy_array = mult_gauss(salt_pepper(array_calibration))
-
-# ╔═╡ 5313555e-239e-4534-9fec-46f84e3973b1
-CairoMakie.heatmap(noisy_array)
-
-# ╔═╡ cb10a1e7-e292-466f-bd65-39a117e9a303
-md"""
-## Step 1
-Create weighting function
-"""
-
-# ╔═╡ 0e6887f1-b68d-4584-89fe-a275caf85a55
-vec_noisy = vec(noisy_array)
-
-# ╔═╡ d9bb2391-907f-4673-8dba-70fc68b725b0
-begin
-	μ200 = mean(vec_noisy)
-	σ200 = std(vec_noisy)
-	d = Normal(μ200, σ200)
-end
-
-# ╔═╡ 1f5d5c9b-67dc-4ad1-bb9d-75b7d6d4b7fc
-CairoMakie.scatter(d)
-
-# ╔═╡ a024c1d0-9c61-49de-841b-ca2104d79bee
-begin
-	low, high = quantile.(d, [0.00001, 0.99999])
-	cdf_array = cdf(d, range(low, high))
-end
-
-# ╔═╡ 0ef24b04-fc1f-4e88-8c8d-15f414542368
-CairoMakie.scatter(cdf_array)
-
-# ╔═╡ e7c7fe28-0abc-4b2c-8ad9-c5856928a5bd
-md"""
-Looks like `cdf(d, array[i])` is the weighting function we want. We can now apply that to the noisy array on all pixels
-"""
-
-# ╔═╡ 23b743a5-6438-4b65-a1a6-42935dd8c22b
-begin
-	scaled_array = zeros(size(noisy_array))
-	for i in 1:size(noisy_array, 1)
-		for j in 1:size(noisy_array, 2)
-			scaled_array[i, j] =  cdf(d, noisy_array[i, j])
-		end
-	end
-end
-
-# ╔═╡ ceee29a6-9df1-4abd-ac86-d15cf71af780
-scaled_array
-
-# ╔═╡ 64919a4d-2833-4644-853a-65084e518f34
-CairoMakie.heatmap(scaled_array)
-
-# ╔═╡ 00777d97-194f-43da-b4f3-d15d432b0981
-md"""
-## Step 2
-"""
-
-# ╔═╡ 7d087894-e95e-47d9-84d3-013952240563
-kern = [
-		0   0.2 0
-		0.2 0.2 0.2
-		0   0.2 0
-	]
-
-# ╔═╡ 99c7f282-fc93-425b-aca6-472bdb352b8a
-weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
-
-# ╔═╡ 4125e4e8-6eed-442d-9cec-ad072b2bd9c7
-CairoMakie.heatmap(weighted_arr)
-
-# ╔═╡ 99b81fa5-3a36-4a7a-8078-0154d0032443
-md"""
-## Step 3
-"""
-
-# ╔═╡ 7ba3a955-b6e1-498f-9b59-1698968347bb
-swcs = sum(weighted_arr)
-
-# ╔═╡ 41e00d27-1edf-4387-a777-7287578e8dc4
-md"""
-## Full function
-"""
 
 # ╔═╡ b0d93309-7d9d-4d83-9477-2f534a05ddfe
 begin
@@ -146,88 +43,297 @@ begin
 end
 
 # ╔═╡ 9f4a38f7-9f7d-4bca-a7d3-5daefe798c14
-function score(vol, calibration, alg::SpatiallyWeighted)
-    μ, σ= mean(calibration), std(calibration)
+function score_test(vol::AbstractMatrix, calibration, alg::SpatiallyWeighted)
+    μ, σ = mean(calibration), std(calibration)
 	d = Distributions.Normal(μ, σ)
 
 	scaled_array = zeros(size(vol))
 	for i in 1:size(vol, 1)
 		for j in 1:size(vol, 2)
-            if length(size(vol)) == 3
-                for z in 1:size(vol, 3)
-                    scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
-                end
-            else
-			    scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
-            end
+			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
 		end
 	end
 
-    local weighted_arr
-    if length(size(vol)) == 3
-		kern1 = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-		kern2 = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-		kern3 = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-		kern = cat(kern1, kern2, kern3, dims=3)
-        weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1, 2:end-1]
-    else
-		kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-	    weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
-    end
+	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+	weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
     
 	return sum(weighted_arr)
 end
 
-# ╔═╡ 94023c0d-7da5-4e6b-af0e-2730c5e3f84a
-alg = SpatiallyWeighted()
+# ╔═╡ 41c4242b-b025-497b-b5b8-f0e029ecbd8e
+function score_test(vol::AbstractMatrix, μ, σ, alg::SpatiallyWeighted)
+	d = Distributions.Normal(μ, σ)
 
-# ╔═╡ 32bb7e29-0aa3-441e-94fb-d47a5bc46320
-score(array_calcium, noisy_array, alg)
+	scaled_array = zeros(size(vol))
+	for i in 1:size(vol, 1)
+		for j in 1:size(vol, 2)
+			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
+		end
+	end
 
-# ╔═╡ 68452530-776b-43eb-9ac9-fe68977ab1ed
+	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+	weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
+    
+	return sum(weighted_arr)
+end
+
+# ╔═╡ 3cfc6aca-b1f0-41cf-9b7f-f1c84363ae34
+function score_test(vol::AbstractArray, calibration, alg::SpatiallyWeighted)
+    μ, σ = mean(calibration), std(calibration)
+	d = Distributions.Normal(μ, σ)
+
+	scaled_array = zeros(size(vol))
+	for i in 1:size(vol, 1)
+		for j in 1:size(vol, 2)
+			for z in 1:size(vol, 3)
+				scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
+			end
+		end
+	end
+
+	weighted_arr = zeros(size(vol))
+	for z in 1:size(scaled_array, 3)
+		kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+		weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:end-1, 2:end-1]
+	end
+    
+	return sum(weighted_arr)
+end
+
+# ╔═╡ 0e4a1d69-a342-4b0a-91b0-3667db8267b4
+function score_test(vol::AbstractArray, μ, σ, alg::SpatiallyWeighted)
+	d = Distributions.Normal(μ, σ)
+
+	scaled_array = zeros(size(vol))
+	for i in 1:size(vol, 1)
+		for j in 1:size(vol, 2)
+			for z in 1:size(vol, 3)
+				scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
+			end
+		end
+	end
+
+	weighted_arr = zeros(size(vol))
+	for z in 1:size(scaled_array, 3)
+		kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+		weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:end-1, 2:end-1]
+	end
+    
+	return sum(weighted_arr)
+end
+
+# ╔═╡ 9929b3c2-6c07-4da0-9eb4-26d6c407d7e2
 md"""
-### Test 3D
+## Step 1
 """
 
-# ╔═╡ 2f848513-54ac-4153-9f07-3eef0c7f6652
-array_calcium3D = cat(array_calcium, array_calcium, dims=3);
+# ╔═╡ 1b5d567f-4337-423b-8674-b4485c336ce8
+vol = [
+	0 46 58 123 133 104 65 7
+	19 25 20 125 163 83 -22 -134
+	127 99 65 104 139 57 -51 -102
+	123 88 112 140 104 57 46 34
+	122 31 71 121 93 83 101 72
+	97 24 59 99 68 27 22 52
+	0 22 29 72 80 54 28 72
+	0 17 -20 15 42 61 80 83
+	0 66 14 -3 11 54 110 148
+	0 121 127 102 103 93 118 167
+]
 
-# ╔═╡ e66e2f21-6fa6-4b47-bff3-e9c9a5f41320
-noisy_array3D = cat(noisy_array, noisy_array, dims=3);
+# ╔═╡ 1803d49e-287d-4779-ad34-157b6e977d0f
+vol3D = cat(vol, vol, dims=3);
 
-# ╔═╡ 3ae79fb3-18d6-4b18-91a7-7dbba80bc305
-score(array_calcium3D, noisy_array3D, alg)
+# ╔═╡ df800b73-6567-43c5-b7bc-df18234041dd
+begin
+	calibration = zeros(5, 5, 100)
+	for i in 1:100
+		calibration[:, :, i] = mult_gauss(ones(5, 5) * 170)
+	end
+end
+
+# ╔═╡ 4baf3584-ddfe-4dd0-b63d-d9a43121b3cd
+begin
+	μ, σ = mean(calibration), std(calibration) + 30
+	d = Distributions.Normal(μ, σ)
+end
+
+# ╔═╡ 6ddd523e-f43f-4410-bb50-d4b41989208c
+scatter(d)
+
+# ╔═╡ a076ec71-5a46-439d-938f-d7dcf4679248
+begin
+	# low, high = quantile.(d, [0.00001, 0.99999])
+	xs = []
+	ys = []
+	for x in -100:300
+		push!(xs, x)
+		push!(ys, cdf(d, x))
+	end
+	xs = round.(xs, digits = 10)
+	ys = round.(ys, digits = 10)
+end
+
+# ╔═╡ 3ef92c9c-59b7-42a4-abe9-38cbc8209358
+scatter(xs, ys)
+
+# ╔═╡ 85adf61f-f7a4-4576-921f-50f37631f134
+begin
+	scaled_array = zeros(size(vol))
+	for i in 1:size(vol, 1)
+		for j in 1:size(vol, 2)
+			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
+		end
+	end
+	round.(scaled_array, digits=2)
+end
+
+# ╔═╡ 91940958-2d95-472a-a7ec-7cfe88fe12cb
+md"""
+## Step 2
+"""
+
+# ╔═╡ c8b0da1f-5394-42d1-80e0-87b17417cb18
+begin
+	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+	weighted_arr = DSP.conv(scaled_array, kern)[2:end-1, 2:end-1]
+	round.(weighted_arr, digits=2)
+end
+
+# ╔═╡ c12d83f6-cfe0-4210-bb00-0ec8de046310
+md"""
+## Step 3
+"""
+
+# ╔═╡ 85179b38-a120-4d1f-8ce5-8cae6331e17a
+sum(weighted_arr)
 
 # ╔═╡ 41236dd9-fdcb-4c00-b89b-3ed742fe7f01
 md"""
 # Testing
 """
 
+# ╔═╡ 3c5436d3-a925-4b63-ab0b-1adeac1146aa
+md"""
+### Agatston
+"""
+
+# ╔═╡ a5b06b4b-db94-42c5-a976-fd01f4da8661
+struct Agatston <: CalciumScore end
+
+# ╔═╡ 07ecf4e4-7e86-4ac6-be16-fe61d9ebed6b
+function score_agat(vol, spacing, alg::Agatston; threshold=130, min_size_mm=1)
+    area_mm = spacing[1] * spacing[2]
+    min_size_pixels = Int(round(min_size_mm / area_mm))
+    num_slices = size(vol, 3)
+    score = 0
+    for z in range(1, num_slices)
+        slice = vol[:, :, z]
+        thresholded_slice = slice .> threshold
+        max_intensity = maximum(slice)
+        if max_intensity < threshold
+            continue
+        end
+        comp_connect = trues(min_size_pixels + 1, min_size_pixels + 1)
+        lesion_map = label_components(thresholded_slice, comp_connect)
+        num_non_zero = 0
+        number_islands = 0
+        slice_score = 0
+        num_labels = length(unique(lesion_map))
+        for label_idx in 0:num_labels
+            if label_idx == 0
+                continue
+            end
+
+            idxs = findall(x -> x == label_idx, lesion_map)
+            num_label_idxs = length(idxs)
+            if num_label_idxs < min_size_pixels
+                continue
+            end
+
+            intensities = slice[idxs]
+            max_intensity = maximum(intensities)
+            weight = floor(max_intensity / 100)
+            if weight > 4
+                weight = 4.0
+            end
+            num_non_zero_in_island = num_label_idxs
+            slice_score += num_non_zero_in_island * area_mm * weight
+            num_non_zero += num_non_zero_in_island
+            number_islands += 1
+        end
+        score += slice_score
+    end
+    return score
+end
+
+# ╔═╡ 9fff444c-d222-4fcc-8438-8c3217c336c4
+function score_agat(vol, spacing, mass_cal_factor, alg::Agatston; threshold=130, min_size_mm=1)
+    area_mm = spacing[1] * spacing[2]
+    slice_thickness = spacing[3]
+    min_size_pixels = Int(round(min_size_mm / area_mm))
+    mass_score = 0
+    score = 0
+    for z in 1:size(vol, 3)
+        slice = vol[:, :, z]
+        thresholded_slice = slice .> threshold
+        max_intensity = maximum(slice)
+        if max_intensity < threshold
+            continue
+        end
+        comp_connect = trues(min_size_pixels + 1, min_size_pixels + 1)
+        lesion_map = label_components(thresholded_slice, comp_connect)
+        num_non_zero = 0
+        number_islands = 0
+        mass_slice_score = 0
+        slice_score = 0
+        num_labels = length(unique(lesion_map))
+        for label_idx in 1:(num_labels - 1)
+            idxs = findall(x -> x == label_idx, lesion_map)
+            num_label_idxs = length(idxs)
+            if num_label_idxs < min_size_pixels
+                continue
+            end
+
+            intensities = slice[idxs]
+            max_intensity = maximum(intensities)
+            weight = floor(max_intensity / 100)
+            if weight > 4
+                weight = 4.0
+            end
+            num_non_zero_in_island = num_label_idxs
+            slice_score += num_non_zero_in_island * area_mm * weight
+            num_non_zero += num_non_zero_in_island
+            number_islands += 1
+            mass_slice_score += mean(intensities)
+        end
+        plaque_vol = length(findall(x -> x != 0, lesion_map))
+        plaque_vol = plaque_vol * area_mm * slice_thickness
+        mass_score += mass_slice_score * plaque_vol * mass_cal_factor
+        score += slice_score
+    end
+    return score, mass_score
+end
+
 # ╔═╡ 51a5a3b7-bab6-441d-92ca-4cec857e83a0
 md"""
 ## 2D
 """
 
-# ╔═╡ 1b5d567f-4337-423b-8674-b4485c336ce8
-vol = [
-	10 30 135 145 5 150 100 80 9
-	9 40 135 130 5 150 190 80 9
-	10 100 100 130 5 9 0 80 18
-	4 40 135 -10 5 150 100 0 9
-	10 0 189 130 5 150 40 80 22
-]
-
-# ╔═╡ df800b73-6567-43c5-b7bc-df18234041dd
-calibration = [
-	 196.569  207.709  177.004  207.147  178.809
-	 207.359  211.824    0.0    168.913  202.965
-	 160.564    0.0    208.593  214.862  220.32
-	 158.685  188.71   226.872  202.076  226.995
-	 186.996  212.137  185.208  228.175  234.261
-]
+# ╔═╡ 94023c0d-7da5-4e6b-af0e-2730c5e3f84a
+alg = SpatiallyWeighted()
 
 # ╔═╡ 3a4d9b2c-a786-4c59-9f5c-05dfd38379ca
-score(vol, calibration, alg)
+score_test(vol, μ, σ, alg)
+
+# ╔═╡ 29e107be-4018-4b72-9489-84c8ec0ff685
+alg2 = Agatston()
+
+# ╔═╡ 0465cdaa-15eb-4a30-b218-78c888601f04
+spacing = [1, 1, 3]
+
+# ╔═╡ 2148710c-5ee2-4648-86c0-bf337af72b99
+score(vol3D, spacing, alg2)
 
 # ╔═╡ a3a9e388-fb66-4058-ba3b-3d6fe8d4dadd
 md"""
@@ -235,54 +341,55 @@ md"""
 """
 
 # ╔═╡ 6f61f901-94b3-4475-bff6-be338c12ff90
-vol3D = cat(vol, vol, dims=3)
+# vol3D = cat(vol, vol, dims=3)
 
 # ╔═╡ 71f3c1d5-82db-400d-a5d8-aee347521f5c
-calibration3D = cat(calibration, calibration, dims=3)
+# calibration_ = calibration[:, :, 1]
 
 # ╔═╡ b52f41a1-3f25-41e6-bbbb-2041dec891b9
-score(vol3D, calibration3D, alg)
+# score(vol3D, calibration_, alg)
+
+# ╔═╡ 49bbbd77-2bb1-489a-aaf2-8e43c86c680f
+# pixel_size = [0.488, 0.488, 3.0]
+
+# ╔═╡ 6ba1585e-3c91-475e-a301-132626b97c5b
+# agat_l_hd = score(vol3D, pixel_size, alg)
 
 # ╔═╡ Cell order:
 # ╠═2a9b41e8-bab2-11ec-3294-ddf4409d19b6
 # ╠═abc5db86-a240-46a4-8114-6aa7b7445317
-# ╟─c538773a-ed7d-42ee-bd2c-f2e792d369b7
-# ╠═47d01a99-7aab-4810-90d7-160dc7081519
-# ╠═1e6d27ee-943c-464f-912a-207edf61a3df
-# ╠═680787bc-797e-4454-8450-2cb0495efe0c
-# ╠═60041821-dcbc-4cb6-b000-86379d01a815
-# ╠═5313555e-239e-4534-9fec-46f84e3973b1
-# ╟─cb10a1e7-e292-466f-bd65-39a117e9a303
-# ╠═0e6887f1-b68d-4584-89fe-a275caf85a55
-# ╠═d9bb2391-907f-4673-8dba-70fc68b725b0
-# ╠═1f5d5c9b-67dc-4ad1-bb9d-75b7d6d4b7fc
-# ╠═a024c1d0-9c61-49de-841b-ca2104d79bee
-# ╠═0ef24b04-fc1f-4e88-8c8d-15f414542368
-# ╟─e7c7fe28-0abc-4b2c-8ad9-c5856928a5bd
-# ╠═23b743a5-6438-4b65-a1a6-42935dd8c22b
-# ╠═ceee29a6-9df1-4abd-ac86-d15cf71af780
-# ╠═64919a4d-2833-4644-853a-65084e518f34
-# ╟─00777d97-194f-43da-b4f3-d15d432b0981
-# ╠═7d087894-e95e-47d9-84d3-013952240563
-# ╠═99c7f282-fc93-425b-aca6-472bdb352b8a
-# ╠═4125e4e8-6eed-442d-9cec-ad072b2bd9c7
-# ╟─99b81fa5-3a36-4a7a-8078-0154d0032443
-# ╠═7ba3a955-b6e1-498f-9b59-1698968347bb
-# ╟─41e00d27-1edf-4387-a777-7287578e8dc4
 # ╠═b0d93309-7d9d-4d83-9477-2f534a05ddfe
 # ╠═9f4a38f7-9f7d-4bca-a7d3-5daefe798c14
-# ╠═94023c0d-7da5-4e6b-af0e-2730c5e3f84a
-# ╠═32bb7e29-0aa3-441e-94fb-d47a5bc46320
-# ╟─68452530-776b-43eb-9ac9-fe68977ab1ed
-# ╠═2f848513-54ac-4153-9f07-3eef0c7f6652
-# ╠═e66e2f21-6fa6-4b47-bff3-e9c9a5f41320
-# ╠═3ae79fb3-18d6-4b18-91a7-7dbba80bc305
-# ╟─41236dd9-fdcb-4c00-b89b-3ed742fe7f01
-# ╟─51a5a3b7-bab6-441d-92ca-4cec857e83a0
+# ╠═41c4242b-b025-497b-b5b8-f0e029ecbd8e
+# ╠═3cfc6aca-b1f0-41cf-9b7f-f1c84363ae34
+# ╠═0e4a1d69-a342-4b0a-91b0-3667db8267b4
+# ╟─9929b3c2-6c07-4da0-9eb4-26d6c407d7e2
 # ╠═1b5d567f-4337-423b-8674-b4485c336ce8
+# ╠═1803d49e-287d-4779-ad34-157b6e977d0f
 # ╠═df800b73-6567-43c5-b7bc-df18234041dd
+# ╠═4baf3584-ddfe-4dd0-b63d-d9a43121b3cd
+# ╠═6ddd523e-f43f-4410-bb50-d4b41989208c
+# ╠═a076ec71-5a46-439d-938f-d7dcf4679248
+# ╠═3ef92c9c-59b7-42a4-abe9-38cbc8209358
+# ╠═85adf61f-f7a4-4576-921f-50f37631f134
+# ╟─91940958-2d95-472a-a7ec-7cfe88fe12cb
+# ╠═c8b0da1f-5394-42d1-80e0-87b17417cb18
+# ╟─c12d83f6-cfe0-4210-bb00-0ec8de046310
+# ╠═85179b38-a120-4d1f-8ce5-8cae6331e17a
+# ╟─41236dd9-fdcb-4c00-b89b-3ed742fe7f01
+# ╟─3c5436d3-a925-4b63-ab0b-1adeac1146aa
+# ╠═a5b06b4b-db94-42c5-a976-fd01f4da8661
+# ╠═07ecf4e4-7e86-4ac6-be16-fe61d9ebed6b
+# ╠═9fff444c-d222-4fcc-8438-8c3217c336c4
+# ╟─51a5a3b7-bab6-441d-92ca-4cec857e83a0
+# ╠═94023c0d-7da5-4e6b-af0e-2730c5e3f84a
 # ╠═3a4d9b2c-a786-4c59-9f5c-05dfd38379ca
+# ╠═29e107be-4018-4b72-9489-84c8ec0ff685
+# ╠═0465cdaa-15eb-4a30-b218-78c888601f04
+# ╠═2148710c-5ee2-4648-86c0-bf337af72b99
 # ╟─a3a9e388-fb66-4058-ba3b-3d6fe8d4dadd
 # ╠═6f61f901-94b3-4475-bff6-be338c12ff90
 # ╠═71f3c1d5-82db-400d-a5d8-aee347521f5c
 # ╠═b52f41a1-3f25-41e6-bbbb-2041dec891b9
+# ╠═49bbbd77-2bb1-489a-aaf2-8e43c86c680f
+# ╠═6ba1585e-3c91-475e-a301-132626b97c5b

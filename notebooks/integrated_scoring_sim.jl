@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 45f704d4-66e5-49db-aef5-05132f3853ee
+# ╠═╡ show_logs = false
 begin
 	let
 		using Pkg
@@ -66,7 +67,7 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 begin
 	SCAN_NUMBER = 1
 	VENDER = "120"
-	kern = 0
+	kern = 100
 	TYPE = "integrated_scoring"
 	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
 end
@@ -96,9 +97,10 @@ begin
 	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
 	if kern != 0
 		for z in size(dcm_array, 3)
-			dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], kern)
+			dcm_array[:, :, z] = poisson(dcm_array[:, :, z], kern)
 		end
 	end
+	dcm_array
 end;
 
 # ╔═╡ 66f5fc66-d5ba-45ba-8624-55adc58085e4
