@@ -43,8 +43,8 @@ file = 3
 
 # ╔═╡ 075c1ec9-94a0-49d5-ac5b-8df8a48ef38b
 begin
-	# density = "low"
-	density = "normal"
+	density = "low"
+	# density = "normal"
 end
 
 # ╔═╡ d2429957-942e-42b5-a782-86298abd1bf8
@@ -98,7 +98,7 @@ try
 	array2 = Int16.(round.(array2))
 catch
 	BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", "normal/")
-	path = string(BP, ROD)
+	path = string(BP, VESSEL)
 	vars2 = matread(path)
 	global array2
 	array2 = vars2[string("I")]

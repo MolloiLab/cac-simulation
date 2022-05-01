@@ -35,6 +35,7 @@ begin
 		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
 		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
 		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
+		Pkg.add("ImageComponentAnalysis")
 	end
 	
 	using PlutoUI
@@ -51,6 +52,7 @@ begin
 	using DICOMUtils
 	using PhantomSegmentation
 	using CalciumScoring
+	using ImageComponentAnalysis
 end
 
 # ╔═╡ e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -66,10 +68,14 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
 	SCAN_NUMBER = 1
-	VENDER = "120"
-	kern = 100
+	VENDER = "80"
+	# SIZE = "small"
+	# SIZE = "medium"
+	SIZE = "large"
+	# DENSITY = "low"
+	DENSITY = "normal"
 	TYPE = "integrated_scoring"
-	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
+	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
 end
 
 # ╔═╡ 6aa51429-981a-4dea-a0f6-2935867d5b2a
@@ -90,18 +96,7 @@ pth = dcm_path_list[SCAN_NUMBER]
 scan = basename(pth)
 
 # ╔═╡ b7e0b678-0627-44fe-b0cb-3ef2bccae6a7
-# header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
-
-# ╔═╡ 3813d24f-eef7-4d96-8adc-69a9e22fe9a1
-begin
-	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
-	if kern != 0
-		for z in size(dcm_array, 3)
-			dcm_array[:, :, z] = poisson(dcm_array[:, :, z], kern)
-		end
-	end
-	dcm_array
-end;
+header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
 
 # ╔═╡ 66f5fc66-d5ba-45ba-8624-55adc58085e4
 md"""
@@ -156,7 +151,7 @@ masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array
 @bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 84e56c91-14a4-45b7-81a1-77e778bae695
-heatmap(masked_array[:, :, a], colormap=:grays)
+heatmap(transpose(masked_array[:, :, a]), colormap=:grays)
 
 # ╔═╡ abfd965c-df00-4028-a0f3-8356a261b527
 begin
@@ -165,7 +160,7 @@ begin
 	ax = Makie.Axis(fig[1, 1])
 	ax.title = "Raw DICOM Array"
 	heatmap!(transpose(dcm_array[:, :, 5]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig
 end
 
@@ -191,13 +186,137 @@ begin
 	fig3
 end
 
+# ╔═╡ b8d1a5b8-13ae-4afb-bc1a-dd7f691eb46e
+masked_array[170:180, 310:320, 2]
+
 # ╔═╡ f8a4eacd-2f69-4755-b017-5a0b0dda1004
 md"""
 ## Segment Calcium Rod
 """
 
+# ╔═╡ ac9d2652-6d69-4cf3-acbf-2e141fb633f0
+begin
+	global thresh
+	if DENSITY == "low" && (SIZE == "medium" || SIZE == "large")
+		thresh = 80
+	elseif DENSITY == "low"
+		thresh = 60
+	elseif DENSITY ==  "normal" && SIZE == "large"
+		thresh = 50
+	elseif DENSITY ==  "normal"
+		thresh == 130
+	end
+end
+
+# ╔═╡ 8bc509c1-a7dd-4d8c-9583-d49c2fd851af
+function get_calcium_slices_test(dcm_array, header; calcium_threshold=130)
+    array = copy(dcm_array)
+    array = Int.(array .> (1.1 * calcium_threshold))
+
+    pixel_size = PhantomSegmentation.get_pixel_size(header)
+    CCI_5mm_num_pixels = Int(round(π * (5 / 2)^2 / pixel_size[1]^2))
+    cal_rod_num_pixels = Int(round(π * (20 / 2)^2 / pixel_size[1]^2))
+
+    kern = Int.(round(5 / pixel_size[1]))
+    if kern % 2 == 0
+        kern += 1
+    end
+
+    slice_dict = Dict()
+    large_index = []
+    cal_rod_dict = Dict()
+	global comps
+	comps = []
+    for idx in 1:size(array, 3)
+        array_filtered = mapwindow(median, array[:, :, idx], (kern, kern))
+        components = ImageComponentAnalysis.label_components(array_filtered)
+		push!(comps, components)
+        a1 = analyze_components(components, BasicMeasurement(; area=true, perimeter=true))
+        a2 = analyze_components(components, BoundingBox(; box_area=true))
+        df = leftjoin(a1, a2; on=:l)
+
+        count_5mm = 0
+        count = 0
+        for row in eachrow(df)
+            count += 1
+            df_area = Int(round(row[:area]))
+
+            r1_1 = Int(round(CCI_5mm_num_pixels * 0.6))
+            r1_2 = Int(round(CCI_5mm_num_pixels * 1.5))
+            r2_1 = Int(round(cal_rod_num_pixels * 0.7))
+            r2_2 = Int(round(cal_rod_num_pixels * 1.3))
+
+            if df_area in r1_1:r1_2
+                count_5mm += 1
+            elseif df_area in r2_1:r2_2
+                indices = row[:box_indices]
+                x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
+                y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
+                cal_rod_dict[count] = [x_point, y_point]
+            end
+        end
+
+        if count_5mm > 0 && count_5mm < 4
+            slice_dict[idx] = count_5mm
+        end
+
+        poppable_keys = []
+        for key in cal_rod_dict
+            start_coordinate = [key[2][1], key[2][2]]
+
+            x_right = 0
+            while array_filtered[start_coordinate[1], start_coordinate[2] + x_right] == 1
+                x_right += 1
+            end
+
+            x_left = 0
+            while array_filtered[start_coordinate[1], start_coordinate[2] - x_left] == 1
+                x_left += 1
+            end
+
+            y_top = 0
+            while array_filtered[start_coordinate[1] + y_top, start_coordinate[2]] == 1
+                y_top += 1
+            end
+
+            y_bottom = 0
+            while array_filtered[start_coordinate[1] - y_bottom, start_coordinate[2]] == 1
+                y_bottom += 1
+            end
+
+            x_dist = x_right + x_left
+            y_dist = y_top + y_bottom
+
+            range1 = round(0.7 * y_dist):round(1.2 * y_dist)
+            if ((x_dist in range1) == false) ||
+                ((round(0.7 * y_dist) == 0) && (round(1.2 * y_dist) == 0))
+                push!(poppable_keys, key)
+            else
+                nothing
+            end
+        end
+
+        for key in poppable_keys
+            pop!(cal_rod_dict)
+        end
+
+        if length(cal_rod_dict) == 0
+            nothing
+        else
+            append!(large_index, idx)
+        end
+    end
+    return slice_dict, large_index
+end
+
+# ╔═╡ 434026ec-7e20-473e-9223-d4d8ccf9174c
+heatmap(comps[6])
+
+# ╔═╡ 165a7503-5b15-4865-a453-2b877c643312
+slice_dict, large_index = get_calcium_slices_test(masked_array, header; calcium_threshold=60)
+
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header);
+calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
 
 # ╔═╡ 417d150e-0df9-4963-b59e-ebd9acf6d4a0
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=cal_rod_slice, show_value=true)
@@ -212,7 +331,7 @@ md"""
 
 # ╔═╡ ece7d76b-93c8-430c-8679-07cf92585949
 mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
-            dcm_array, masked_array, header, slice_CCI, center_insert
+            dcm_array, masked_array, header, slice_CCI, center_insert; calcium_threshold=thresh,
 );
 
 # ╔═╡ fa58a5ba-7aaf-4be6-8796-ecef516d8d53
@@ -236,7 +355,7 @@ array_filtered = abs.(mapwindow(median, calcium_image[:, :, 2], (3, 3)));
 bool_arr = array_filtered .> 0;
 
 # ╔═╡ c3a87ddd-64ad-4aeb-95e9-7f7b1ba1bd28
-bool_arr_erode = (((erode(erode(bool_arr)))));
+bool_arr_erode = ((erode(erode(erode(bool_arr)))));
 
 # ╔═╡ da3c96b9-efdb-40f4-a959-747c097e16b2
 heatmap(bool_arr, colormap=:grays)
@@ -267,10 +386,35 @@ md"""
 """
 
 # ╔═╡ 6c3f0dc5-9db2-4db8-abb0-64e4cda6d6fe
-density_array = [0, 200, 400, 800]
+begin
+	global density_array
+	if DENSITY == "low"
+		density_array = [0, 25, 50, 100]
+	elseif DENSITY == "normal"
+		density_array = [0, 200, 400, 800]
+	end
+end
 
 # ╔═╡ 6ceb2a0a-8fcf-4f8c-8167-5b2ab770df48
 density_array_cal = [0, 200]
+
+# ╔═╡ 43cf1721-57db-4048-8528-b0430c5e8043
+intensity_array_cal = [0, cal_insert_mean]
+
+# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
+df_cal = DataFrame(:density => density_array_cal, :intensity => intensity_array_cal)
+
+# ╔═╡ 6c3c7d22-78e6-428e-ac62-90a473b06e2d
+linearRegressor = lm(@formula(intensity ~ density), df_cal);
+
+# ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
+linearFit = predict(linearRegressor)
+
+# ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
+m = linearRegressor.model.pp.beta0[2]
+
+# ╔═╡ dbec08a2-96c5-488b-89b9-5df6fe1f5a12
+b = linearRegressor.model.rr.mu[1]
 
 # ╔═╡ e50baf62-0a02-47ee-8440-551f68baee0d
 md"""
@@ -287,6 +431,26 @@ x = \frac{y - b}{m}
 ```
 
 """
+
+# ╔═╡ 3fa80bee-20f6-4e9c-a14d-75a77482a2c3
+density(intensity) = (intensity - b) / m
+
+# ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
+intensity(ρ) = m*ρ + b
+
+# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
+begin
+	f = Figure()
+	ax1 = Axis(f[1, 1])
+	
+	scatter!(density_array_cal, intensity_array_cal)
+	lines!(density_array_cal, linearFit, color = :red)
+	ax1.title = "Calibration Line (Intensity vs Density)"
+	ax1.ylabel = "Intensity (HU)"
+	ax1.xlabel = "Density (mg/cm^3)"
+	
+	f
+end
 
 # ╔═╡ 3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 md"""
@@ -352,8 +516,18 @@ begin
 	s_bkg_L_HD = mean(single_arr[single_ring_mask_L_HD])
 end
 
+# ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
+S_Obj_HD = intensity(800)
+
 # ╔═╡ 28c869df-75eb-42dc-9033-867ca4782f41
 pixel_size = DICOMUtils.get_pixel_size(header)
+
+# ╔═╡ 7d61e536-fac5-43e1-9ce9-5952d7d20e8d
+begin
+	alg_L_HD = Integrated(arr[mask_L_HD_3D])
+	ρ_hd = 0.8 # mg/mm^3
+	mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
+end
 
 # ╔═╡ e93b26b5-ba84-4410-87b7-eefad3d8ab3e
 md"""
@@ -408,6 +582,16 @@ begin
 	s_bkg_L_MD = mean(single_arr[single_ring_mask_L_MD])
 end
 
+# ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
+S_Obj_MD = intensity(400)
+
+# ╔═╡ 367750d8-a287-4313-b6df-d6533849623f
+begin
+	alg_L_MD = Integrated(arr[mask_L_MD_3D])
+	ρ_md = 0.4
+	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
+end
+
 # ╔═╡ 73105b5a-05b7-429f-9a7f-b8c12684df91
 md"""
 ## Low Density
@@ -429,64 +613,6 @@ end
 
 # ╔═╡ 2f06a3e2-5c65-4f7d-af65-829a8e657a92
 intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
-
-# ╔═╡ 43cf1721-57db-4048-8528-b0430c5e8043
-intensity_array_cal = [0, low_density_cal]
-
-# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
-df_cal = DataFrame(:density => density_array_cal, :intensity => intensity_array_cal)
-
-# ╔═╡ 6c3c7d22-78e6-428e-ac62-90a473b06e2d
-linearRegressor = lm(@formula(intensity ~ density), df_cal);
-
-# ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
-linearFit = predict(linearRegressor)
-
-# ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
-m = linearRegressor.model.pp.beta0[2]
-
-# ╔═╡ dbec08a2-96c5-488b-89b9-5df6fe1f5a12
-b = linearRegressor.model.rr.mu[1]
-
-# ╔═╡ 3fa80bee-20f6-4e9c-a14d-75a77482a2c3
-density(intensity) = (intensity - b) / m
-
-# ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
-intensity(ρ) = m*ρ + b
-
-# ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
-S_Obj_HD = intensity(800)
-
-# ╔═╡ 7d61e536-fac5-43e1-9ce9-5952d7d20e8d
-begin
-	alg_L_HD = Integrated(arr[mask_L_HD_3D])
-	ρ_hd = 0.8 # mg/mm^3
-	mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
-end
-
-# ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
-S_Obj_MD = intensity(400)
-
-# ╔═╡ 367750d8-a287-4313-b6df-d6533849623f
-begin
-	alg_L_MD = Integrated(arr[mask_L_MD_3D])
-	ρ_md = 0.4
-	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
-end
-
-# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
-begin
-	f = Figure()
-	ax1 = Axis(f[1, 1])
-	
-	scatter!(density_array_cal, intensity_array_cal)
-	lines!(density_array_cal, linearFit, color = :red)
-	ax1.title = "Calibration Line (Intensity vs Density)"
-	ax1.ylabel = "Intensity (HU)"
-	ax1.xlabel = "Density (mg/cm^3)"
-	
-	f
-end
 
 # ╔═╡ d8d7a93f-85e7-43e7-a23d-11e7c6ce27be
 md"""
@@ -930,7 +1056,6 @@ calculated_mass_small = [
 
 # ╔═╡ 82540ec2-d054-40db-a561-8d7ecb254756
 df = DataFrame(
-	kern = kern,
 	scan = scan,
 	inserts = inserts,
 	ground_truth_mass_large = ground_truth_mass_large,
@@ -952,9 +1077,17 @@ begin
 	axmass2.title = "Mass Measurements (Large)"
 	axmass2.ylabel = "Mass (mg)"
 	axmass2.xlabel = "Density (mg/cm^3)"
-
-	xlims!(axmass2, 0, 850)
-	ylims!(axmass2, 0, 200)
+	local xlim
+	local ylim
+	if DENSITY == "low"
+		xlim = 130
+		ylim = 30
+	elseif DENSITY == "normal"
+		xlim = 850
+		ylim = 200
+	end
+	xlims!(axmass2, 0, xlim)
+	ylims!(axmass2, 0, ylim)
 	
 	fmass2[1, 2] = Legend(fmass2, axmass2, framevisible = false)
 	
@@ -973,8 +1106,17 @@ begin
 	axmass3.ylabel = "Mass (mg)"
 	axmass3.xlabel = "Density (mg/cm^3)"
 
-	xlims!(axmass3, 0, 850)
-	ylims!(axmass3, 0, 70)
+	local xlim
+	local ylim
+	if DENSITY == "low"
+		xlim = 130
+		ylim = 10
+	elseif DENSITY == "normal"
+		xlim = 850
+		ylim = 70
+	end
+	xlims!(axmass3, 0, xlim)
+	ylims!(axmass3, 0, ylim)
 	
 	fmass3[1, 2] = Legend(fmass3, axmass3, framevisible = false)
 	
@@ -992,9 +1134,18 @@ begin
 	axmass4.title = "Mass Measurements (Small)"
 	axmass4.ylabel = "Mass (mg)"
 	axmass4.xlabel = "Density (mg/cm^3)"
-
-	xlims!(axmass4, 0, 850)
-	ylims!(axmass4, 0, 10)
+	
+	local xlim
+	local ylim
+	if DENSITY == "low"
+		xlim = 130
+		ylim = 1.5
+	elseif DENSITY == "normal"
+		xlim = 850
+		ylim = 10
+	end
+	xlims!(axmass4, 0, xlim)
+	ylims!(axmass4, 0, ylim)
 	
 	fmass4[1, 2] = Legend(fmass4, axmass4, framevisible = false)
 	
@@ -1038,11 +1189,11 @@ dfs = []
 push!(dfs, df)
 
 # ╔═╡ 5d7f1e9e-500d-4812-b966-6b42948da3f6
-if length(dfs) == 12
-	global new_df = vcat(dfs[1:12]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
-	CSV.write(output_path_new, new_df)
-end
+# if length(dfs) == 12
+# 	global new_df = vcat(dfs[1:12]...)
+# 	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
+# 	CSV.write(output_path_new, new_df)
+# end
 
 # ╔═╡ Cell order:
 # ╠═45f704d4-66e5-49db-aef5-05132f3853ee
@@ -1055,7 +1206,6 @@ end
 # ╠═a327ef18-2941-4783-9266-7332826eaf58
 # ╠═b44d18f8-1b86-4235-bb5b-7a77a1af55e0
 # ╠═b7e0b678-0627-44fe-b0cb-3ef2bccae6a7
-# ╠═3813d24f-eef7-4d96-8adc-69a9e22fe9a1
 # ╟─66f5fc66-d5ba-45ba-8624-55adc58085e4
 # ╟─6e812172-6371-4461-9365-22f68ef16e53
 # ╟─483a14dd-e798-41ed-9144-13678f8b8461
@@ -1064,10 +1214,15 @@ end
 # ╠═4ff19af0-7f53-4f24-b315-08bd54a488e3
 # ╟─b74941c4-12d4-4be1-81f7-ef1f4d288984
 # ╠═84e56c91-14a4-45b7-81a1-77e778bae695
-# ╟─abfd965c-df00-4028-a0f3-8356a261b527
+# ╠═abfd965c-df00-4028-a0f3-8356a261b527
 # ╟─41541a09-609b-4f46-9a25-eb974422efc0
 # ╟─e6753c9a-d172-47fe-b066-78cb43df2c89
+# ╠═b8d1a5b8-13ae-4afb-bc1a-dd7f691eb46e
 # ╟─f8a4eacd-2f69-4755-b017-5a0b0dda1004
+# ╠═ac9d2652-6d69-4cf3-acbf-2e141fb633f0
+# ╠═8bc509c1-a7dd-4d8c-9583-d49c2fd851af
+# ╠═434026ec-7e20-473e-9223-d4d8ccf9174c
+# ╠═165a7503-5b15-4865-a453-2b877c643312
 # ╠═dd399c0e-f8e4-464c-8964-bdc0dd657202
 # ╟─417d150e-0df9-4963-b59e-ebd9acf6d4a0
 # ╠═5f10075b-4d95-4d53-a22f-016749fb7583
