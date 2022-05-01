@@ -72,8 +72,8 @@ begin
 	# SIZE = "small"
 	# SIZE = "medium"
 	SIZE = "large"
-	# DENSITY = "low"
-	DENSITY = "normal"
+	DENSITY = "low"
+	# DENSITY = "normal"
 	TYPE = "integrated_scoring"
 	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
 end
@@ -186,9 +186,6 @@ begin
 	fig3
 end
 
-# ╔═╡ b8d1a5b8-13ae-4afb-bc1a-dd7f691eb46e
-masked_array[170:180, 310:320, 2]
-
 # ╔═╡ f8a4eacd-2f69-4755-b017-5a0b0dda1004
 md"""
 ## Segment Calcium Rod
@@ -197,123 +194,17 @@ md"""
 # ╔═╡ ac9d2652-6d69-4cf3-acbf-2e141fb633f0
 begin
 	global thresh
-	if DENSITY == "low" && (SIZE == "medium" || SIZE == "large")
-		thresh = 80
-	elseif DENSITY == "low"
-		thresh = 60
-	elseif DENSITY ==  "normal" && SIZE == "large"
-		thresh = 50
+	# if DENSITY == "low" && (SIZE == "medium" || SIZE == "large")
+	# 	thresh = 80
+	if DENSITY == "low"
+		thresh = 70
 	elseif DENSITY ==  "normal"
-		thresh == 130
+		thresh = 130
 	end
 end
 
-# ╔═╡ 8bc509c1-a7dd-4d8c-9583-d49c2fd851af
-function get_calcium_slices_test(dcm_array, header; calcium_threshold=130)
-    array = copy(dcm_array)
-    array = Int.(array .> (1.1 * calcium_threshold))
-
-    pixel_size = PhantomSegmentation.get_pixel_size(header)
-    CCI_5mm_num_pixels = Int(round(π * (5 / 2)^2 / pixel_size[1]^2))
-    cal_rod_num_pixels = Int(round(π * (20 / 2)^2 / pixel_size[1]^2))
-
-    kern = Int.(round(5 / pixel_size[1]))
-    if kern % 2 == 0
-        kern += 1
-    end
-
-    slice_dict = Dict()
-    large_index = []
-    cal_rod_dict = Dict()
-	global comps
-	comps = []
-    for idx in 1:size(array, 3)
-        array_filtered = mapwindow(median, array[:, :, idx], (kern, kern))
-        components = ImageComponentAnalysis.label_components(array_filtered)
-		push!(comps, components)
-        a1 = analyze_components(components, BasicMeasurement(; area=true, perimeter=true))
-        a2 = analyze_components(components, BoundingBox(; box_area=true))
-        df = leftjoin(a1, a2; on=:l)
-
-        count_5mm = 0
-        count = 0
-        for row in eachrow(df)
-            count += 1
-            df_area = Int(round(row[:area]))
-
-            r1_1 = Int(round(CCI_5mm_num_pixels * 0.6))
-            r1_2 = Int(round(CCI_5mm_num_pixels * 1.5))
-            r2_1 = Int(round(cal_rod_num_pixels * 0.7))
-            r2_2 = Int(round(cal_rod_num_pixels * 1.3))
-
-            if df_area in r1_1:r1_2
-                count_5mm += 1
-            elseif df_area in r2_1:r2_2
-                indices = row[:box_indices]
-                x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
-                y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
-                cal_rod_dict[count] = [x_point, y_point]
-            end
-        end
-
-        if count_5mm > 0 && count_5mm < 4
-            slice_dict[idx] = count_5mm
-        end
-
-        poppable_keys = []
-        for key in cal_rod_dict
-            start_coordinate = [key[2][1], key[2][2]]
-
-            x_right = 0
-            while array_filtered[start_coordinate[1], start_coordinate[2] + x_right] == 1
-                x_right += 1
-            end
-
-            x_left = 0
-            while array_filtered[start_coordinate[1], start_coordinate[2] - x_left] == 1
-                x_left += 1
-            end
-
-            y_top = 0
-            while array_filtered[start_coordinate[1] + y_top, start_coordinate[2]] == 1
-                y_top += 1
-            end
-
-            y_bottom = 0
-            while array_filtered[start_coordinate[1] - y_bottom, start_coordinate[2]] == 1
-                y_bottom += 1
-            end
-
-            x_dist = x_right + x_left
-            y_dist = y_top + y_bottom
-
-            range1 = round(0.7 * y_dist):round(1.2 * y_dist)
-            if ((x_dist in range1) == false) ||
-                ((round(0.7 * y_dist) == 0) && (round(1.2 * y_dist) == 0))
-                push!(poppable_keys, key)
-            else
-                nothing
-            end
-        end
-
-        for key in poppable_keys
-            pop!(cal_rod_dict)
-        end
-
-        if length(cal_rod_dict) == 0
-            nothing
-        else
-            append!(large_index, idx)
-        end
-    end
-    return slice_dict, large_index
-end
-
-# ╔═╡ 434026ec-7e20-473e-9223-d4d8ccf9174c
-heatmap(comps[6])
-
 # ╔═╡ 165a7503-5b15-4865-a453-2b877c643312
-slice_dict, large_index = get_calcium_slices_test(masked_array, header; calcium_threshold=60)
+slice_dict, large_index = get_calcium_slices(masked_array, header; calcium_threshold=60)
 
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202
 calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
@@ -1217,11 +1108,8 @@ push!(dfs, df)
 # ╠═abfd965c-df00-4028-a0f3-8356a261b527
 # ╟─41541a09-609b-4f46-9a25-eb974422efc0
 # ╟─e6753c9a-d172-47fe-b066-78cb43df2c89
-# ╠═b8d1a5b8-13ae-4afb-bc1a-dd7f691eb46e
 # ╟─f8a4eacd-2f69-4755-b017-5a0b0dda1004
 # ╠═ac9d2652-6d69-4cf3-acbf-2e141fb633f0
-# ╠═8bc509c1-a7dd-4d8c-9583-d49c2fd851af
-# ╠═434026ec-7e20-473e-9223-d4d8ccf9174c
 # ╠═165a7503-5b15-4865-a453-2b877c643312
 # ╠═dd399c0e-f8e4-464c-8964-bdc0dd657202
 # ╟─417d150e-0df9-4963-b59e-ebd9acf6d4a0

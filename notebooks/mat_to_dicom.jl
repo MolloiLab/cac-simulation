@@ -43,8 +43,8 @@ file = 3
 
 # ╔═╡ 075c1ec9-94a0-49d5-ac5b-8df8a48ef38b
 begin
-	density = "low"
-	# density = "normal"
+	# density = "low"
+	density = "normal"
 end
 
 # ╔═╡ d2429957-942e-42b5-a782-86298abd1bf8
@@ -77,6 +77,7 @@ try
 	global array1
 	array1 = vars1[string("r", ENERGY)]
 	array1 = Int16.(round.(array1))
+	@info path
 catch
 	BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", "normal/")
 	path = string(BP, ROD)
@@ -84,25 +85,51 @@ catch
 	global array1
 	array1 = vars1[string("I")]
 	array1 = Int16.(round.(array1))
+	@info path
 end;
 
 # ╔═╡ 2cd3beb0-ce9f-461e-803c-59eb20b02dee
 heatmap(transpose(array1), colormap=:grays)
 
 # ╔═╡ 506a5e6b-94ed-4502-af57-0092eba7d817
-try
-	path2 = string(BASE_PATH, VESSEL)
-	vars2 = matread(path2)
-	# @info vars2
-	array2 = vars2[string("v", ENERGY, "_r")]
-	array2 = Int16.(round.(array2))
-catch
-	BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", "normal/")
-	path = string(BP, VESSEL)
-	vars2 = matread(path)
-	global array2
-	array2 = vars2[string("I")]
-	array2 = Int16.(round.(array2))
+begin
+	if density == "low"
+		try
+			path2 = string(BASE_PATH, VESSEL)
+			vars2 = matread(path2)
+			# @info vars2
+			global array2
+			array2 = vars2[string("v", ENERGY, "_r")]
+			array2 = Int16.(round.(array2))
+			@info path2
+		catch
+			BP = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/", _size, "/", density, "/")
+			path = string(BP, VESSEL)
+			vars2 = matread(path)
+			global array2
+			array2 = vars2[string("I")]
+			array2 = Int16.(round.(array2))
+			@info path
+		end
+	elseif density == "normal"
+		try
+			path2 = string(BASE_PATH, VESSEL)
+			vars2 = matread(path2)
+			# @info vars2
+			global array2
+			array2 = vars2[string("v", ENERGY)]
+			array2 = Int16.(round.(array2))
+			@info path2
+		catch
+			path2 = string(BASE_PATH, VESSEL)
+			vars2 = matread(path2)
+			# @info vars2
+			global array2
+			array2 = vars2[string("I")]
+			array2 = Int16.(round.(array2))
+			@info path2
+		end
+	end
 end;
 
 # ╔═╡ 65c27fd3-3959-4d87-a120-2be6a221ca87
