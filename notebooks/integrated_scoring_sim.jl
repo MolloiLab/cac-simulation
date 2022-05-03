@@ -70,10 +70,10 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
 	SCAN_NUMBER = 1
-	VENDER = "100"
-	# SIZE = "small"
+	VENDER = "135"
+	SIZE = "small"
 	# SIZE = "medium"
-	SIZE = "large"
+	# SIZE = "large"
 	DENSITY = "low"
 	# DENSITY = "normal"
 	TYPE = "integrated_scoring"
