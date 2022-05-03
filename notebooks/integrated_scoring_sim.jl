@@ -36,6 +36,7 @@ begin
 		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
 		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
 		Pkg.add("ImageComponentAnalysis")
+		Pkg.add("Tables")
 	end
 	
 	using PlutoUI
@@ -53,6 +54,7 @@ begin
 	using PhantomSegmentation
 	using CalciumScoring
 	using ImageComponentAnalysis
+	using Tables
 end
 
 # ╔═╡ e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -68,7 +70,7 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
 	SCAN_NUMBER = 1
-	VENDER = "80"
+	VENDER = "100"
 	# SIZE = "small"
 	# SIZE = "medium"
 	SIZE = "large"
@@ -77,6 +79,43 @@ begin
 	TYPE = "integrated_scoring"
 	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
 end
+
+# ╔═╡ 1df1a491-6207-4b5c-a5e8-15a07323b6e7
+md"""
+**Scans**
+- normal (consistent underestimation of HD inserts; probably solved by using all inserts for calibration line instead of calibration rod)
+  - small
+    - 80 (thresh: 130, ✅)
+    - 100 (thresh: 130, ✅)
+    - 120 (thresh: 130, ✅)
+    - 135 (thresh: 130, ✅)
+  - medium
+    - 80 (thresh: 130, ✅)
+    - 100 (thresh: 130, ✅)
+    - 120 (thresh: 130, ✅)
+    - 135 (thresh: 130, ✅)
+  - large
+    - 80 (thresh: 130, ✅)
+    - 100 (thresh: 130, ✅)
+    - 120 (thresh: 130, ✅)
+    - 135 (thresh: 130, ✅)
+- low
+  - small
+    - 80 (thresh: 60, ✅)
+    - 100 (thresh: 60, ✅)
+    - 120 (thresh: 60, ✅)
+    - 135 (thresh: 60, ✅)
+  - medium
+    - 80 (thresh: 75, ✅)
+    - 100 (thresh: 75, ✅)
+    - 120 (thresh: 75, ✅)
+    - 135 (thresh: 70, ✅)
+  - large
+    - 80
+    - 100
+    - 120
+    - 135
+"""
 
 # ╔═╡ 6aa51429-981a-4dea-a0f6-2935867d5b2a
 md"""
@@ -171,7 +210,7 @@ begin
 	ax2 = Makie.Axis(fig2[1, 1])
 	ax2.title = "Mask Array"
 	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig2
 end
 
@@ -182,7 +221,7 @@ begin
 	ax3 = Makie.Axis(fig3[1, 1])
 	ax3.title = "Masked DICOM Array"
 	heatmap!(transpose(masked_array[:, :, 1]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig3
 end
 
@@ -194,39 +233,60 @@ md"""
 # ╔═╡ ac9d2652-6d69-4cf3-acbf-2e141fb633f0
 begin
 	global thresh
-	# if DENSITY == "low" && (SIZE == "medium" || SIZE == "large")
-	# 	thresh = 80
 	if DENSITY == "low"
-		thresh = 70
+		thresh = 60
 	elseif DENSITY ==  "normal"
 		thresh = 130
 	end
 end
 
-# ╔═╡ 165a7503-5b15-4865-a453-2b877c643312
-slice_dict, large_index = get_calcium_slices(masked_array, header; calcium_threshold=60)
-
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202
 calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
 
 # ╔═╡ 417d150e-0df9-4963-b59e-ebd9acf6d4a0
-@bind c PlutoUI.Slider(1:size(calcium_image, 3), default=cal_rod_slice, show_value=true)
+@bind c PlutoUI.Slider(1:size(calcium_image, 3), default=5, show_value=true)
 
 # ╔═╡ 5f10075b-4d95-4d53-a22f-016749fb7583
 heatmap(transpose(calcium_image[:, :, c]), colormap=:grays)
 
 # ╔═╡ b921dcf8-54ea-420b-9285-23e38d5ce433
 md"""
-## Segment Calcium Inserts
+## Load (segment) Calcium Inserts
 """
 
 # ╔═╡ ece7d76b-93c8-430c-8679-07cf92585949
-mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
-            dcm_array, masked_array, header, slice_CCI, center_insert; calcium_threshold=thresh,
-);
+# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
+#             dcm_array, masked_array, header, slice_CCI, center_insert; calcium_threshold=thresh
+# );
 
-# ╔═╡ fa58a5ba-7aaf-4be6-8796-ecef516d8d53
-slice_CCI
+# ╔═╡ ca408955-54ff-40ff-9a0f-77ee2666d7a2
+# begin
+# 	root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
+# 	CSV.write(string(root, "mask_L_HD.csv"),  Tables.table(mask_L_HD), writeheader=false)
+# 	CSV.write(string(root, "mask_M_HD.csv"),  Tables.table(mask_M_HD), writeheader=false)
+# 	CSV.write(string(root, "mask_S_HD.csv"),  Tables.table(mask_S_HD), writeheader=false)
+# 	CSV.write(string(root, "mask_L_MD.csv"),  Tables.table(mask_L_MD), writeheader=false)
+# 	CSV.write(string(root, "mask_M_MD.csv"),  Tables.table(mask_M_MD), writeheader=false)
+# 	CSV.write(string(root, "mask_S_MD.csv"),  Tables.table(mask_S_MD), writeheader=false)
+# 	CSV.write(string(root, "mask_L_LD.csv"),  Tables.table(mask_L_LD), writeheader=false)
+# 	CSV.write(string(root, "mask_M_LD.csv"),  Tables.table(mask_M_LD), writeheader=false)
+# 	CSV.write(string(root, "mask_S_LD.csv"),  Tables.table(mask_S_LD), writeheader=false)
+# end
+
+# ╔═╡ 05ed60db-b4d8-4cdc-9a54-b108ade22557
+begin 
+	root_new = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
+	mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
+	mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
+	mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
+	mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame;
+	header=false))
+	mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
+	mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
+	mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
+	mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
+	mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
+end;
 
 # ╔═╡ 8bb2d451-b575-40bf-b31e-51e80392ef51
 masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
@@ -269,7 +329,7 @@ end;
 hist(c_img[mask_cal_3D])
 
 # ╔═╡ d302f987-19aa-4401-9b79-20ca04103050
-cal_insert_mean = quantile!(c_img[mask_cal_3D], 0.7)
+cal_insert_mean = mean(c_img[mask_cal_3D])
 
 # ╔═╡ 37e25efb-abf5-4568-a4d4-ff5c8aff1f64
 md"""
@@ -292,21 +352,6 @@ density_array_cal = [0, 200]
 # ╔═╡ 43cf1721-57db-4048-8528-b0430c5e8043
 intensity_array_cal = [0, cal_insert_mean]
 
-# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
-df_cal = DataFrame(:density => density_array_cal, :intensity => intensity_array_cal)
-
-# ╔═╡ 6c3c7d22-78e6-428e-ac62-90a473b06e2d
-linearRegressor = lm(@formula(intensity ~ density), df_cal);
-
-# ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
-linearFit = predict(linearRegressor)
-
-# ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
-m = linearRegressor.model.pp.beta0[2]
-
-# ╔═╡ dbec08a2-96c5-488b-89b9-5df6fe1f5a12
-b = linearRegressor.model.rr.mu[1]
-
 # ╔═╡ e50baf62-0a02-47ee-8440-551f68baee0d
 md"""
 We can see from above that the linear regression returns a best fit line with the formula:
@@ -322,26 +367,6 @@ x = \frac{y - b}{m}
 ```
 
 """
-
-# ╔═╡ 3fa80bee-20f6-4e9c-a14d-75a77482a2c3
-density(intensity) = (intensity - b) / m
-
-# ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
-intensity(ρ) = m*ρ + b
-
-# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
-begin
-	f = Figure()
-	ax1 = Axis(f[1, 1])
-	
-	scatter!(density_array_cal, intensity_array_cal)
-	lines!(density_array_cal, linearFit, color = :red)
-	ax1.title = "Calibration Line (Intensity vs Density)"
-	ax1.ylabel = "Intensity (HU)"
-	ax1.xlabel = "Density (mg/cm^3)"
-	
-	f
-end
 
 # ╔═╡ 3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 md"""
@@ -407,18 +432,8 @@ begin
 	s_bkg_L_HD = mean(single_arr[single_ring_mask_L_HD])
 end
 
-# ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
-S_Obj_HD = intensity(800)
-
 # ╔═╡ 28c869df-75eb-42dc-9033-867ca4782f41
 pixel_size = DICOMUtils.get_pixel_size(header)
-
-# ╔═╡ 7d61e536-fac5-43e1-9ce9-5952d7d20e8d
-begin
-	alg_L_HD = Integrated(arr[mask_L_HD_3D])
-	ρ_hd = 0.8 # mg/mm^3
-	mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
-end
 
 # ╔═╡ e93b26b5-ba84-4410-87b7-eefad3d8ab3e
 md"""
@@ -473,16 +488,6 @@ begin
 	s_bkg_L_MD = mean(single_arr[single_ring_mask_L_MD])
 end
 
-# ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
-S_Obj_MD = intensity(400)
-
-# ╔═╡ 367750d8-a287-4313-b6df-d6533849623f
-begin
-	alg_L_MD = Integrated(arr[mask_L_MD_3D])
-	ρ_md = 0.4
-	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
-end
-
 # ╔═╡ 73105b5a-05b7-429f-9a7f-b8c12684df91
 md"""
 ## Low Density
@@ -504,6 +509,61 @@ end
 
 # ╔═╡ 2f06a3e2-5c65-4f7d-af65-829a8e657a92
 intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
+
+# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
+df_cal = DataFrame(:density => [density_array[1], density_array[4]], :intensity => [intensity_array[1], intensity_array[4]])
+
+# ╔═╡ 6c3c7d22-78e6-428e-ac62-90a473b06e2d
+linearRegressor = lm(@formula(intensity ~ density), df_cal);
+
+# ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
+linearFit = predict(linearRegressor)
+
+# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
+begin
+	f = Figure()
+	ax1 = Axis(f[1, 1])
+	
+	scatter!(density_array_cal, intensity_array_cal)
+	lines!(density_array_cal, linearFit, color = :red)
+	ax1.title = "Calibration Line (Intensity vs Density)"
+	ax1.ylabel = "Intensity (HU)"
+	ax1.xlabel = "Density (mg/cm^3)"
+	
+	f
+end
+
+# ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
+m = linearRegressor.model.pp.beta0[2]
+
+# ╔═╡ dbec08a2-96c5-488b-89b9-5df6fe1f5a12
+b = linearRegressor.model.rr.mu[1]
+
+# ╔═╡ 3fa80bee-20f6-4e9c-a14d-75a77482a2c3
+density(intensity) = (intensity - b) / m
+
+# ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
+intensity(ρ) = m*ρ + b
+
+# ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
+S_Obj_HD = intensity(800)
+
+# ╔═╡ 7d61e536-fac5-43e1-9ce9-5952d7d20e8d
+begin
+	alg_L_HD = Integrated(arr[mask_L_HD_3D])
+	ρ_hd = 0.8 # mg/mm^3
+	mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
+end
+
+# ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
+S_Obj_MD = intensity(400)
+
+# ╔═╡ 367750d8-a287-4313-b6df-d6533849623f
+begin
+	alg_L_MD = Integrated(arr[mask_L_MD_3D])
+	ρ_md = 0.4
+	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
+end
 
 # ╔═╡ d8d7a93f-85e7-43e7-a23d-11e7c6ce27be
 md"""
@@ -1080,8 +1140,8 @@ dfs = []
 push!(dfs, df)
 
 # ╔═╡ 5d7f1e9e-500d-4812-b966-6b42948da3f6
-# if length(dfs) == 12
-# 	global new_df = vcat(dfs[1:12]...)
+# if length(dfs) == 24
+# 	global new_df = vcat(dfs[1:24]...)
 # 	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
 # 	CSV.write(output_path_new, new_df)
 # end
@@ -1091,6 +1151,7 @@ push!(dfs, df)
 # ╠═e7c4aaab-83ef-4256-b392-f8ef7a899a05
 # ╟─48e3097f-0767-4dad-9d7c-94e0899f790b
 # ╠═bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
+# ╟─1df1a491-6207-4b5c-a5e8-15a07323b6e7
 # ╟─6aa51429-981a-4dea-a0f6-2935867d5b2a
 # ╠═e849cf69-65c7-4e5e-9688-fc249d471f2c
 # ╠═3e649fee-a2e9-4f0f-b705-3966f69d97ea
@@ -1105,18 +1166,18 @@ push!(dfs, df)
 # ╠═4ff19af0-7f53-4f24-b315-08bd54a488e3
 # ╟─b74941c4-12d4-4be1-81f7-ef1f4d288984
 # ╠═84e56c91-14a4-45b7-81a1-77e778bae695
-# ╠═abfd965c-df00-4028-a0f3-8356a261b527
+# ╟─abfd965c-df00-4028-a0f3-8356a261b527
 # ╟─41541a09-609b-4f46-9a25-eb974422efc0
 # ╟─e6753c9a-d172-47fe-b066-78cb43df2c89
 # ╟─f8a4eacd-2f69-4755-b017-5a0b0dda1004
 # ╠═ac9d2652-6d69-4cf3-acbf-2e141fb633f0
-# ╠═165a7503-5b15-4865-a453-2b877c643312
 # ╠═dd399c0e-f8e4-464c-8964-bdc0dd657202
 # ╟─417d150e-0df9-4963-b59e-ebd9acf6d4a0
 # ╠═5f10075b-4d95-4d53-a22f-016749fb7583
 # ╟─b921dcf8-54ea-420b-9285-23e38d5ce433
-# ╠═ece7d76b-93c8-430c-8679-07cf92585949
-# ╠═fa58a5ba-7aaf-4be6-8796-ecef516d8d53
+# ╟─ece7d76b-93c8-430c-8679-07cf92585949
+# ╟─ca408955-54ff-40ff-9a0f-77ee2666d7a2
+# ╠═05ed60db-b4d8-4cdc-9a54-b108ade22557
 # ╠═8bb2d451-b575-40bf-b31e-51e80392ef51
 # ╠═4862496e-464d-40c3-baef-e5c507028d66
 # ╟─997952cd-dc01-4528-a30a-fdc11a46dad8
@@ -1145,7 +1206,7 @@ push!(dfs, df)
 # ╟─e50baf62-0a02-47ee-8440-551f68baee0d
 # ╠═3fa80bee-20f6-4e9c-a14d-75a77482a2c3
 # ╠═04c77c9d-c498-4e09-abff-9c361e887c56
-# ╠═b03c711f-9e0e-4089-add1-5abbde81cce1
+# ╟─b03c711f-9e0e-4089-add1-5abbde81cce1
 # ╟─3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 # ╠═d27df860-7ca8-4e93-90e4-a58605aa1aaa
 # ╠═5dfb50b9-7545-4948-8026-2074ce5d86cf
