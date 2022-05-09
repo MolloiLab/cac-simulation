@@ -67,141 +67,6 @@ SIZES = ["small", "medium", "large"]
 # ╔═╡ 27f09e79-5152-4618-8b8b-da1c92da584f
 DENSITIES = ["low", "normal"]
 
-# ╔═╡ ed0d67a9-7ee9-4fcd-9d76-0d6577caa0f1
-function center_points_test(dcm_array, output, header, tmp_center, CCI_slice)
-    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-    rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
-    sizes = []
-    for row in eachrow(output[3])
-        area = row[:area]
-        append!(sizes, area)
-    end
-
-    centroids = output[4]
-    largest = Dict()
-    for index in 1:length(centroids)
-        x = centroids[index][1]
-        y = centroids[index][2]
-        dist_loc = sqrt((tmp_center[2] - x)^2 + (tmp_center[1] - y)^2)
-        dist_loc *= PixelSpacing[1]
-        if dist_loc > 31
-            largest[index] = [round(y), round(x)]
-        else
-            nothing
-        end
-    end
-
-    max_dict = Dict()
-    radius = round(2.5 / PixelSpacing[1], RoundUp)
-    for key in largest
-        tmp_arr = create_circular_mask(rows, cols, (key[2][2], key[2][1]), radius)
-        tmp_arr = @. abs(tmp_arr * dcm_array[:, :, CCI_slice]) +
-            abs(tmp_arr * dcm_array[:, :, CCI_slice - 1]) +
-            abs(tmp_arr * dcm_array[:, :, CCI_slice + 1])
-        tmp_arr = @. ifelse(tmp_arr == 0, missing, tmp_arr)
-        max_dict[key[1]] = median(skipmissing(tmp_arr))
-    end
-    large1_index, large1_key = maximum(zip(values(max_dict), keys(max_dict)))
-    pop!(max_dict, large1_key)
-    large2_index, large2_key = maximum(zip(values(max_dict), keys(max_dict)))
-    pop!(max_dict, large2_key)
-    large3_index, large3_key = maximum(zip(values(max_dict), keys(max_dict)))
-
-    center1 = largest[large1_key]
-    center2 = largest[large2_key]
-    center3 = largest[large3_key]
-
-    center = find_circle(center1, center2, center3)
-    return center, center1, center2, center3
-end
-
-# ╔═╡ bb7ba9c8-533f-477d-b940-de29f3be12f8
-function calc_centers_test(dcm_array, output, header, tmp_center, CCI_slice; angle_factor=0)
-    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-    center, center1, center2, center3 = center_points_test(
-        dcm_array, output, header, tmp_center, CCI_slice
-    )
-    centers = Dict()
-    for size_index4 in (center1, center2, center3)
-        center_index = size_index4
-        side_x = abs(center[1] - center_index[1]) + angle_factor
-        side_y = abs(center[2] - center_index[2]) + angle_factor
-
-        angle = angle_calc(side_x, side_y)
-        if (center_index[1] < center[1] && center_index[2] < center[2])
-            medium_calc = [
-                center_index[1] + (12.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (12.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] + (25 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (25 / PixelSpacing[2]) * cos(angle)),
-            ]
-        elseif (center_index[1] < center[1] && center_index[2] > center[2])
-            medium_calc = [
-                center_index[1] + (12.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (12.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] + (25 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (25 / PixelSpacing[2]) * cos(angle)),
-            ]
-        elseif (center_index[1] > center[1] && center_index[2] < center[2])
-            medium_calc = [
-                center_index[1] - (12.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (12.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] - (25 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (25 / PixelSpacing[2]) * cos(angle)),
-            ]
-        elseif (center_index[1] > center[1] && center_index[2] > center[2])
-            medium_calc = [
-                center_index[1] - (12.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (12.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] - (25 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (25 / PixelSpacing[2]) * cos(angle)),
-            ]
-        elseif (side_x == 0 && center_index[2] < center[2])
-            medium_calc = [center_index[1], center_index[2] + (12.5 / PixelSpacing[2])]
-            low_calc = [center_index[1], center_index[2] + (25 / PixelSpacing[2])]
-        elseif (side_x == 0 && center_index[2] > center[2])
-            medium_calc = [center_index[1], center_index[2] - (12.5 / PixelSpacing[2])]
-            low_calc = [center_index[1], center_index[2] - (25 / PixelSpacing[2])]
-        elseif (center_index[1] > center[1] && side_y == 0)
-            medium_calc = [center_index[1] - (12.5 / PixelSpacing[1]), center_index[2]]
-            low_calc = [center_index[1] - (25 / PixelSpacing[1]), center_index[2]]
-        elseif (center_index[1] > center[1] && side_y == 0)
-            medium_calc = [center_index[1] + (12.5 / PixelSpacing[1]), center_index[2]]
-            low_calc = [(center_index[1] + (25 / PixelSpacing[1])), center_index[1]]
-        else
-            error("unknown angle")
-        end
-
-        if size_index4 == center1
-            centers[:Large_HD] = Int.(round.(center_index))
-            centers[:Medium_HD] = Int.(round.(medium_calc))
-            centers[:Small_HD] = Int.(round.(low_calc))
-
-        elseif size_index4 == center2
-            centers[:Large_MD] = Int.(round.(center_index))
-            centers[:Medium_MD] = Int.(round.(medium_calc))
-            centers[:Small_MD] = Int.(round.(low_calc))
-
-        elseif size_index4 == center3
-            centers[:Large_LD] = Int.(round.(center_index))
-            centers[:Medium_LD] = Int.(round.(medium_calc))
-            centers[:Small_LD] = Int.(round.(low_calc))
-
-        else
-            nothing
-        end
-    end
-    return centers
-end
-
 # ╔═╡ 653f4b85-58f1-4bd7-a81e-86a8366c8395
 begin
 	dfs = []
@@ -221,9 +86,9 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				# if DENSITY == "low" && SIZE == "small"
-				# 	thresh = 60
-				if DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+				if DENSITY == "low" && SIZE == "small"
+					thresh = 60
+				elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
 					thresh = 75
 				# elseif DENSITY == "low" && SIZE == "small" && VENDER == "135"
 				# 	thresh = 60
@@ -256,7 +121,7 @@ begin
 			
 				# Mask Calibration Factor
 				output = calc_output(masked_array, header, slice_CCI, thresh, trues(3, 3))
-				insert_centers = calc_centers_test(dcm_array, output, header, center_insert, slice_CCI)
+				insert_centers = calc_centers(dcm_array, output, header, center_insert, slice_CCI)
 				rows, cols = Int(header[tag"Rows"]), Int(header[tag"Columns"])
 				pixel_size = DICOMUtils.get_pixel_size(header)
 				mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, 2, cols, rows, pixel_size)
@@ -350,7 +215,12 @@ begin
 				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
 				
 				# Results
-				density_array = [0, 200, 400, 800]
+				local density_array
+				if DENSITY == "low"
+					density_array = [0, 25, 50, 100]
+				elseif DENSITY == "normal"
+					density_array = [0, 200, 400, 800]
+				end
 				inserts = [
 					"Low Density",
 					"Medium Density",
@@ -444,8 +314,8 @@ if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
 end
 
 # ╔═╡ 99aee610-1b33-4b64-b752-ac8fe602bdcb
-if length(dfs) == 12
-	new_df = vcat(dfs[1:12]...)
+if length(dfs) == 24
+	new_df = vcat(dfs[1:24]...)
 	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
@@ -458,8 +328,6 @@ end
 # ╠═f4ed0461-50ff-4156-82cb-b270478c9075
 # ╠═8d431b04-9251-4096-a8f0-1892d0f8b12a
 # ╠═27f09e79-5152-4618-8b8b-da1c92da584f
-# ╠═ed0d67a9-7ee9-4fcd-9d76-0d6577caa0f1
-# ╠═bb7ba9c8-533f-477d-b940-de29f3be12f8
 # ╠═653f4b85-58f1-4bd7-a81e-86a8366c8395
 # ╟─ed2d91ef-73c7-48cd-bcd9-4bfb5d1f4ae5
 # ╠═a005fc54-44e3-43d1-8b4a-4767dc0e180e

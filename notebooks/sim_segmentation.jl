@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,7 @@ macro bind(def, element)
 end
 
 # ╔═╡ 946debe7-078f-4db6-a383-d0b5a973bd4c
+# ╠═╡ show_logs = false
 begin
 	let
 		using Pkg
@@ -33,7 +34,8 @@ begin
 		Pkg.add("MAT")
 		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
 		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-		Pkg.add(url="https://github.com/Dale-Black/Phantoms.jl")
+		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
+		Pkg.add("LinearAlgebra")
 	end
 
 	using PlutoUI
@@ -49,7 +51,8 @@ begin
 	using MAT
 	using DICOM
 	using DICOMUtils
-	using Phantoms
+	using PhantomSegmentation
+	using LinearAlgebra
 end
 
 # ╔═╡ 601c4b6d-ca82-4fb0-b66b-5b50d507fa83
@@ -58,7 +61,8 @@ TableOfContents()
 # ╔═╡ 3a43e3e5-adc3-4a0d-ad98-1a7e39dc6a69
 begin
 	root_dir = dirname(pwd())
-	root = string(root_dir, "/data/simulated/combined")
+	# root = string(root_dir, "/data/simulated/combined")
+	root = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/small/normal/120"
 end
 
 # ╔═╡ 20e6e9ba-2d70-4d47-9187-95b903d95814
@@ -242,7 +246,7 @@ function mask_heart(
 	radius_val=95, 
 	)
 	
-	pixel_size = Phantoms.get_pixel_size(header)
+	pixel_size = PhantomSegmentation.get_pixel_size(header)
     
     radius = (radius_val / 2) / pixel_size[1]
     central_image = copy(array_used[:, :, slice_used_center])
@@ -311,7 +315,7 @@ begin
 	ax = Makie.Axis(fig[1, 1])
 	ax.title = "Raw DICOM Array"
 	heatmap!(transpose(dcm_array[:, :, 2]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig
 end
 
@@ -322,7 +326,7 @@ begin
 	ax2 = Makie.Axis(fig2[1, 1])
 	ax2.title = "Mask Array"
 	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig2
 end
 
@@ -333,7 +337,7 @@ begin
 	ax3 = Makie.Axis(fig3[1, 1])
 	ax3.title = "Masked DICOM Array"
 	heatmap!(transpose(masked_array[:, :, 2]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig3
 end
 
@@ -362,7 +366,7 @@ function get_calcium_slices(dcm_array, header; calcium_threshold=130)
     array = copy(dcm_array)
     array = Int.(array .> (1.1 * calcium_threshold))
 
-	pixel_size = Phantoms.get_pixel_size(header)
+	pixel_size = PhantomSegmentation.get_pixel_size(header)
     CCI_5mm_num_pixels = Int(round(π * (5/2)^2 / pixel_size[1]^2))
     cal_rod_num_pixels = Int(round(π * (20/2)^2 / pixel_size[1]^2))
     
@@ -606,14 +610,14 @@ slice_CCI1, quality_slice1, cal_rod_slice1
 @bind a PlutoUI.Slider(1:size(calcium_image1, 3), default=10, show_value=true)
 
 # ╔═╡ 57962d59-66ac-4e88-999d-d3ec825bb8ef
-begin
-	fig4 = Figure()
+let
+	f = Figure()
 	
-	ax4 = Makie.Axis(fig4[1, 1])
+	ax = Makie.Axis(f[1, 1])
 	heatmap!(transpose(calcium_image1[:, :, a]), colormap=:grays)
-	ax5 = Makie.Axis(fig4[1,2])
+	ax = Makie.Axis(f[1,2])
 	heatmap!(transpose(dcm_array[:, :, a]), colormap=:grays)
-	fig4
+	f
 end
 
 # ╔═╡ 85a3591e-60c2-4522-9e73-1be0d99845d6
@@ -709,7 +713,7 @@ md"""
 function calc_output_sim(dcm_array, header, CCI_slice, calcium_threshold=130, comp_connect=trues(3, 3))
 	# Actual scoring for CCI insert
     # First step is to remove slices without calcium from arrays
-	PixelSpacing = Phantoms.get_pixel_size(header)
+	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
 	SliceThickness = header[(0x0018, 0x0050)]
     CCI_min = Int((CCI_slice - round(5 / SliceThickness, RoundUp)))
     CCI_max = Int((CCI_slice + round(5 / SliceThickness, RoundUp)) + 1)
@@ -783,6 +787,30 @@ heatmap(transpose(output[2]))
 # ╔═╡ baba875d-c791-4f12-a0d2-8160ba6a823e
 heatmap(transpose(masked_array[:, :, 5]), colormap=:grays)
 
+# ╔═╡ d214593d-9453-4f42-bf39-f21a07812743
+md"""
+## `find__triangle_points`
+"""
+
+# ╔═╡ 4ba4005c-b28e-42cf-a919-0610733fa37d
+function find_triangle_points(p1::Vector, center::Vector; offset=0, offset2=0)
+	# Shift the points as if the center-point was located at (0, 0)
+	p1 = p1 .- center
+
+	# Calculate points 2 and 3
+	R = norm(p1)
+	θ = atan(p1[2], p1[1])
+	p2 = [R*cos(θ + (2*π/3) + offset), R*sin(θ + (2*π/3) + offset)]
+ 	p3 = [R*cos(θ - (2*π/3) + offset2), R*sin(θ - (2*π/3) + offset2)]
+
+	# Fudge (NEEDS TO BE FIXED)
+	p2 = p2[1] + 2, p2[2] - 5
+	
+	# Shift the points back to the original center point
+	p2, p3 = Int.(round.(p2 .+ center)), Int.(round.(p3 .+ center))
+	return p2, p3
+end
+
 # ╔═╡ b3f82d69-6ccd-4760-af29-9122a0386c2a
 md"""
 ## `center_points`
@@ -790,7 +818,7 @@ md"""
 
 # ╔═╡ cfaace51-8302-44cf-b619-ecba23e0b3f8
 function center_points(dcm_array, output, header, tmp_center, CCI_slice)
-	PixelSpacing = Phantoms.get_pixel_size(header)
+	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
 	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
     sizes = []
     for row in eachrow(output[3])
@@ -822,20 +850,19 @@ function center_points(dcm_array, output, header, tmp_center, CCI_slice)
 	end
     large1_index, large1_key = maximum(zip(values(max_dict), keys(max_dict)))
     pop!(max_dict, large1_key)
-    large2_index, large2_key = maximum(zip(values(max_dict), keys(max_dict)))
-    pop!(max_dict, large2_key)
-    large3_index, large3_key = maximum(zip(values(max_dict), keys(max_dict)))
 
     center1 = largest[large1_key]
-    center2 = largest[large2_key]  
-    center3 = largest[large3_key]
 	
-    center = find_circle(center1, center2, center3)
-	return center, center1, center2, center3
+	center = vec(tmp_center')
+	p1 = vec(center1')
+	offset = -2π/180
+	offset2 = -5π/180
+	p2, p3 = find__triangle_points(p1, center; offset=offset, offset2=offset2)
+	cent1, cent2, cent3 = vec(p1'), vec(p2'), vec(p3')
+	
+    center = find_circle(cent1, cent2, cent3)
+	return center, cent1, cent2, cent3
 end
-
-# ╔═╡ d5b7264b-0ca0-4b4d-abcd-e597dd4422fc
-center_insert
 
 # ╔═╡ fad7cd8d-0d3d-446c-a348-f61084d02cea
 heatmap(transpose(masked_array[:, :, 5]), colormap=:grays)
@@ -849,74 +876,100 @@ md"""
 """
 
 # ╔═╡ dc1a292c-ca0f-42b6-8f4c-30adbec04d76
-function calc_centers(dcm_array, output, header, tmp_center, CCI_slice)
-	PixelSpacing = Phantoms.get_pixel_size(header)
-	center, center1, center2, center3 = center_points(dcm_array, output, header, tmp_center, CCI_slice)
+function calc_centers_simulation(dcm_array, output, header, tmp_center, CCI_slice; angle_factor=0)
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    center, center1, center2, center3 = center_points(
+        dcm_array, output, header, tmp_center, CCI_slice
+    )
     centers = Dict()
     for center_index in (center1, center2, center3)
-        side_x = abs(center[1]-center_index[1])
-        side_y = abs(center[2]-center_index[2])
+		side_x = abs(center[1] - center_index[1]) + angle_factor
+		side_y = abs(center[2] - center_index[2]) + angle_factor
         angle = angle_calc(side_x, side_y)
         if (center_index[1] < center[1] && center_index[2] < center[2])
-			medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle), (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle))]
-			low_calc = [center_index[1] + (17 / PixelSpacing[1]) * sin(angle), (center_index[2] + (17 / PixelSpacing[2]) * cos(angle))]
-			
-		elseif (center_index[1] < center[1] && center_index[2] > center[2])
-			medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle), (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle))]
-			low_calc = [center_index[1] + (17 / PixelSpacing[1]) * sin(angle), (center_index[2] - (17 / PixelSpacing[2]) * cos(angle))] 
-			
-		elseif (center_index[1] > center[1] && center_index[2] < center[2])
-			medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle), (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle))]
-			low_calc = [center_index[1] - (17 / PixelSpacing[1]) * sin(angle), (center_index[2] + (17 / PixelSpacing[2]) * cos(angle))]
-			
-		elseif (center_index[1] > center[1] && center_index[2] > center[2])
-			medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle), (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle))]
-			low_calc = [center_index[1] - (17 / PixelSpacing[1]) * sin(angle), (center_index[2] - (17 / PixelSpacing[2]) * cos(angle))]
-			
-		elseif (side_x == 0 && center_index[2] < center[2])
-			medium_calc = [center_index[1], center_index[2] + (10.5 / PixelSpacing[2])]
-			low_calc = [center_index[1], center_index[2] + (17 / PixelSpacing[2])]
-			
-		elseif (side_x == 0 && center_index[2] > center[2])
-			medium_calc = [center_index[1], center_index[2] - (10.5 / PixelSpacing[2])]
-			low_calc = [center_index[1], center_index[2] - (17 / PixelSpacing[2])]
-			
-		elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] < center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] < center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (side_x == 0 && center_index[2] < center[2])
+            medium_calc = [center_index[1], center_index[2] + (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] + (17 / PixelSpacing[2])]
+
+        elseif (side_x == 0 && center_index[2] > center[2])
+            medium_calc = [center_index[1], center_index[2] - (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] - (17 / PixelSpacing[2])]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
             medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]), center_index[2]]
-			low_calc = [center_index[1] - (17 / PixelSpacing[1]), center_index[2]]
-			
-		elseif (center_index[1] > center[1] && side_y == 0)
-			medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]), center_index[2]]
+            low_calc = [center_index[1] - (17 / PixelSpacing[1]), center_index[2]]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]), center_index[2]]
             low_calc = [(center_index[1] + (17 / PixelSpacing[1])), center_index[1]]
-			
+
         else
-			error("unknown angle")
-		end
-                
+            error("unknown angle")
+        end
+
         if center_index == center1
             centers[:Large_HD] = Int.(round.(center_index))
             centers[:Medium_HD] = Int.(round.(medium_calc))
             centers[:Small_HD] = Int.(round.(low_calc))
-        
-		elseif center_index == center2
+
+        elseif center_index == center2
             centers[:Large_MD] = Int.(round.(center_index))
             centers[:Medium_MD] = Int.(round.(medium_calc))
             centers[:Small_MD] = Int.(round.(low_calc))
-        
-		elseif center_index == center3
+
+        elseif center_index == center3
             centers[:Large_LD] = Int.(round.(center_index))
             centers[:Medium_LD] = Int.(round.(medium_calc))
             centers[:Small_LD] = Int.(round.(low_calc))
-        
+
         else
             nothing
-		end
-	end
+        end
+    end
     return centers
 end
 
 # ╔═╡ 66eb4749-fd37-4b1e-9405-2e4c80018b68
-dict = calc_centers(dcm_array, output, header, center_insert, slice_CCI1)
+dict = calc_centers_simulation(dcm_array, output, header, center_insert, slice_CCI1)
 
 # ╔═╡ 1416f1ff-9314-4ee4-9a27-074d9961d349
 dict[:Large_MD]
@@ -930,44 +983,77 @@ md"""
 """
 
 # ╔═╡ a94f2710-1953-4679-8b26-11c6ba990cfa
-function mask_inserts(
-	dcm_array, masked_array, header, CCI_slice, center_insert; 
-	calcium_threshold=130, comp_connect=trues(3, 3)
-	)
-	
-    output = calc_output_sim(masked_array, header, CCI_slice, calcium_threshold, comp_connect)
-    insert_centers = calc_centers(dcm_array, output, header, center_insert, CCI_slice)
+function mask_inserts_simulation(
+    dcm_array,
+    masked_array,
+    header,
+    CCI_slice,
+    center_insert;
+    calcium_threshold=130,
+    comp_connect=trues(3, 3),
+	angle_factor=0
+)
+    output = calc_output(masked_array, header, CCI_slice, calcium_threshold, comp_connect)
+    insert_centers = calc_centers_simulation(
+        dcm_array, output, header, center_insert, CCI_slice; angle_factor=angle_factor
+    )
 
-	PixelSpacing = Phantoms.get_pixel_size(header)
-	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
-	
-    mask_L_HD = create_circular_mask(cols, rows, insert_centers[:Large_HD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_L_MD = create_circular_mask(cols, rows, insert_centers[:Large_MD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_L_LD = create_circular_mask(cols, rows, insert_centers[:Large_LD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1)   
-    mask_M_HD = create_circular_mask(cols, rows, insert_centers[:Medium_HD], (round(3 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_M_MD = create_circular_mask(cols, rows, insert_centers[:Medium_MD], (round(3 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_M_LD = create_circular_mask(cols, rows, insert_centers[:Medium_LD], (round(3 / PixelSpacing[1], RoundUp) / 2) + 1) 
-    mask_S_HD = create_circular_mask(cols, rows, insert_centers[:Small_HD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_S_MD = create_circular_mask(cols, rows, insert_centers[:Small_MD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1)
-    mask_S_LD = create_circular_mask(cols, rows, insert_centers[:Small_LD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1) 
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
 
-    return mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD
+    mask_L_HD = create_circular_mask(
+        cols, rows, insert_centers[:Large_HD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+    mask_L_MD = create_circular_mask(
+        cols, rows, insert_centers[:Large_MD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+    mask_L_LD = create_circular_mask(
+        cols, rows, insert_centers[:Large_LD], (round(5 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+    mask_M_HD = create_circular_mask(
+        cols,
+        rows,
+        insert_centers[:Medium_HD],
+        (round(3 / PixelSpacing[1], RoundUp) / 2) + 1,
+    )
+    mask_M_MD = create_circular_mask(
+        cols,
+        rows,
+        insert_centers[:Medium_MD],
+        (round(3 / PixelSpacing[1], RoundUp) / 2) + 1,
+    )
+    mask_M_LD = create_circular_mask(
+        cols,
+        rows,
+        insert_centers[:Medium_LD],
+        (round(3 / PixelSpacing[1], RoundUp) / 2) + 1,
+    )
+    mask_S_HD = create_circular_mask(
+        cols, rows, insert_centers[:Small_HD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+    mask_S_MD = create_circular_mask(
+        cols, rows, insert_centers[:Small_MD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+    mask_S_LD = create_circular_mask(
+        cols, rows, insert_centers[:Small_LD], (round(1 / PixelSpacing[1], RoundUp) / 2) + 1
+    )
+
+    return transpose(mask_L_HD),
+    transpose(mask_M_HD),
+    transpose(mask_S_HD),
+    transpose(mask_L_MD),
+    transpose(mask_M_MD),
+    transpose(mask_S_MD),
+    transpose(mask_L_LD),
+    transpose(mask_M_LD),
+    transpose(mask_S_LD)
 end
-
-# ╔═╡ 22d60146-ca07-45cb-8eae-b8cc06b35504
-mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts(dcm_array, masked_array, header, slice_CCI1, center_insert);
 
 # ╔═╡ 9dd44ca1-abd7-459e-87d4-09c576716133
 @bind a3 PlutoUI.Slider(1:size(masked_array, 3), default=5, show_value=true)
 
 # ╔═╡ 517d1578-d3c5-4748-a0ed-dc9fbf787dab
 heatmap(transpose(masked_array[:, :, a3]), colormap=:grays)
-
-# ╔═╡ a98fae0f-c107-49a7-9d60-ce9e7c767ae7
-masks = transpose(mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD);
-
-# ╔═╡ 700cfd05-93f6-4133-9e3c-457b078589c7
-heatmap(transpose(masks), colormap=:grays)
 
 # ╔═╡ 1957ae7a-e63a-420b-82cd-f7148115252c
 md"""
@@ -1009,6 +1095,18 @@ function overlay_mask_plot(array, mask, var, title::AbstractString)
 	scatter!(label_array[:, 1][indices_lbl], label_array[:, 2][indices_lbl], markersize=1, color=:red)
 	fig
 end
+
+# ╔═╡ bf069d5a-8d87-4028-b99d-873c4927288a
+angle_factor=0
+
+# ╔═╡ 22d60146-ca07-45cb-8eae-b8cc06b35504
+mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(dcm_array, masked_array, header, slice_CCI1, center_insert, angle_factor=angle_factor);
+
+# ╔═╡ a98fae0f-c107-49a7-9d60-ce9e7c767ae7
+masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
+
+# ╔═╡ 700cfd05-93f6-4133-9e3c-457b078589c7
+heatmap(transpose(masks), colormap=:grays)
 
 # ╔═╡ b28baa54-34a0-4676-baef-c0ba4422762b
 begin
@@ -1068,7 +1166,7 @@ overlay_mask_plot(dcm_array, masks_3D, v1, "masks overlayed")
 # ╠═df4c740d-cdd8-468a-8699-3e37669f7094
 # ╠═8f91a763-3458-443a-a634-ee392ce8d130
 # ╟─7dd55970-fca1-4cd6-87ed-aa5578be12b5
-# ╠═57962d59-66ac-4e88-999d-d3ec825bb8ef
+# ╟─57962d59-66ac-4e88-999d-d3ec825bb8ef
 # ╟─85a3591e-60c2-4522-9e73-1be0d99845d6
 # ╠═d46f59c3-a25c-4363-8563-853748a3ee84
 # ╠═212ed8c0-6aee-448a-aef8-6db18ea94d18
@@ -1090,9 +1188,10 @@ overlay_mask_plot(dcm_array, masks_3D, v1, "masks overlayed")
 # ╠═8de5a772-7d6b-43ee-9c34-43195c172bfe
 # ╠═508c758c-17ce-4a02-b464-32dd6f177f47
 # ╠═baba875d-c791-4f12-a0d2-8160ba6a823e
+# ╟─d214593d-9453-4f42-bf39-f21a07812743
+# ╠═4ba4005c-b28e-42cf-a919-0610733fa37d
 # ╟─b3f82d69-6ccd-4760-af29-9122a0386c2a
 # ╠═cfaace51-8302-44cf-b619-ecba23e0b3f8
-# ╠═d5b7264b-0ca0-4b4d-abcd-e597dd4422fc
 # ╠═fad7cd8d-0d3d-446c-a348-f61084d02cea
 # ╠═683207b8-c3d9-45be-a32b-a96fe8995400
 # ╟─1ed8ee2e-3c5b-4515-bb45-8fb7b9c12d82
@@ -1103,7 +1202,7 @@ overlay_mask_plot(dcm_array, masks_3D, v1, "masks overlayed")
 # ╟─14c1613a-02eb-4e5e-9c78-677a4c3e8f76
 # ╠═a94f2710-1953-4679-8b26-11c6ba990cfa
 # ╠═22d60146-ca07-45cb-8eae-b8cc06b35504
-# ╠═9dd44ca1-abd7-459e-87d4-09c576716133
+# ╟─9dd44ca1-abd7-459e-87d4-09c576716133
 # ╠═517d1578-d3c5-4748-a0ed-dc9fbf787dab
 # ╠═a98fae0f-c107-49a7-9d60-ce9e7c767ae7
 # ╠═700cfd05-93f6-4133-9e3c-457b078589c7
@@ -1112,5 +1211,6 @@ overlay_mask_plot(dcm_array, masks_3D, v1, "masks overlayed")
 # ╟─dbe32d0d-8e81-4aa0-bda7-52a132dee0be
 # ╠═2fe5f75a-f335-4b1d-83aa-e3f68af95b80
 # ╠═b28baa54-34a0-4676-baef-c0ba4422762b
-# ╠═fa23d5ae-7d81-45cd-a30b-a226c9166822
+# ╟─fa23d5ae-7d81-45cd-a30b-a226c9166822
+# ╠═bf069d5a-8d87-4028-b99d-873c4927288a
 # ╠═0a9ba745-3850-4191-a41e-bfb49400bee2

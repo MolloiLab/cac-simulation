@@ -33,6 +33,8 @@ begin
 		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
 		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
 		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
+
+		Pkg.add("ImageComponentAnalysis")
 	end
 	
 	using PlutoUI
@@ -47,6 +49,8 @@ begin
 	using DICOMUtils
 	using PhantomSegmentation
 	using CalciumScoring
+
+	using ImageComponentAnalysis
 end
 
 # ╔═╡ 8219f406-7175-4573-ae37-642ef9c45b1b
@@ -57,13 +61,17 @@ md"""
 ## Load DICOMS
 """
 
-# ╔═╡ 422ba302-e559-48c0-90a5-73a0544ccbd5
+# ╔═╡ 0697c534-0f9e-4aa1-a219-843f17d4070f
 begin
 	SCAN_NUMBER = 1
-	VENDER = "135"
-	kern = 0
+	VENDER = "100"
+	SIZE = "small"
+	# SIZE = "medium"
+	# SIZE = "large"
+	DENSITY = "low"
+	# DENSITY = "normal"
 	TYPE = "agatston"
-	BASE_PATH = "/Users/daleblack/Google Drive/Datasets/Simulated/"
+	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
 end
 
 # ╔═╡ 80592b38-6672-419e-9315-0e33046c42a8
@@ -84,17 +92,7 @@ pth = dcm_path_list[SCAN_NUMBER]
 scan = basename(pth)
 
 # ╔═╡ 9dd34ad4-3576-4b85-b811-cafcd05b60a9
-# header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
-
-# ╔═╡ 6c015588-a9b8-4eb4-9610-8d0a73c8a3d7
-begin
-	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
-	if kern != 0
-		for z in size(dcm_array, 3)
-			dcm_array[:, :, z] = imfilter(dcm_array[:, :, z], Kernel.gaussian(kern))
-		end
-	end
-end;
+header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
 
 # ╔═╡ 29ef15d4-754a-4619-9abc-51182709bc5e
 md"""
@@ -181,7 +179,7 @@ center_insert
 @bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 06e6ec7d-e2e7-4348-b38c-8fde60a24807
-heatmap(masked_array[:, :, a], colormap=:grays)
+heatmap(transpose(masked_array[:, :, a]), colormap=:grays)
 
 # ╔═╡ 62e0db89-5a32-40d8-9264-684f7df58476
 begin
@@ -190,7 +188,7 @@ begin
 	ax = Makie.Axis(fig[1, 1])
 	ax.title = "Raw DICOM Array"
 	heatmap!(transpose(dcm_array[:, :, 4]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig
 end
 
@@ -201,7 +199,7 @@ begin
 	ax2 = Makie.Axis(fig2[1, 1])
 	ax2.title = "Mask Array"
 	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig2
 end
 
@@ -212,7 +210,7 @@ begin
 	ax3 = Makie.Axis(fig3[1, 1])
 	ax3.title = "Masked DICOM Array"
 	heatmap!(transpose(masked_array[:, :, 5]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2]+1, center_insert[1]:center_insert[1]+1, markersize=10, color=:red)
+	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
 	fig3
 end
 
@@ -221,8 +219,24 @@ md"""
 ## Segment Calcium Rod
 """
 
+# ╔═╡ 8742a48f-5309-448a-b705-1a19592eded9
+begin
+	global thresh
+	if DENSITY == "low" && SIZE == "small"
+		thresh = 60
+	elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+		thresh = 75
+	elseif DENSITY == "low" && SIZE == "medium"
+		thresh = 75
+	elseif DENSITY == "low"
+		thresh = 60
+	elseif DENSITY ==  "normal"
+		thresh = 130
+	end
+end
+
 # ╔═╡ d1cc731f-7a3d-412e-ae6c-a4cc9c4d1e9d
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header);
+calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
 
 # ╔═╡ a15bd533-776e-44a7-bac4-6c37478d5969
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=cal_rod_slice, show_value=true)
@@ -236,12 +250,24 @@ md"""
 """
 
 # ╔═╡ 77ff2fb9-d20c-4ec8-95a2-e95a677eadda
-mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
-            dcm_array, masked_array, header, slice_CCI, center_insert
-);
+# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
+#             dcm_array, masked_array, header, slice_CCI, center_insert
+# );
 
-# ╔═╡ bfd0e2a3-ef9a-4086-af43-1a1ebe552258
-slice_CCI
+# ╔═╡ 32562372-4ece-4586-8088-97ad26f1281c
+begin 
+	root_new = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
+	mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
+	mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
+	mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
+	mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame;
+	header=false))
+	mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
+	mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
+	mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
+	mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
+	mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
+end;
 
 # ╔═╡ 84938868-94a9-4fd0-8164-209122612f88
 masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
@@ -254,11 +280,14 @@ md"""
 ## Mass cal factor
 """
 
+# ╔═╡ f67ca999-4ee5-44d0-b3af-6492f48a0426
+output = calc_output(masked_array, header, 5, thresh, trues(3, 3));
+
+# ╔═╡ 5a6cd733-fa49-4e81-bcb6-59f597ad6f13
+heatmap(output[2])
+
 # ╔═╡ fdbda290-3d6d-4134-a62d-aa9b80ad35c6
-begin
-	output = calc_output(masked_array, header, slice_CCI, 130, trues(3, 3))
-    insert_centers = calc_centers(dcm_array, output, header, center_insert, slice_CCI)
-end
+insert_centers = calc_centers(dcm_array, output, header, center_insert, slice_CCI)
 
 # ╔═╡ e6636298-c93e-49c0-be89-2e714a5b0a77
 center_large_LD = insert_centers[:Large_LD]
@@ -319,12 +348,6 @@ alg = Agatston()
 # ╔═╡ d9f7f897-7525-4667-a414-3111296bc27f
 agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
 
-# ╔═╡ cb7c19d8-a222-4b0f-92a5-105827d4f5b1
-alg2 = SpatiallyWeighted()
-
-# ╔═╡ dcf6a967-aec9-4fa4-98fc-86e728876acf
-μ, σ = 160, 30
-
 # ╔═╡ d390e652-23a9-455d-87a0-3f8c54e2bb09
 md"""
 ## Medium Density
@@ -357,6 +380,9 @@ overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD);
 
 # ╔═╡ acdf2d47-adfa-4ee0-9c9b-4d2bdb7e7aca
 agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
+
+# ╔═╡ 965c698f-d110-4b47-96b0-0f75aa92ee73
+hist(arr[dilated_mask_L_MD])
 
 # ╔═╡ d5f66a85-966a-4cfc-8e8c-c2211e103f74
 md"""
@@ -605,7 +631,14 @@ md"""
 """
 
 # ╔═╡ deeafe24-aef9-4dd1-ba21-639c01fd918a
-density_array = [0, 200, 400, 800]
+begin
+	global density_array
+	if DENSITY == "low"
+		density_array = [0, 25, 50, 100]
+	elseif DENSITY == "normal"
+		density_array = [0, 200, 400, 800]
+	end
+end
 
 # ╔═╡ 97aee49f-6666-4750-be7f-07c17b71dc29
 inserts = [
@@ -696,7 +729,6 @@ calculated_mass_small = [
 
 # ╔═╡ ea714f36-1f0f-43b4-85fe-6f483afdd32b
 df = DataFrame(
-	kern = kern,
 	scan = scan,
 	inserts = inserts,
 	calculated_agat_large = calculated_agat_large,
@@ -809,14 +841,13 @@ end
 # ╠═f5acf58b-8436-4b0b-a170-746ba5475c10
 # ╠═8219f406-7175-4573-ae37-642ef9c45b1b
 # ╟─ef30dc5c-0f83-485b-9718-669f292a87ec
-# ╠═422ba302-e559-48c0-90a5-73a0544ccbd5
+# ╠═0697c534-0f9e-4aa1-a219-843f17d4070f
 # ╟─80592b38-6672-419e-9315-0e33046c42a8
 # ╠═d2f9de75-8b2a-40f2-98c0-5df90c32c8d6
 # ╠═813bf029-e475-4e65-a2ca-fdb6c23de115
 # ╠═ca10a4df-7e26-49c3-bdee-de9f0ffdc39c
 # ╠═670cfd3e-c32f-4357-a2b4-9b9d31d49c6a
 # ╠═9dd34ad4-3576-4b85-b811-cafcd05b60a9
-# ╠═6c015588-a9b8-4eb4-9610-8d0a73c8a3d7
 # ╟─29ef15d4-754a-4619-9abc-51182709bc5e
 # ╟─e500136f-34f4-484c-8296-088ee69b0f48
 # ╟─f6c6aa68-5e87-495e-b45b-ca96e61e9a69
@@ -832,15 +863,18 @@ end
 # ╟─09bd19ff-0db5-4a79-adb8-c3e202a4d7c7
 # ╟─85a5667d-6606-4cce-8ca2-b3682422648e
 # ╟─935767d5-046d-46b0-b1cc-01f85b0698f5
+# ╠═8742a48f-5309-448a-b705-1a19592eded9
 # ╠═d1cc731f-7a3d-412e-ae6c-a4cc9c4d1e9d
 # ╟─a15bd533-776e-44a7-bac4-6c37478d5969
 # ╠═1665243d-4c39-4c69-bf35-bf30c4662c48
 # ╟─638286bd-35c6-4d18-84a2-15e92d2e815f
 # ╠═77ff2fb9-d20c-4ec8-95a2-e95a677eadda
-# ╠═bfd0e2a3-ef9a-4086-af43-1a1ebe552258
+# ╠═32562372-4ece-4586-8088-97ad26f1281c
 # ╠═84938868-94a9-4fd0-8164-209122612f88
 # ╠═229478be-eaac-4750-a3fd-790bfd9d541c
 # ╟─d721bf89-a2f4-443a-a550-6bc2082d95a9
+# ╠═f67ca999-4ee5-44d0-b3af-6492f48a0426
+# ╠═5a6cd733-fa49-4e81-bcb6-59f597ad6f13
 # ╠═fdbda290-3d6d-4134-a62d-aa9b80ad35c6
 # ╠═e6636298-c93e-49c0-be89-2e714a5b0a77
 # ╠═44e8d33b-8f01-4894-91db-e9bc68eea754
@@ -858,8 +892,6 @@ end
 # ╠═2d2d2600-dd70-4325-9032-4467882aff73
 # ╠═73121968-a17a-4dcd-bbe5-96c0a04b5cb9
 # ╠═d9f7f897-7525-4667-a414-3111296bc27f
-# ╠═cb7c19d8-a222-4b0f-92a5-105827d4f5b1
-# ╠═dcf6a967-aec9-4fa4-98fc-86e728876acf
 # ╟─d390e652-23a9-455d-87a0-3f8c54e2bb09
 # ╠═fcc751cd-120c-4c6f-828d-cf070b3466fa
 # ╟─96d09c06-e499-4390-b101-d663af7e5d75
@@ -868,6 +900,7 @@ end
 # ╠═37d44541-d30e-42be-b2d3-3423ac34c7dc
 # ╠═8270b725-8748-4f48-8ac2-20ea81b80306
 # ╠═acdf2d47-adfa-4ee0-9c9b-4d2bdb7e7aca
+# ╠═965c698f-d110-4b47-96b0-0f75aa92ee73
 # ╟─d5f66a85-966a-4cfc-8e8c-c2211e103f74
 # ╠═5a84502c-39ba-4234-a1b2-f852c7955193
 # ╟─53a04c71-9bcf-4af7-96de-71322df085b4
@@ -928,7 +961,7 @@ end
 # ╠═5c9e783f-46d6-416d-a6ef-bb8b019b13ac
 # ╟─e603f95c-0a9a-4ad7-9a9f-8608fc982bd6
 # ╠═deeafe24-aef9-4dd1-ba21-639c01fd918a
-# ╟─97aee49f-6666-4750-be7f-07c17b71dc29
+# ╠═97aee49f-6666-4750-be7f-07c17b71dc29
 # ╟─59926926-4e0e-48cd-ac53-2132c95ccf0d
 # ╠═8fe8d2a6-d2a0-4aaa-98ae-2d065b3877b2
 # ╠═28a0755a-50ad-46ce-adae-45e9ef850c30
