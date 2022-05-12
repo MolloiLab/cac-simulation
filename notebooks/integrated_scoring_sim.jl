@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.2
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -74,8 +74,8 @@ begin
 	SIZE = "small"
 	# SIZE = "medium"
 	# SIZE = "large"
-	DENSITY = "low"
-	# DENSITY = "normal"
+	# DENSITY = "low"
+	DENSITY = "normal"
 	TYPE = "integrated_scoring"
 	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
 end
@@ -352,6 +352,9 @@ density_array_cal = [0, 200]
 # ╔═╡ 43cf1721-57db-4048-8528-b0430c5e8043
 intensity_array_cal = [0, cal_insert_mean]
 
+# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
+# df_cal = DataFrame(:density => [density_array[1], density_array[4]], :intensity => [intensity_array[1], intensity_array[4]])
+
 # ╔═╡ e50baf62-0a02-47ee-8440-551f68baee0d
 md"""
 We can see from above that the linear regression returns a best fit line with the formula:
@@ -510,28 +513,14 @@ end
 # ╔═╡ 2f06a3e2-5c65-4f7d-af65-829a8e657a92
 intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
 
-# ╔═╡ 444ec4ef-6140-4556-9305-599d819e58ca
-df_cal = DataFrame(:density => [density_array[1], density_array[4]], :intensity => [intensity_array[1], intensity_array[4]])
+# ╔═╡ b6d389f3-6ecf-4798-978c-c28ef4b8e5da
+df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
 
 # ╔═╡ 6c3c7d22-78e6-428e-ac62-90a473b06e2d
 linearRegressor = lm(@formula(intensity ~ density), df_cal);
 
 # ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
 linearFit = predict(linearRegressor)
-
-# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
-begin
-	f = Figure()
-	ax1 = Axis(f[1, 1])
-	
-	scatter!(density_array_cal, intensity_array_cal)
-	lines!(density_array_cal, linearFit, color = :red)
-	ax1.title = "Calibration Line (Intensity vs Density)"
-	ax1.ylabel = "Intensity (HU)"
-	ax1.xlabel = "Density (mg/cm^3)"
-	
-	f
-end
 
 # ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
 m = linearRegressor.model.pp.beta0[2]
@@ -563,6 +552,20 @@ begin
 	alg_L_MD = Integrated(arr[mask_L_MD_3D])
 	ρ_md = 0.4
 	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
+end
+
+# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
+begin
+	f = Figure()
+	ax1 = Axis(f[1, 1])
+	
+	scatter!(density_array, intensity_array)
+	lines!(density_array, linearFit, color = :red)
+	ax1.title = "Calibration Line (Intensity vs Density)"
+	ax1.ylabel = "Intensity (HU)"
+	ax1.xlabel = "Density (mg/cm^3)"
+	
+	f
 end
 
 # ╔═╡ d8d7a93f-85e7-43e7-a23d-11e7c6ce27be
@@ -1007,6 +1010,7 @@ calculated_mass_small = [
 
 # ╔═╡ 82540ec2-d054-40db-a561-8d7ecb254756
 df = DataFrame(
+	DENSITY = DENSITY,
 	scan = scan,
 	inserts = inserts,
 	ground_truth_mass_large = ground_truth_mass_large,
@@ -1199,6 +1203,7 @@ push!(dfs, df)
 # ╠═2f06a3e2-5c65-4f7d-af65-829a8e657a92
 # ╠═43cf1721-57db-4048-8528-b0430c5e8043
 # ╠═444ec4ef-6140-4556-9305-599d819e58ca
+# ╠═b6d389f3-6ecf-4798-978c-c28ef4b8e5da
 # ╠═6c3c7d22-78e6-428e-ac62-90a473b06e2d
 # ╠═f42a62d8-11e9-48b8-b6bc-ae25b6797707
 # ╠═b407d628-0db0-4d13-9a6c-8e4ff5a84cbd

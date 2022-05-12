@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.2
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -164,7 +164,7 @@ begin
 				density_array_cal = [0, 200]
 				intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
 				intensity_array_cal = [0, cal_insert_mean]
-				df_cal = DataFrame(:density => [density_array[1], density_array[4]], :intensity => [intensity_array[1], intensity_array[4]])
+				df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
 				linearRegressor = lm(@formula(intensity ~ density), df_cal);
 				linearFit = predict(linearRegressor)
 				m = linearRegressor.model.pp.beta0[2]
@@ -343,9 +343,6 @@ begin
 	end
 end
 
-# ╔═╡ 12e1c176-bee2-42ea-9dc2-b8ef107d9890
-
-
 # ╔═╡ 1b95b391-cad0-4aad-8885-fd0c79cd94c1
 md"""
 # Save Results
@@ -362,7 +359,7 @@ end
 # ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full_new.csv")
 	CSV.write(output_path_new, new_df)
 end
 
@@ -375,7 +372,6 @@ end
 # ╠═57656cb2-146a-43ec-abbb-1b5a6a1f3afb
 # ╠═6e98101e-f052-4b19-9915-429166605ced
 # ╠═40454c15-d8fa-4530-8b74-39a934afc257
-# ╠═12e1c176-bee2-42ea-9dc2-b8ef107d9890
 # ╟─1b95b391-cad0-4aad-8885-fd0c79cd94c1
 # ╠═cc20b566-f645-4ae5-8fe2-19ba5697aa6c
 # ╠═bb622f09-0da5-4c38-a7d3-de898af42490
