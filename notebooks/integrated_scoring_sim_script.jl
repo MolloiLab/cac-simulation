@@ -164,7 +164,12 @@ begin
 				density_array_cal = [0, 200]
 				intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
 				intensity_array_cal = [0, cal_insert_mean]
-				df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
+				local df_cal
+				if DENSITY == "low"
+					df_cal = DataFrame(:density => density_array[2:end], :intensity => intensity_array[2:end])
+				elseif DENSITY == "normal"
+					df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
+				end
 				linearRegressor = lm(@formula(intensity ~ density), df_cal);
 				linearFit = predict(linearRegressor)
 				m = linearRegressor.model.pp.beta0[2]
