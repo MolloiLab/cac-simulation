@@ -990,7 +990,7 @@ let
 	ax.xlabel = "Known Mass (mg)"
 
 	xlims!(ax, 0, 1)
-	ylims!(ax, -0.25, 1)
+	ylims!(ax, -0.25, 2)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -1148,7 +1148,7 @@ end
 # ╟─22c8739d-b262-4b15-bc43-04f790cb469e
 # ╟─d815abc5-f695-4be3-b615-51be6c02b442
 # ╟─e5261f46-dce6-45cc-baa8-39c389e190ad
-# ╟─fa349c10-3cd9-47dd-a290-129328b70d32
+# ╠═fa349c10-3cd9-47dd-a290-129328b70d32
 # ╠═5537da9f-0361-4f16-b681-2ec251251034
 # ╠═3fa49994-e141-4f70-a076-da43874d24cb
 # ╠═eb0cb4a2-3387-4eee-8e9e-6c691971f8a5
