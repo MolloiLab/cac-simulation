@@ -64,10 +64,10 @@ md"""
 # ╔═╡ c02953cc-0020-452e-938b-694c7f7de44e
 begin
 	SCAN_NUMBER = 1
-	VENDER = "135"
-	SIZE = "small"
+	VENDER = "80"
+	# SIZE = "small"
 	# SIZE = "medium"
-	# SIZE = "large"
+	SIZE = "large"
 	DENSITY = "low"
 	# DENSITY = "normal"
 	TYPE = "agatston"
@@ -270,40 +270,17 @@ begin
 	end
 end;
 
-# ╔═╡ 385df0f4-bd29-4702-a699-f70ea0093d06
-begin
-	global offset
-	if DENSITY == "normal"
-		if VENDER == "80"
-			offset = 220
-		elseif VENDER == "100"
-			offset = 170
-		elseif VENDER == "120"
-			offset = 140
-		else VENDER == "135"
-			offset = 125
-		end
-	else DENSITY == "low"
-		if VENDER == "80"
-			offset = 185
-		elseif VENDER == "100"
-			offset = 155
-		elseif VENDER == "120"
-			offset = 135
-		else VENDER == "135"
-			offset = 110
-		end
-	end
-end
-
 # ╔═╡ 28445fd5-9798-4ace-bc96-ab57a402d56e
-hist(c_img[mask_cal_3D] .- offset)
+# hist(c_img[mask_cal_3D] .- offset)
 
 # ╔═╡ 0bbac64e-c842-4dc4-8062-8c99cc3f029a
-calibration = c_img[mask_cal_3D] .- offset
+# calibration = c_img[mask_cal_3D] .- offset
+
+# ╔═╡ 3a7a7501-30ef-4952-a2b7-1628f1af520e
+# quantile!(c_img[mask_cal_3D] .- offset, 0.05:0.95)
 
 # ╔═╡ 13948415-9b64-4ec0-b70a-8dd991bb4e9c
-mean(calibration), std(calibration)
+# mean(calibration), std(calibration)
 
 # ╔═╡ b441160a-84fd-49d0-afae-1b63248cd90f
 md"""
@@ -403,11 +380,22 @@ alg2 = SpatiallyWeighted()
 # ╔═╡ b5686627-bfa4-4802-9122-eed55fb7db96
 agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
 
-# ╔═╡ 05cf3e18-950e-427c-91d9-be289da5c5c5
-swcs_l_hd = score(overlayed_mask_l_hd, calibration, alg2)
+# ╔═╡ 385df0f4-bd29-4702-a699-f70ea0093d06
+begin
+	global μ, σ
+	if VENDER == "80"
+		μ, σ = 170, 30
+	elseif VENDER == "100"
+		μ, σ = 165, 30
+	elseif VENDER == "120"
+		μ, σ = 160, 30
+	else VENDER == "135"
+		μ, σ = 155, 30
+	end
+end
 
-# ╔═╡ 7317c1a3-e616-4ca3-af39-cd0b6523c459
-mean(arr[erode(erode(erode(erode(erode(mask_L_HD_3D)))))])
+# ╔═╡ 05cf3e18-950e-427c-91d9-be289da5c5c5
+swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
 
 # ╔═╡ 6fa0cf17-0c5a-4285-ab2c-09c55dd2e31b
 md"""
@@ -455,7 +443,7 @@ overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD);
 agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 2269beda-ae30-49ca-af6a-65a681dc7405
-swcs_l_md = score(overlayed_mask_l_md, calibration, alg2)
+swcs_l_md = score(overlayed_mask_l_md, μ, σ, alg2)
 
 # ╔═╡ 9d8e3d8d-a4e6-418c-a241-b4b1cd119a14
 md"""
@@ -491,7 +479,7 @@ overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD);
 agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 8b27b710-b790-441d-8541-17fae3a72b32
-swcs_l_ld = score(overlayed_mask_l_ld, calibration, alg2)
+swcs_l_ld = score(overlayed_mask_l_ld, μ, σ, alg2)
 
 # ╔═╡ 341e35e2-f280-47c6-9da5-0d2dc137bce0
 md"""
@@ -532,7 +520,7 @@ overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD);
 agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 33b85892-7ce9-4392-a3dc-b0a69592dba9
-swcs_m_hd = score(overlayed_mask_m_hd, calibration, alg2)
+swcs_m_hd = score(overlayed_mask_m_hd, μ, σ, alg2)
 
 # ╔═╡ 3d5aa5e2-cfd9-4c5e-83fc-d855ea5c2f30
 md"""
@@ -568,7 +556,7 @@ overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD);
 agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 0011a165-5fb0-4964-8065-de0663249ee2
-swcs_m_md = score(overlayed_mask_m_md, calibration, alg2)
+swcs_m_md = score(overlayed_mask_m_md, μ, σ, alg2)
 
 # ╔═╡ d179a807-dcf1-4524-81e4-2071c4933f13
 md"""
@@ -604,7 +592,7 @@ overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD);
 agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ e5eb2459-faad-43d9-a702-cae081f5ae8f
-swcs_m_ld = score(overlayed_mask_m_ld, calibration, alg2)
+swcs_m_ld = score(overlayed_mask_m_ld, μ, σ, alg2)
 
 # ╔═╡ aeb23eb0-6ac0-4791-95ce-563bbd9f551b
 md"""
@@ -645,7 +633,7 @@ overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD);
 agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 6cfe8bf9-7869-41e6-9df2-d2c18a159255
-swcs_s_hd = score(overlayed_mask_s_hd, calibration, alg2)
+swcs_s_hd = score(overlayed_mask_s_hd, μ, σ, alg2)
 
 # ╔═╡ 26609afb-14a5-4a5f-a90e-55fa9f3b17dd
 md"""
@@ -681,7 +669,7 @@ overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD);
 agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ 78ce4c60-51c7-4c64-a3ce-d71d1529a8c7
-swcs_s_md = score(overlayed_mask_s_md, calibration, alg2)
+swcs_s_md = score(overlayed_mask_s_md, μ, σ, alg2)
 
 # ╔═╡ 4238b68f-b4fc-40b3-b859-3a5130834017
 md"""
@@ -717,7 +705,7 @@ overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD);
 agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
 
 # ╔═╡ c2116577-2f05-40dc-9094-92c621955f93
-swcs_s_ld = score(overlayed_mask_s_ld, calibration, alg2)
+swcs_s_ld = score(overlayed_mask_s_ld, μ, σ, alg2)
 
 # ╔═╡ 258caf22-6f46-4341-80eb-d572aa26ca59
 md"""
@@ -1069,9 +1057,9 @@ end
 # ╠═6ad451a3-6693-4355-8346-9469f7d94167
 # ╠═67cf1029-ebea-4b48-9168-b0d0b491a277
 # ╠═da901979-3472-48c7-81d5-ff36c1cb0366
-# ╠═385df0f4-bd29-4702-a699-f70ea0093d06
 # ╠═28445fd5-9798-4ace-bc96-ab57a402d56e
 # ╠═0bbac64e-c842-4dc4-8062-8c99cc3f029a
+# ╠═3a7a7501-30ef-4952-a2b7-1628f1af520e
 # ╠═13948415-9b64-4ec0-b70a-8dd991bb4e9c
 # ╟─b441160a-84fd-49d0-afae-1b63248cd90f
 # ╠═325edc29-0752-432f-a1bc-ecb7976667ad
@@ -1097,7 +1085,7 @@ end
 # ╠═19c04849-68a6-4ea3-8a1b-e9183c9b852e
 # ╠═b5686627-bfa4-4802-9122-eed55fb7db96
 # ╠═05cf3e18-950e-427c-91d9-be289da5c5c5
-# ╠═7317c1a3-e616-4ca3-af39-cd0b6523c459
+# ╠═385df0f4-bd29-4702-a699-f70ea0093d06
 # ╟─6fa0cf17-0c5a-4285-ab2c-09c55dd2e31b
 # ╠═f6a0b43f-a56a-41d2-a89f-c1f17f0c6154
 # ╠═9b39f9e2-2080-4ab7-ba84-7e58b0047805

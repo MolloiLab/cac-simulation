@@ -364,7 +364,7 @@ end
 # ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full_new.csv")
+	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 

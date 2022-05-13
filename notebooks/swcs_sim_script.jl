@@ -101,39 +101,17 @@ begin
 				@info DENSITY, SIZE, VENDER
 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)
 				
-				local offset
-				if DENSITY == "normal"
-					if VENDER == "80"
-						offset = 220
-					elseif VENDER == "100"
-						offset = 170
-					elseif VENDER == "120"
-						offset = 140
-					else VENDER == "135"
-						offset = 125
-					end
-				else DENSITY == "low"
-					if VENDER == "80"
-						offset = 185
-					elseif VENDER == "100"
-						offset = 155
-					elseif VENDER == "120"
-						offset = 135
-					else VENDER == "135"
-						offset = 110
-					end
+				local μ, σ
+				if VENDER == "80"
+					μ, σ = 170, 40
+				elseif VENDER == "100"
+					μ, σ = 165, 40
+				elseif VENDER == "120"
+					μ, σ = 160, 40
+				else VENDER == "135"
+					μ, σ = 155, 40
 				end
-				array_filtered = abs.(mapwindow(median, calcium_image[:, :, 2], (3, 3)))
-				bool_arr = array_filtered .> 0
-				bool_arr_erode = ((erode(erode(erode(bool_arr)))))
 				
-				c_img = calcium_image[:, :, 1:3]
-				mask_cal_3D = Array{Bool}(undef, size(c_img))
-				for z in 1:size(c_img, 3)
-					mask_cal_3D[:, :, z] = bool_arr_erode
-				end
-				calibration = c_img[mask_cal_3D] .- offset
-		
 				# Segment Calcium Inserts
 				# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
 				# 		dcm_array, masked_array, header, slice_CCI, center_insert
@@ -170,7 +148,7 @@ begin
 				alg2 = SpatiallyWeighted()
 				overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
 				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
-				swcs_l_hd = score(overlayed_mask_l_hd, calibration, alg2)
+				swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
 				
 				## Medium Density
 				mask_L_MD_3D = Array{Bool}(undef, size(arr))
@@ -180,7 +158,7 @@ begin
 				dilated_mask_L_MD = dilate(dilate(mask_L_MD_3D))
 				overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
 				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
-				swcs_l_md = score(overlayed_mask_l_md, calibration, alg2)
+				swcs_l_md = score(overlayed_mask_l_md, μ, σ, alg2)
 				
 				## Low Density
 				mask_L_LD_3D = Array{Bool}(undef, size(arr))
@@ -190,7 +168,7 @@ begin
 				dilated_mask_L_LD = dilate(dilate(mask_L_LD_3D))
 				overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
 				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
-				swcs_l_ld = score(overlayed_mask_l_ld, calibration, alg2)
+				swcs_l_ld = score(overlayed_mask_l_ld, μ, σ, alg2)
 			
 			
 				# Score Medium Inserts
@@ -202,7 +180,7 @@ begin
 				dilated_mask_M_HD = dilate(dilate(dilate(dilate(mask_M_HD_3D))))
 				overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
 				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
-				swcs_m_hd = score(overlayed_mask_m_hd, calibration, alg2)
+				swcs_m_hd = score(overlayed_mask_m_hd, μ, σ, alg2)
 				
 				## Medium Density
 				mask_M_MD_3D = Array{Bool}(undef, size(arr))
@@ -212,7 +190,7 @@ begin
 				dilated_mask_M_MD = dilate(dilate(dilate(dilate(mask_M_MD_3D))))
 				overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
 				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
-				swcs_m_md = score(overlayed_mask_m_md, calibration, alg2)
+				swcs_m_md = score(overlayed_mask_m_md, μ, σ, alg2)
 				
 				## Low Density
 				mask_M_LD_3D = Array{Bool}(undef, size(arr))
@@ -222,7 +200,7 @@ begin
 				dilated_mask_M_LD = dilate(dilate(dilate(dilate(mask_M_LD_3D))))
 				overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
 				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
-				swcs_m_ld = score(overlayed_mask_m_ld, calibration, alg2)
+				swcs_m_ld = score(overlayed_mask_m_ld, μ, σ, alg2)
 				
 				# Score Small Inserts
 				## High Density
@@ -233,7 +211,7 @@ begin
 				dilated_mask_S_HD = dilate((dilate(dilate(dilate((mask_S_HD_3D))))))
 				overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
 				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
-				swcs_s_hd = score(overlayed_mask_s_hd, calibration, alg2)
+				swcs_s_hd = score(overlayed_mask_s_hd, μ, σ, alg2)
 				
 				## Medium Density
 				mask_S_MD_3D = Array{Bool}(undef, size(arr))
@@ -243,7 +221,7 @@ begin
 				dilated_mask_S_MD = dilate((dilate(dilate(dilate(mask_S_MD_3D)))))
 				overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
 				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
-				swcs_s_md = score(overlayed_mask_s_md, calibration, alg2)
+				swcs_s_md = score(overlayed_mask_s_md, μ, σ, alg2)
 				
 				## Low Density
 				mask_S_LD_3D = Array{Bool}(undef, size(arr))
@@ -253,7 +231,7 @@ begin
 				dilated_mask_S_LD = dilate((dilate(dilate(dilate(mask_S_LD_3D)))))
 				overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
 				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
-				swcs_s_ld = score(overlayed_mask_s_ld, calibration, alg2)
+				swcs_s_ld = score(overlayed_mask_s_ld, μ, σ, alg2)
 				
 				# Results
 				local density_array
@@ -391,7 +369,7 @@ end
 # ╔═╡ Cell order:
 # ╠═6e3c5404-386a-4bbb-b911-2b314e589a36
 # ╠═6319ab98-eae2-45ce-b18c-29fda037fb77
-# ╠═76d9f096-194f-4981-9b46-ea78b5a15ce6
+# ╟─76d9f096-194f-4981-9b46-ea78b5a15ce6
 # ╠═0d10d0e3-5833-4330-9c6a-a6a620b56d9e
 # ╠═af7aaaa6-4333-4157-b77c-dad9e07b3c46
 # ╠═dd4d15fc-02af-42ab-a3b7-fdeaf1b1eb09
