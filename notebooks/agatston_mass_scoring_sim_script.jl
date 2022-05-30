@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.2
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -74,7 +74,7 @@ begin
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -86,12 +86,8 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				if DENSITY == "low" && SIZE == "small"
-					thresh = 60
-				elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+				if DENSITY == "low" && SIZE == "large"
 					thresh = 75
-				# elseif DENSITY == "low" && SIZE == "small" && VENDER == "135"
-				# 	thresh = 60
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -125,6 +121,18 @@ begin
 				rows, cols = Int(header[tag"Rows"]), Int(header[tag"Columns"])
 				pixel_size = DICOMUtils.get_pixel_size(header)
 				mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, 2, cols, rows, pixel_size)
+
+				local agat_thresh
+				agat_thresh = 130
+				# if VENDER == "80"
+				# 	agat_thresh = 110
+				# elseif VENDER == "100"
+				# 	agat_thresh = 87
+				# elseif VENDER == "120"
+				# 	agat_thresh = 77
+				# else VENDER == "135"
+				# 	agat_thresh = 72
+				# end
 				
 				# Score Large Inserts
 				arr = masked_array[:, :, 4:6]
@@ -137,7 +145,7 @@ begin
 				dilated_mask_L_HD = dilate(dilate(mask_L_HD_3D))
 				alg = Agatston()
 				overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
-				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
+				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_L_MD_3D = Array{Bool}(undef, size(arr))
@@ -146,7 +154,7 @@ begin
 				end
 				dilated_mask_L_MD = dilate(dilate(mask_L_MD_3D))
 				overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
-				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
+				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_L_LD_3D = Array{Bool}(undef, size(arr))
@@ -155,7 +163,7 @@ begin
 				end
 				dilated_mask_L_LD = dilate(dilate(mask_L_LD_3D))
 				overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
-				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
+				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 			
 			
 				# Score Medium Inserts
@@ -166,7 +174,7 @@ begin
 				end
 				dilated_mask_M_HD = dilate(dilate(dilate(dilate(mask_M_HD_3D))))
 				overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
-				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
+				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_M_MD_3D = Array{Bool}(undef, size(arr))
@@ -175,7 +183,7 @@ begin
 				end
 				dilated_mask_M_MD = dilate(dilate(dilate(dilate(mask_M_MD_3D))))
 				overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
-				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
+				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_M_LD_3D = Array{Bool}(undef, size(arr))
@@ -184,7 +192,7 @@ begin
 				end
 				dilated_mask_M_LD = dilate(dilate(dilate(dilate(mask_M_LD_3D))))
 				overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
-				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
+				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				# Score Small Inserts
 				## High Density
@@ -194,7 +202,7 @@ begin
 				end
 				dilated_mask_S_HD = dilate((dilate(dilate(dilate((mask_S_HD_3D))))))
 				overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
-				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
+				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_S_MD_3D = Array{Bool}(undef, size(arr))
@@ -203,7 +211,7 @@ begin
 				end
 				dilated_mask_S_MD = dilate((dilate(dilate(dilate(mask_S_MD_3D)))))
 				overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
-				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
+				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_S_LD_3D = Array{Bool}(undef, size(arr))
@@ -212,7 +220,7 @@ begin
 				end
 				dilated_mask_S_LD = dilate((dilate(dilate(dilate(mask_S_LD_3D)))))
 				overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
-				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
+				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				# Results
 				local density_array
@@ -309,14 +317,14 @@ md"""
 dfs
 
 # ╔═╡ ad45f9c8-b82f-4015-b912-f548ee988e05
-if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output/", TYPE))
+if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
 end
 
 # ╔═╡ 99aee610-1b33-4b64-b752-ac8fe602bdcb
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 

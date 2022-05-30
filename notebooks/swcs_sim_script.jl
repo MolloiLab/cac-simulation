@@ -74,7 +74,7 @@ begin
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -86,10 +86,12 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				if DENSITY == "low" && SIZE == "small"
-					thresh = 60
-				elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+				if DENSITY == "low" && SIZE == "large"
 					thresh = 75
+				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "80"
+				# 	thresh = 75
+				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+				# 	thresh = 75
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -134,10 +136,17 @@ begin
 				rows, cols = Int(header[tag"Rows"]), Int(header[tag"Columns"])
 				pixel_size = DICOMUtils.get_pixel_size(header)
 				mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, 2, cols, rows, pixel_size)
+
+				# Background
+				arr = masked_array[:, :, 4:6]
+				alg2 = SpatiallyWeighted()
+				
+				background_mask = zeros(size(arr)...)
+				background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
+				background_mask = Bool.(background_mask)
+				swcs_bkg = score(background_mask, μ, σ, alg2)
 				
 				# Score Large Inserts
-				arr = masked_array[:, :, 4:6]
-				
 				## High Density
 				mask_L_HD_3D = Array{Bool}(undef, size(arr))
 				for z in 1:size(arr, 3)
@@ -145,7 +154,6 @@ begin
 				end
 				dilated_mask_L_HD = dilate(dilate(mask_L_HD_3D))
 				alg = Agatston()
-				alg2 = SpatiallyWeighted()
 				overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
 				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
 				swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
@@ -329,7 +337,8 @@ begin
 					calculated_mass_small = calculated_mass_small,
 					calculated_swcs_large = calculated_swcs_large,
 					calculated_swcs_medium = calculated_swcs_medium,
-					calculated_swcs_small = calculated_swcs_small
+					calculated_swcs_small = calculated_swcs_small,
+					swcs_bkg = swcs_bkg
 				)
 				push!(dfs, df)
 			end
@@ -346,14 +355,14 @@ md"""
 dfs
 
 # ╔═╡ c7b29675-2392-40f9-b4c8-94afe85a9a9c
-if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output/", TYPE))
+if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
 end
 
 # ╔═╡ b60b6d28-d1a3-46bd-b59a-37d1663452ca
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 

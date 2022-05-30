@@ -74,7 +74,7 @@ begin
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -86,12 +86,12 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				# if DENSITY == "low" && SIZE == "small"
-				# 	thresh = 60
-				if DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+				if DENSITY == "low" && SIZE == "large"
 					thresh = 75
-				# elseif DENSITY == "low" && SIZE == "small" && VENDER == "135"
-				# 	thresh = 60
+				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "80"
+				# 	thresh = 75
+				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+				# 	thresh = 75
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -100,7 +100,7 @@ begin
 					thresh = 130
 				end
 
-				@info DENSITY, SIZE, VENDER
+				@info DENSITY, SIZE, VENDER, thresh
 				
 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)
 	
@@ -176,6 +176,24 @@ begin
 				b = linearRegressor.model.rr.mu[1]
 				density(intensity) = (intensity - b) / m
 				intensity(ρ) = m*ρ + b
+
+
+				# Score background
+				background_mask = zeros(size(arr)...)
+				background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
+				background_mask = Bool.(background_mask)
+				background_mask_dil = dilate(dilate(background_mask))
+
+				single_bkg_center = Bool.(background_mask[:, :, 2])
+				S_Obj_bkg = intensity(200)
+
+				ring_background = background_mask_dil - background_mask
+				single_ring_bkg = Bool.(ring_background[:, :, 2])
+				s_bkg = mean(single_arr[single_ring_bkg])
+
+				alg_bkg = Integrated(arr[background_mask])
+				ρ_bkg = 0.2 # mg/mm^3
+				mass_bkg = score(s_bkg, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg)
 				
 				# Score Large InsertS
 				## High Density
@@ -340,7 +358,8 @@ begin
 					ground_truth_mass_medium = ground_truth_mass_medium,
 					calculated_mass_medium = calculated_mass_medium,
 					ground_truth_mass_small = ground_truth_mass_small,
-					calculated_mass_small = calculated_mass_small
+					calculated_mass_small = calculated_mass_small,
+					mass_bkg = mass_bkg
 				)
 				push!(dfs, df)
 			end
@@ -357,14 +376,14 @@ md"""
 dfs
 
 # ╔═╡ bb622f09-0da5-4c38-a7d3-de898af42490
-if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output/", TYPE))
+if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
 end
 
 # ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 

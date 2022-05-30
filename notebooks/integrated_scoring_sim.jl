@@ -382,6 +382,41 @@ arr = masked_array[:, :, 4:6];
 # ╔═╡ 5dfb50b9-7545-4948-8026-2074ce5d86cf
 single_arr = masked_array[:, :, slice_CCI];
 
+# ╔═╡ 177ab471-2783-4e83-95fd-fcd8d02cb104
+md"""
+## Background
+"""
+
+# ╔═╡ aa02f7d8-6b01-4da9-b0f5-d1df587c7d4d
+md"""
+#### Dilated background
+"""
+
+# ╔═╡ dec0f541-4f89-45e3-b084-ecdbc837b794
+begin
+	background_mask = zeros(size(arr)...)
+	background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
+	background_mask = Bool.(background_mask)
+	background_mask_dil = dilate(dilate(background_mask))
+end;
+
+# ╔═╡ 94c66847-765d-4d58-8510-043285d6cdcd
+md"""
+#### Ring background
+"""
+
+# ╔═╡ 703c7556-3904-41d7-972b-48ea31890a7d
+begin
+	ring_background = background_mask_dil - background_mask
+	single_ring_bkg = Bool.(ring_background[:, :, 2])
+	s_bkg = mean(single_arr[single_ring_bkg])
+end
+
+# ╔═╡ 983fa5b0-45fe-4ba9-8eea-ad5c030ed32f
+md"""
+#### Noise
+"""
+
 # ╔═╡ 2a6961fc-f94f-4250-aeb8-63bbfd9e29a0
 md"""
 ## High Density
@@ -533,6 +568,20 @@ density(intensity) = (intensity - b) / m
 
 # ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
 intensity(ρ) = m*ρ + b
+
+# ╔═╡ 3895fafc-a999-4b06-974d-caef190f7830
+begin
+	single_bkg_center = Bool.(background_mask[:, :, 2])
+	# S_Obj_bkg = mean(single_arr[single_bkg_center])
+	S_Obj_bkg = intensity(200)
+end
+
+# ╔═╡ a7de43e0-795d-4267-b7dd-3be85a201485
+begin
+	alg_bkg = Integrated(arr[background_mask])
+	ρ_bkg = 0.2 # mg/mm^3
+	mass_bkg = score(s_bkg, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg)
+end
 
 # ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
 S_Obj_HD = intensity(800)
@@ -1018,7 +1067,8 @@ df = DataFrame(
 	ground_truth_mass_medium = ground_truth_mass_medium,
 	calculated_mass_medium = calculated_mass_medium,
 	ground_truth_mass_small = ground_truth_mass_small,
-	calculated_mass_small = calculated_mass_small
+	calculated_mass_small = calculated_mass_small,
+	background = mass_bkg
 )
 
 # ╔═╡ 053072ba-1eb5-46de-be89-8bdd78658fcb
@@ -1150,6 +1200,9 @@ push!(dfs, df)
 # 	CSV.write(output_path_new, new_df)
 # end
 
+# ╔═╡ f53ba93d-e1c0-4614-9efc-25de15d17cf7
+
+
 # ╔═╡ Cell order:
 # ╠═45f704d4-66e5-49db-aef5-05132f3853ee
 # ╠═e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -1215,6 +1268,14 @@ push!(dfs, df)
 # ╟─3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 # ╠═d27df860-7ca8-4e93-90e4-a58605aa1aaa
 # ╠═5dfb50b9-7545-4948-8026-2074ce5d86cf
+# ╟─177ab471-2783-4e83-95fd-fcd8d02cb104
+# ╟─aa02f7d8-6b01-4da9-b0f5-d1df587c7d4d
+# ╠═dec0f541-4f89-45e3-b084-ecdbc837b794
+# ╠═3895fafc-a999-4b06-974d-caef190f7830
+# ╟─94c66847-765d-4d58-8510-043285d6cdcd
+# ╠═703c7556-3904-41d7-972b-48ea31890a7d
+# ╟─983fa5b0-45fe-4ba9-8eea-ad5c030ed32f
+# ╠═a7de43e0-795d-4267-b7dd-3be85a201485
 # ╟─2a6961fc-f94f-4250-aeb8-63bbfd9e29a0
 # ╠═db4992af-e78b-4f84-b0b3-c13b6cd6cde5
 # ╟─58172907-2026-4caa-a6ad-ab484b86b329
@@ -1354,3 +1415,4 @@ push!(dfs, df)
 # ╠═ccfc2cbb-990d-49ca-94b3-6ca8cd665535
 # ╠═ca4c048e-1fe0-481f-b4f3-a85223bb5ab4
 # ╠═5d7f1e9e-500d-4812-b966-6b42948da3f6
+# ╠═f53ba93d-e1c0-4614-9efc-25de15d17cf7

@@ -332,13 +332,28 @@ md"""
 # Score Large Inserts
 """
 
+# ╔═╡ 46c2bdd7-f333-41de-9cd5-2ec5d3a21f2c
+arr = masked_array[:, :, 4:6];
+
+# ╔═╡ 00c43b6b-69ff-48ed-8d6d-fc3e44a6a4f2
+single_arr = masked_array[:, :, slice_CCI];
+
+# ╔═╡ 22723c3e-0d5d-4676-b33a-11faa8476d2f
+md"""
+## Background
+"""
+
+# ╔═╡ c604fc41-00ef-498b-ac8b-b5e5cd438306
+begin
+	background_mask = zeros(size(arr)...)
+	background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
+	background_mask = Bool.(background_mask)
+end;
+
 # ╔═╡ 1f353ddd-4e9a-4437-8d2e-97a4c466ee28
 md"""
 ## High Density
 """
-
-# ╔═╡ 10899fba-616b-4bfc-9d75-49383512e747
-arr = masked_array[:, :, 4:6];
 
 # ╔═╡ a228cbf8-4d79-41a4-b419-afe26b981a1c
 begin
@@ -393,6 +408,9 @@ begin
 		μ, σ = 155, 30
 	end
 end
+
+# ╔═╡ d1905ee6-9f61-408c-8362-7b148045859e
+swcs_bkg = score(background_mask, μ, σ, alg2)
 
 # ╔═╡ 05cf3e18-950e-427c-91d9-be289da5c5c5
 swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
@@ -1071,8 +1089,12 @@ end
 # ╠═d0194709-f4f5-4f7a-acba-76b600dcff92
 # ╠═72dcf6e7-8fb8-47f7-bfaa-f5529210e8d0
 # ╟─65c9df3c-ea01-48fa-b192-52b3f3b76f9b
+# ╠═46c2bdd7-f333-41de-9cd5-2ec5d3a21f2c
+# ╠═00c43b6b-69ff-48ed-8d6d-fc3e44a6a4f2
+# ╟─22723c3e-0d5d-4676-b33a-11faa8476d2f
+# ╠═c604fc41-00ef-498b-ac8b-b5e5cd438306
+# ╠═d1905ee6-9f61-408c-8362-7b148045859e
 # ╟─1f353ddd-4e9a-4437-8d2e-97a4c466ee28
-# ╠═10899fba-616b-4bfc-9d75-49383512e747
 # ╠═a228cbf8-4d79-41a4-b419-afe26b981a1c
 # ╟─334e9473-fc4f-466c-a046-6c66bf65b738
 # ╠═a2c59aa5-6c86-4d4a-aa84-c6675446083d

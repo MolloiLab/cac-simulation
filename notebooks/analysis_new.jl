@@ -26,6 +26,7 @@ begin
 		Pkg.add("CairoMakie")
 		Pkg.add("HypothesisTests")
 		Pkg.add("Colors")
+		Pkg.add("MLJBase")
 	end
 	
 	using PlutoUI
@@ -43,6 +44,7 @@ begin
 	using CairoMakie
 	using HypothesisTests
 	using Colors
+	using MLJBase
 end
 
 # ╔═╡ 08788f31-c822-4d0b-8eca-6e83c4cc9f12
@@ -176,35 +178,35 @@ end
 # ╔═╡ 51a79c37-dbbd-41af-b3ca-47cb67fa0ae9
 let
 	df = df_i_normal_small
-	global int_normal_small_rms
-	int_normal_small_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
+	global int_normal_small_rmsd
+	int_normal_small_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
 end
 
 # ╔═╡ d114d2db-d813-4aff-b993-5df344e2317f
 let
 	df = df_i_normal_medium
-	global int_normal_medium_rms
-	int_normal_medium_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
+	global int_normal_medium_rmsd
+	int_normal_medium_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
 end
 
 # ╔═╡ 42f95b3b-016b-4bd1-a139-0bdfbdbbae38
 let
 	df = df_i_normal_large
-	global int_normal_large_rms
-	int_normal_large_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
+	global int_normal_large_rmsd
+	int_normal_large_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
 end
 
 # ╔═╡ b0a5ec8a-3630-43fe-aeb4-2ae2d5f66d55
-df_i_rms_normal = DataFrame(
-	small_rms = int_normal_small_rms,
-	medium_rms = int_normal_medium_rms,
-	large_rms = int_normal_large_rms
+df_i_rmsd_normal = DataFrame(
+	small_rmsd = int_normal_small_rmsd,
+	medium_rmsd = int_normal_medium_rmsd,
+	large_rmsd = int_normal_large_rmsd
 )
 
 # ╔═╡ 3e321850-eb7c-4620-99b4-60025921c10b
 let
 	f = Figure()
-	df = df_i_rms_normal
+	df = df_i_rmsd_normal
 	
 	ax = Makie.Axis(
 		f[1, 1],
@@ -213,9 +215,9 @@ let
 	ax.title = "RMS (Large)"
 	ax.ylabel = "RMSD"
 	
-	barplot!(ax, [1], df[!, :small_rms])
-	barplot!(ax, [2], df[!, :medium_rms])
-	barplot!(ax, [3], df[!, :large_rms])
+	barplot!(ax, [1], df[!, :small_rmsd])
+	barplot!(ax, [2], df[!, :medium_rmsd])
+	barplot!(ax, [3], df[!, :large_rmsd])
 
 	f
 end
@@ -682,14 +684,14 @@ let
 	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
 	# lines!([0, 100], [0, 100], label="Unity")
 	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
+	ax.title = "Spatially Weighted (Small Patient)"
+	ax.ylabel = "SWCS"
 	ax.xlabel = "Known Mass (mg)"
 	# ax.xticks = [0, 25, 50, 75, 100]
 	# ax.yticks = [0, 25, 50, 75, 100]
 
 	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 400)
+	ylims!(ax, 0, 500)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -707,14 +709,14 @@ let
 	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
 	# lines!([0, 100], [0, 100], label="Unity")
 	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
+	ax.title = "Spatially Weighted (Medium Patient)"
+	ax.ylabel = "SWCS"
 	ax.xlabel = "Known Mass (mg)"
 	# ax.xticks = [0, 25, 50, 75, 100]
 	# ax.yticks = [0, 25, 50, 75, 100]
 
 	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 400)
+	ylims!(ax, 0, 500)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -730,16 +732,16 @@ let
 	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
 	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
 	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
+	# lines!([0, 500], [0, 500], label="Unity")
 	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
+	ax.title = "Spatially Weighted (Large Patient)"
+	ax.ylabel = "SWCS"
 	ax.xlabel = "Known Mass (mg)"
 	# ax.xticks = [0, 25, 50, 75, 100]
 	# ax.yticks = [0, 25, 50, 75, 100]
 	
 	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 400)
+	ylims!(ax, 0, 500)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -762,8 +764,8 @@ let
 	ax.ylabel = "Calculated Mass (mg)"
 	ax.xlabel = "Known Mass (mg)"
 
-	xlims!(ax, 0, 10)
-	ylims!(ax, 0, 70)
+	# xlims!(ax, 0, 10)
+	# ylims!(ax, 0, 70)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -886,16 +888,23 @@ let
 		f[1, 1],
 		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
 	)
+
+	
+	colors = Makie.wong_colors()
+	labels = ["Agatston", "Integrated"]
+	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+	title = "Groups"
+	
 	ax.title = "RMS Agatston vs Integrated (Normal Density)"
 	ax.ylabel = "RMSD"
 	labels = ["Agatston", "Integrated"]
 
 	table = [1, 1, 2, 2, 3, 3]
 	grp = [1, 2, 1, 2, 1, 2]
-	heights = [agat_normal_small_rms, int_normal_small_rms, agat_normal_medium_rms, int_normal_medium_rms, agat_normal_large_rms, int_normal_medium_rms]
-	barplot!(ax, table, heights, dodge=grp, color=grp)
+	heights = [agat_normal_small_rms, int_normal_small_rmsd, agat_normal_medium_rms, int_normal_medium_rmsd, agat_normal_large_rms, int_normal_medium_rmsd]
+	barplot!(ax, table, heights, dodge=grp, color=colors[grp])
 
-	# Legend(f[1,2], heights, labels)
+	Legend(f[1, 2], elements, labels, title)
 
 	f
 end
@@ -908,16 +917,22 @@ let
 		f[1, 1],
 		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
 	)
+
+
+	colors = Makie.wong_colors()
+	labels = ["Agatston", "Integrated"]
+	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+	title = "Groups"
+	
 	ax.title = "RMS Agatston vs Integrated (Low Density)"
 	ax.ylabel = "RMSD"
-	labels = ["Agatston", "Integrated"]
-
+	
 	table = [1, 1, 2, 2, 3, 3]
 	grp = [1, 2, 1, 2, 1, 2]
 	heights = [agat_low_small_rms, int_low_small_rms, agat_low_medium_rms, int_low_medium_rms, agat_low_large_rms, int_low_medium_rms]
-	barplot!(ax, table, heights, dodge=grp, color=grp)
-
-	# Legend(f[1,2], heights, labels)
+	barplot!(ax, table, heights, dodge=grp, color=colors[grp])
+	
+	Legend(f[1, 2], elements, labels, title)
 
 	f
 end
@@ -948,8 +963,8 @@ let
 	ax.ylabel = "SWCS"
 	ax.xlabel = "Known Mass (mg)"
 
-	xlims!(ax, 0, 7)
-	ylims!(ax, 0, 60)
+	xlims!(ax, 0, 8)
+	ylims!(ax, 0, 200)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
 	f
@@ -1029,18 +1044,665 @@ let
 	df1 = df_s_low_large
 	df2 = df_s_low_medium
 	df3 = df_s_low_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_swcs_small], label="Small Inserts", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_swcs_small], label="Small Inserts", color=:green)
+	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_swcs_small], label="Large Patient", color=:red)
+	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_swcs_small], label="Medium Patient", color=:blue)
+	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_swcs_small], label="Small Patient", color=:green)
 	
-	ax.title = "Small Inserts (All Patient Size, Low Intensities)"
+	ax.title = "Small Inserts"
 	ax.ylabel = "SWCS"
 	ax.xlabel = "Known Mass (mg)"
 
 	xlims!(ax, 0, 1)
-	ylims!(ax, 0, 45)
+	ylims!(ax, 0, 100)
 	
 	f[1, 2] = Legend(f, ax, framevisible = false)
+	f
+end
+
+# ╔═╡ 72dca916-fcec-41e6-928f-f4cd524ba49a
+md"""
+### --Integrated Score
+"""
+
+# ╔═╡ f12f6cd7-4cfc-46ed-bdd3-10186547e6f0
+let
+	f = Figure()
+	ax = Axis(f[1, 1])
+
+	df1 = df_i_low_large
+	df2 = df_i_low_medium
+	df3 = df_i_low_small
+	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
+	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
+	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
+	
+	ax.title = "Small Inserts"
+	ax.ylabel = "Integrated Mass"
+	ax.xlabel = "Known Mass (mg)"
+
+	xlims!(ax, 0, 1)
+	ylims!(ax, -0.1, 1)
+	
+	f[1, 2] = Legend(f, ax, framevisible = false)
+	f
+end
+
+# ╔═╡ a3c8b60e-dad5-4eb2-ac85-91e49fdfc0f8
+md"""
+### --Agatston Score
+"""
+
+# ╔═╡ 1565f83e-a82c-4a70-97d3-efc7c88fff45
+let
+	f = Figure()
+	ax = Axis(f[1, 1])
+
+	df1 = df_a_low_large
+	df2 = df_a_low_medium
+	df3 = df_a_low_small
+	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
+	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
+	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
+	
+	ax.title = "Small Inserts"
+	ax.ylabel = "Agatston Mass"
+	ax.xlabel = "Known Mass (mg)"
+
+	xlims!(ax, 0, 1)
+	ylims!(ax, -0.1, 1)
+	
+	f[1, 2] = Legend(f, ax, framevisible = false)
+	f
+end
+
+# ╔═╡ 990071b7-d417-463e-ae39-8f1591df0d7f
+md"""
+# Figures
+"""
+
+# ╔═╡ 19016ebb-93c3-470b-93ae-4930e04a9a29
+md"""
+## Figure 1. Zero CAC Scores
+"""
+
+# ╔═╡ c58fd175-a769-44ad-9e0b-c5e99b3e5bf7
+md"""
+#### SWCS
+"""
+
+# ╔═╡ a03ee3a8-1c80-47e1-b9a9-f6245e2259ae
+df_s_80, df_s_100, df_s_120, df_s_135, = groupby(df_s, :scan);
+
+# ╔═╡ f26ebcf5-bb40-4b9a-aaeb-66fcd8e28d66
+begin
+	mean_swcs_80, std_swcs_80= mean(df_s_80[!, :swcs_bkg]), std(df_s_80[!, :swcs_bkg])
+	mean_swcs_100, std_swcs_100= mean(df_s_100[!, :swcs_bkg]), std(df_s_100[!, :swcs_bkg])
+	mean_swcs_120, std_swcs_120= mean(df_s_120[!, :swcs_bkg]), std(df_s_120[!, :swcs_bkg])
+	mean_swcs_135, std_swcs_135 = mean(df_s_135[!, :swcs_bkg]), std(df_s_135[!, :swcs_bkg])
+end
+
+# ╔═╡ 0eeaab7f-6dca-4096-82f0-421e0f5d3815
+begin
+	array_s_80 = Array(df_s_80[!, 12:14])
+	array_s_100 = Array(df_s_100[!, 12:14])
+	array_s_120 = Array(df_s_120[!, 12:14])
+	array_s_135 = Array(df_s_135[!, 12:14])
+end;
+
+# ╔═╡ 4c2cda1f-4bfb-4ac0-9b8b-387045647148
+begin
+	num_zeroCAC_80 = length(findall(x -> x < mean_swcs_80 - std_swcs_80, array_s_80))
+	num_zeroCAC_100 = length(findall(x -> x < mean_swcs_100 - std_swcs_100, array_s_100))
+	num_zeroCAC_120 = length(findall(x -> x < mean_swcs_120 - std_swcs_120, array_s_120))
+	num_zeroCAC_135 = length(findall(x -> x < mean_swcs_135 - std_swcs_135, array_s_135))
+
+	total_zero_s = num_zeroCAC_80 + num_zeroCAC_100 + num_zeroCAC_120 + num_zeroCAC_135
+	total_cac = length(array_s_80) * 4
+end;
+
+# ╔═╡ e522127d-aa19-46c9-9617-2b2c8574455d
+total_cac
+
+# ╔═╡ 9c595b59-39a2-42c6-a1fc-081ca6a91df1
+total_zero_s
+
+# ╔═╡ 90573c0e-ee3a-4b75-9d92-1677e644df08
+md"""
+#### Agatston
+"""
+
+# ╔═╡ 5e0ecc11-1ce7-4542-ab45-4c1da3484b32
+array_a = hcat(df_a[!, 7], df_a[!, 9], df_a[!, 11]);
+
+# ╔═╡ 89246a65-ef7f-4697-875c-eb0da534d557
+num_zero_a = length(findall(x -> x == 0, array_a))
+
+# ╔═╡ 9be8af6c-c35d-4824-8041-9a49c763ebf1
+md"""
+#### Integrated
+"""
+
+# ╔═╡ 9541d8c2-1b5b-4fe2-bec4-754a5a431b40
+df_i_80, df_i_100, df_i_120, df_i_135, = groupby(df_i, :scan);
+
+# ╔═╡ 89f6ae83-2c91-456e-807c-9585e3f029e6
+begin
+	mean_i_80, std_i_80= mean(df_i_80[!, :mass_bkg]), std(df_i_80[!, :mass_bkg])
+	mean_i_100, std_i_100= mean(df_i_100[!, :mass_bkg]), std(df_i_100[!, :mass_bkg])
+	mean_i_120, std_i_120= mean(df_i_120[!, :mass_bkg]), std(df_i_120[!, :mass_bkg])
+	mean_i_135, std_i_135 = mean(df_i_135[!, :mass_bkg]), std(df_i_135[!, :mass_bkg])
+end
+
+# ╔═╡ ad26cc0b-d5f7-45fb-bb30-a9c9a5901c34
+begin
+	array_i_80 = hcat(df_i_80[!, 7], df_i_80[!, 9], df_i_80[!, 11])
+	array_i_100 = hcat(df_i_100[!, 7], df_i_100[!, 9], df_i_100[!, 11])
+	array_i_120 = hcat(df_i_120[!, 7], df_i_120[!, 9], df_i_120[!, 11])
+	array_i_135 = hcat(df_i_135[!, 7], df_i_135[!, 9], df_i_135[!, 11])
+end;
+
+# ╔═╡ 16db3a02-7614-4bcb-9eb7-43f695cfb81e
+begin
+	num_zeroCAC_80_i = length(findall(x -> x < mean_i_80 - std_i_80, array_i_80))
+	num_zeroCAC_100_i = length(findall(x -> x < mean_i_100 - std_i_100, array_i_100))
+	num_zeroCAC_120_i = length(findall(x -> x < mean_i_120 - std_i_120, array_i_120))
+	num_zeroCAC_135_i = length(findall(x -> x < mean_i_135 - std_i_135, array_i_135))
+
+	total_zero_i = num_zeroCAC_80_i + num_zeroCAC_100_i + num_zeroCAC_120_i + num_zeroCAC_135_i
+end;
+
+# ╔═╡ 05d6a990-55de-48e4-b620-eaf326e3a208
+total_zero_i
+
+# ╔═╡ bd0b16ef-ea0f-4028-9d1c-3cf7e69d7c43
+
+
+# ╔═╡ 54d07958-b2c9-41d7-973a-44bef3067b93
+let
+	f = Figure()
+	ga = f[1, 1] = GridLayout()
+	# gb = f[2, 1] = GridLayout()
+
+	colors = Makie.wong_colors()
+	labels = ["Number Zero CAC (SWCS)", "Number Zero CAC (Agatston)"]
+	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+
+	##-- TOP --##
+	axtop = Axis(ga[1, 1], xticks = (1:3, ["Integrated", "Spatially Weighted", "Agatston"]))
+	# hidexdecorations!(axtop, grid = false)
+	# axtop.ylabel = ""
+	ylims!(axtop, low=0, high=100)
+	# axtop.xticks = [0, 25, 50, 100]
+	axtop.yticks = [0, 25, 50, 75, 100]
+	table = [1, 2, 3]
+	heights1 = [(total_zero_i / total_cac) * 100, (total_zero_s / total_cac) * 100, (num_zero_a / total_cac) * 100]
+	barplot!(axtop, table, heights1, color=colors[1:3], bar_labels=:y)
+	
+	Label(ga[1:end, 1:end, Top()], "Zero CAC Scores", valign = :center, padding = (0, 0, 0, 0), textsize=25)
+	Label(ga[1:end, 1:end, Left()], "% Zero CAC Scores", valign = :center, padding = (0, 50, 0, 0), rotation=π/2, textsize=17)
+
+	# for (label, layout) in zip(["A"], [ga])
+	#     Label(layout[1, 1, TopLeft()], label,
+	#         textsize = 25,
+	#         padding = (0, 60, 25, 0),
+	#         halign = :right)
+	# end
+
+	# Legend(f[1, 2], elements, labels, framevisible = false)
+	
+	f
+end
+
+# ╔═╡ 1f08025c-f326-4d7f-b031-4dad002daa14
+md"""
+## Figure 2. Pearson Correlation Coefficient
+"""
+
+# ╔═╡ ce58f6f6-c0e4-41f5-a77b-5f7a01351446
+md"""
+#### SWCS
+"""
+
+# ╔═╡ 7c46403c-21fd-41d2-80c5-e42168cf7c72
+array_s = Array(hcat(df_s[!, end-3:end-1]));
+
+# ╔═╡ c1f2bfb6-5860-4af2-9926-b6acd00189d7
+vec_s = vec(array_s)
+
+# ╔═╡ 87ec1484-9e5b-41e5-a7a1-94d4803188b4
+md"""
+#### Agatston
+"""
+
+# ╔═╡ 3897a45c-e7d2-4406-9a4e-a4dd427ce5cb
+vec_a = vec(array_a)
+
+# ╔═╡ 1f6ff3a6-489e-4149-9eab-d9473a9f15ff
+md"""
+#### Integrated
+"""
+
+# ╔═╡ 2829e8a3-7eab-4c2b-9745-b01c5362428a
+vec_i = vec(array_i)
+
+# ╔═╡ 2ac67a93-383d-4420-a5b7-0a10a0bfa3d6
+md"""
+#### Known mass
+"""
+
+# ╔═╡ 00389fea-d2da-49a4-b5c4-daca3f79857f
+array_k = hcat(df_a[!, 6], df_a[!, 8], df_a[!, 10]);
+
+# ╔═╡ 7627848b-4421-4002-afce-313244b56697
+vec_k = vec(array_k)
+
+# ╔═╡ 0ae2a51f-ec55-4fc9-a2b6-a68d75745045
+md"""
+#### Correlations
+"""
+
+# ╔═╡ 98dbcf02-7703-402d-a307-65aa7a0c653f
+pearson_s = cor(hcat(vec_s, vec_k))
+
+# ╔═╡ 06033041-bf24-4f8f-b7da-1642d27c31a3
+pearson_a = cor(hcat(vec_a, vec_k))
+
+# ╔═╡ 48882170-9362-4990-b001-8f616395f92f
+pearson_i = cor(hcat(vec_i, vec_k))
+
+# ╔═╡ 0130ad0f-9aad-4f2c-88b1-83f25ff5fcfa
+p_s = EqualVarianceTTest(vec_s, vec_k)
+
+# ╔═╡ 37f9c0f0-0be3-4628-941f-f26e0dd2ece2
+p_i = EqualVarianceTTest(vec_i, vec_k)
+
+# ╔═╡ 0194aa4a-e363-45b2-a37a-78cc7e9be9b0
+p_a = EqualVarianceTTest(vec_a, vec_k)
+
+# ╔═╡ a2d49d55-a715-4623-87f3-e6d9079e1c13
+let
+	f = Figure()
+	ga = f[1, 1] = GridLayout()
+
+	colors = Makie.wong_colors()
+	labels = ["Number Zero CAC (SWCS)", "Number Zero CAC (Agatston)"]
+	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+
+	##-- TOP --##
+	axtop = Axis(ga[1, 1], xticks = (1:3, ["Integrated", "Spatially Weighted", "Agatston"]))
+	ylims!(axtop, low=0, high=1.1)
+	axtop.yticks = [0, 0.25, 0.50, 0.75, 1.0]
+	table = [1, 2, 3]
+	heights1 = [pearson_i[1, 2], pearson_s[1, 2], pearson_a[1, 2]]
+	barplot!(axtop, table, heights1, color=colors[1:3], bar_labels=:y)
+	
+	Label(ga[1:end, 1:end, Top()], "Correlation to Known Calcium Mass", valign = :center, padding = (0, 0, 0, 0), textsize=25)
+	Label(ga[1:end, 1:end, Left()], "Pearson Correlation", valign = :center, padding = (0, 50, 0, 0), rotation=π/2, textsize=17)
+	
+	f
+end
+
+# ╔═╡ 80c3eb0e-20ed-46a7-a112-8562d79eb514
+md"""
+## Figure 3. Linear Regression Mass Score
+"""
+
+# ╔═╡ 547dad9f-2856-45e6-aa66-eddb2041f82a
+let
+	f = Figure()
+	
+	ga = f[1, 1] = GridLayout()
+	gb = f[2, 1] = GridLayout()
+	gcd = f[1:2, 2] = GridLayout()
+	gc = gcd[1, 1] = GridLayout()
+	gd = gcd[2, 1] = GridLayout()
+	ge = f[1:2, 3] = GridLayout()
+
+	##-- A --##
+	axtop = Axis(ga[1, 1])
+	
+	df = df_i_normal
+	scatter!(axtop, df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axtop, df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axtop, low=0, high=200)
+	ylims!(axtop, low=0, high=200)
+	axtop.xticks = [0, 50, 100, 150, 200]
+	axtop.yticks = [0, 50, 100, 150, 200]
+	axtop.xlabel = "Known Mass (mg)"
+	axtop.ylabel = "Calculated Mass (mg)"
+	# Label(ga[1:end, 1:end, Top()], "Integrated", valign = :bottom, padding = (0, 0, 120, 0), textsize = 25)
+	# Label(ga[1:end, 1:end, Left()], "High Density", valign = :center, padding = (0, 120, 0, 0), rotation = pi/2, textsize=25)
+
+	##-- B --##
+	axbottom = Axis(gb[1, 1])
+	
+	df2 = df_i_low
+	scatter!(axbottom, df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axbottom, df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axbottom, df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axbottom, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axbottom, low=0, high=25)
+	ylims!(axbottom, low=0, high=25)
+	axbottom.xticks = [0, 5, 10, 15, 20, 25]
+	axbottom.yticks = [0, 5, 10, 15, 20, 25]
+	axbottom.xlabel = "Known Mass (mg)"
+	axbottom.ylabel = "Calculated Mass (mg)"
+	# Label(gb[1:end, 1:end, Left()], "Low Density", valign = :center, padding = (0, 120, 0, 0), rotation = pi/2, textsize=25)
+
+	##-- C --##
+	axtopright = Axis(gc[1, 1])
+	
+	df3 = df_a_normal
+	scatter!(axtopright, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axtopright, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axtopright, low=0, high=200)
+	ylims!(axtopright, low=0, high=200)
+	axtopright.xticks = [0, 50, 100, 150, 200]
+	axtopright.yticks = [0, 50, 100, 150, 200]
+	axtopright.xlabel = "Known Mass (mg)"
+	axtopright.ylabel = "Calculated Mass (mg)"
+	# Label(gc[1:end, 1:end, Top()], "Agatston", valign = :bottom, padding = (0, 0, 120, 0), textsize = 25)
+
+	##-- D --##
+	axbottomright = Axis(gd[1, 1])
+	
+	df4 = df_a_low
+	scatter!(axbottomright, df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axbottomright, df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axbottomright, df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axbottomright, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axbottomright, low=0, high=25)
+	ylims!(axbottomright, low=0, high=25)
+	axbottomright.xticks = [0, 5, 10, 15, 20, 25]
+	axbottomright.yticks = [0, 5, 10, 15, 20, 25]
+	axbottomright.xlabel = "Known Mass (mg)"
+	axbottomright.ylabel = "Calculated Mass (mg)"
+
+	##-- LABELS --##
+
+	f[1:2, 3] = Legend(f, axbottomright, framevisible = false)
+
+	
+	for (label, layout) in zip(["A", "B", "C", "D"], [ga, gb, gc, gd])
+	    Label(layout[1, 1, TopLeft()], label,
+	        textsize = 25,
+	        padding = (0, 60, 25, 0),
+	        halign = :right)
+	end
+
+	# colsize!(f.layout, 1, Auto(0.5))
+	# rowsize!(gcd, 1, Auto(1.5))
+
+	f
+end
+
+# ╔═╡ 2a84d850-0d54-4a0a-9be3-d03a7fa16ba7
+let
+	df = df_i_normal
+	df2 = df_i_low
+	# gt_array = Array(df[!, :ground_truth_mass_large])
+	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small], df2[!, :ground_truth_mass_large], df2[!, :ground_truth_mass_medium], df2[!, :ground_truth_mass_small]))
+	# calc_array = Array(df[!, :calculated_mass_large])
+	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small], df2[!, :calculated_mass_large], df2[!, :calculated_mass_medium], df2[!, :calculated_mass_small]))
+	data = DataFrame(
+		X = gt_array,
+		Y= calc_array
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = r2(model)
+end
+
+# ╔═╡ b90e187e-e5a7-4e1a-8944-1b8e5e6fb96f
+let
+	df = df_a_normal
+	df2 = df_a_low
+	# gt_array = Array(df[!, :ground_truth_mass_large])
+	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small], df2[!, :ground_truth_mass_large], df2[!, :ground_truth_mass_medium], df2[!, :ground_truth_mass_small]))
+	# calc_array = Array(df[!, :calculated_mass_large])
+	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small], df2[!, :calculated_mass_large], df2[!, :calculated_mass_medium], df2[!, :calculated_mass_small]))
+	data = DataFrame(
+		X = gt_array,
+		Y= calc_array
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = r2(model)
+end
+
+# ╔═╡ f66f1f95-f35f-414f-b4d6-193822f16376
+let
+	dfs = df_s_normal
+	dfs2 = df_s_low
+	
+	dfk = df_a_normal
+	dfk2 = df_a_low
+	
+	gt_array = vec(hcat(dfk[!, :ground_truth_mass_large], dfk[!, :ground_truth_mass_medium], dfk[!, :ground_truth_mass_small], dfk2[!, :ground_truth_mass_large], dfk2[!, :ground_truth_mass_medium], dfk2[!, :ground_truth_mass_small]))
+	calc_array = vec(hcat(dfs[!, :calculated_swcs_large], dfs[!, :calculated_swcs_medium], dfs[!, :calculated_swcs_small], dfs2[!, :calculated_swcs_large], dfs2[!, :calculated_swcs_medium], dfs2[!, :calculated_swcs_small]))
+	
+	data = DataFrame(
+		X = gt_array,
+		Y= calc_array
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = r2(model)
+end
+
+# ╔═╡ 4d13c232-a4ae-4193-9697-9c93c1446af2
+# let
+# 	df = df_i_low
+# 	# gt_array = Array(df[!, :ground_truth_mass_large])
+# 	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small]))
+# 	# calc_array = Array(df[!, :calculated_mass_large])
+# 	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
+# 	data = DataFrame(
+# 		X = gt_array,
+# 		Y= calc_array
+# 	)
+# 	model = lm(@formula(Y ~ X), data)
+# 	r2 = r2(model)
+# end
+
+# ╔═╡ 37d0e6f9-2c73-43bd-88cb-a20583483abc
+# let
+# 	df = df_a_low
+# 	# gt_array = Array(df[!, :ground_truth_mass_large])
+# 	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small]))
+# 	# calc_array = Array(df[!, :calculated_mass_large])
+# 	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
+# 	data = DataFrame(
+# 		X = gt_array,
+# 		Y= calc_array
+# 	)
+# 	model = lm(@formula(Y ~ X), data)
+# 	r2 = r2(model)
+# end
+
+# ╔═╡ 94dc1c51-561c-4404-a91a-0721f4065f66
+md"""
+## Figure 4. RMSE Mass Score
+"""
+
+# ╔═╡ c19df90c-41ab-4dd7-accb-ab059ddb8195
+begin
+	agat_arr = [agat_normal_small_rms, agat_low_small_rms, agat_normal_medium_rms, agat_low_medium_rms, agat_normal_large_rms, agat_low_large_rms]
+	int_arr = [int_normal_small_rmsd, int_low_small_rms, int_normal_medium_rmsd, int_low_medium_rms, int_normal_large_rmsd, int_low_large_rms]
+end;
+
+# ╔═╡ 46b4d4aa-b9bc-4557-a713-52ce2191e8d3
+total_rms_agat = mean(agat_arr)
+
+# ╔═╡ 9fb19a68-7fe4-4117-8892-206f1fa4eaa1
+total_rms_int = mean(int_arr)
+
+# ╔═╡ c0e8f5af-c0e2-4c7f-9c94-3d580ce2520f
+val_rms = EqualVarianceTTest(agat_arr, int_arr)
+
+# ╔═╡ e1e24e06-7063-4851-afd2-b25dd414b4d7
+let
+	f = Figure()
+	ga = f[1, 1] = GridLayout()
+	gb = f[2, 1] = GridLayout()
+
+	colors = Makie.wong_colors()
+	labels = ["Agatston", "Integrated"]
+	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
+
+	##-- TOP --##
+	axtop = Axis(ga[1, 1])
+	hidexdecorations!(axtop, grid = false)
+	axtop.ylabel = "RMSD"
+	labels = ["Agatston", "Integrated"]
+	table = [1, 1, 2, 2, 3, 3]
+	grp = [1, 2, 1, 2, 1, 2]
+	heights1 = [agat_normal_small_rms, int_normal_small_rmsd, agat_normal_medium_rms, int_normal_medium_rmsd, agat_normal_large_rms, int_normal_medium_rmsd]
+	barplot!(axtop, table, heights1, dodge=grp, color=colors[grp])
+	# Label(ga[1:end, 1:end, Left()], "High Density", valign = :center, padding = (0, 120, 0, 0), rotation = pi/2, textsize=25)
+
+
+	##-- BOTTOM --##
+	axbottom = Axis(gb[1, 1], xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]))
+	axbottom.ylabel = "RMSD"	
+	heights2 = [agat_low_small_rms, int_low_small_rms, agat_low_medium_rms, int_low_medium_rms, agat_low_large_rms, int_low_medium_rms]
+	barplot!(axbottom, table, heights2, dodge=grp, color=colors[grp])
+	linkaxes!(axtop, axbottom)
+	# Label(gb[1:end, 1:end, Left()], "Low Density", valign = :center, padding = (0, 120, 0, 0), rotation = pi/2, textsize=25)
+
+	for (label, layout) in zip(["A", "B"], [ga, gb])
+	    Label(layout[1, 1, TopLeft()], label,
+	        textsize = 25,
+	        padding = (0, 60, 25, 0),
+	        halign = :right)
+	end
+
+	Legend(f[1:2, 2], elements, labels, framevisible = false)
+	
+	f
+end
+
+# ╔═╡ 19049b16-bacc-49b9-8533-546deea85775
+md"""
+## TEMPLATE FIGURE
+"""
+
+# ╔═╡ ea678826-dc11-4c22-9b84-17b21ac59002
+let
+	f = Figure()
+	
+	ga = f[1, 1] = GridLayout()
+	gb = f[2, 1] = GridLayout()
+	gcd = f[1:2, 2] = GridLayout()
+	gc = gcd[1, 1] = GridLayout()
+	gd = gcd[2, 1] = GridLayout()
+
+	##-- A --##
+	axtop = Axis(ga[1, 1])
+	axmain = Axis(ga[2, 1], xlabel = "before", ylabel = "after")
+	axright = Axis(ga[2, 2])
+	
+	linkyaxes!(axmain, axright)
+	linkxaxes!(axmain, axtop)
+	
+	labels = ["treatment", "placebo", "control"]
+	data = randn(3, 100, 2) .+ [1, 3, 5]
+	
+	for (label, col) in zip(labels, eachslice(data, dims = 1))
+	    scatter!(axmain, col, label = label)
+	    density!(axtop, col[:, 1])
+	    density!(axright, col[:, 2], direction = :y)
+	end
+	
+	ylims!(axtop, low = 0)
+	xlims!(axright, low = 0)
+	axmain.xticks = 0:3:9
+	leg = Legend(ga[1, 2], axmain)
+	hidedecorations!(axtop, grid = false)
+	hidedecorations!(axright, grid = false)
+	leg.tellheight = true
+	colgap!(ga, 10)
+	rowgap!(ga, 10)
+	
+	Label(ga[1, 1:2, Top()], "Stimulus ratings", valign = :bottom,
+    padding = (0, 0, 5, 0))
+
+	##-- B --##
+	xs = LinRange(0.5, 6, 50)
+	ys = LinRange(0.5, 6, 50)
+	data1 = [sin(x^1.5) * cos(y^0.5) for x in xs, y in ys] .+ 0.1 .* randn.()
+	data2 = [sin(x^0.8) * cos(y^1.5) for x in xs, y in ys] .+ 0.1 .* randn.()
+	
+	ax1, hm = contourf(gb[1, 1], xs, ys, data1,
+	    levels = 6)
+	ax1.title = "Histological analysis"
+	contour!(ax1, xs, ys, data1, levels = 5, color = :black)
+	hidexdecorations!(ax1)
+	
+	ax2, hm2 = contourf(gb[2, 1], xs, ys, data2,
+	    levels = 6)
+	contour!(ax2, xs, ys, data2, levels = 5, color = :black)
+
+	cb = Colorbar(gb[1:2, 2], hm, label = "cell group")
+	low, high = extrema(data1)
+	edges = range(low, high, length = 7)
+	centers = (edges[1:6] .+ edges[2:7]) .* 0.5
+	cb.ticks = (centers, string.(1:6))
+	cb.alignmode = Mixed(right = 0)
+	colgap!(gb, 10)
+	rowgap!(gb, 10)
+
+	##-- C --##
+	# ...
+
+	##-- D --##
+	axs = [Axis(gd[row, col]) for row in 1:3, col in 1:2]
+	hidedecorations!.(axs, grid = false, label = false)
+	
+	for row in 1:3, col in 1:2
+	    xrange = col == 1 ? (0:0.1:6pi) : (0:0.1:10pi)
+	
+	    eeg = [sum(sin(pi * rand() + k * x) / k for k in 1:10)
+	        for x in xrange] .+ 0.1 .* randn.()
+	
+	    lines!(axs[row, col], eeg, color = (:black, 0.5))
+	end
+	
+	axs[3, 1].xlabel = "Day 1"
+	axs[3, 2].xlabel = "Day 2"
+	Label(gd[1, :, Top()], "EEG traces", valign = :bottom,
+	    font = "TeX Gyre Heros Bold",
+	    padding = (0, 0, 5, 0))
+	rowgap!(gd, 10)
+	colgap!(gd, 10)
+	for (i, label) in enumerate(["sleep", "awake", "test"])
+	    Box(gd[i, 3], color = :gray90)
+	    Label(gd[i, 3], label, rotation = pi/2, tellheight = false)
+	end
+	colgap!(gd, 2, 0)
+	n_day_1 = length(0:0.1:6pi)
+	n_day_2 = length(0:0.1:10pi)
+	
+	colsize!(gd, 1, Auto(n_day_1))
+	colsize!(gd, 2, Auto(n_day_2))
+
+	##-- LABELS --##
+	for (label, layout) in zip(["A", "B", "C", "D"], [ga, gb, gc, gd])
+	    Label(layout[1, 1, TopLeft()], label,
+	        textsize = 26,
+	        font = "TeX Gyre Heros Bold",
+	        padding = (0, 5, 5, 0),
+	        halign = :right)
+	end
+
+	# colsize!(f.layout, 1, Auto(0.5))
+	# rowsize!(gcd, 1, Auto(1.5))
+
 	f
 end
 
@@ -1131,3 +1793,61 @@ end
 # ╟─35ceff8f-7ca4-41f3-94f3-7ef17c1a2695
 # ╟─942a1d3a-74d0-45ce-a103-be1183a04d22
 # ╟─651ee7a0-ed7d-4941-9ac0-3d88c046695f
+# ╟─72dca916-fcec-41e6-928f-f4cd524ba49a
+# ╟─f12f6cd7-4cfc-46ed-bdd3-10186547e6f0
+# ╟─a3c8b60e-dad5-4eb2-ac85-91e49fdfc0f8
+# ╟─1565f83e-a82c-4a70-97d3-efc7c88fff45
+# ╟─990071b7-d417-463e-ae39-8f1591df0d7f
+# ╟─19016ebb-93c3-470b-93ae-4930e04a9a29
+# ╟─c58fd175-a769-44ad-9e0b-c5e99b3e5bf7
+# ╠═a03ee3a8-1c80-47e1-b9a9-f6245e2259ae
+# ╠═f26ebcf5-bb40-4b9a-aaeb-66fcd8e28d66
+# ╠═0eeaab7f-6dca-4096-82f0-421e0f5d3815
+# ╠═4c2cda1f-4bfb-4ac0-9b8b-387045647148
+# ╠═e522127d-aa19-46c9-9617-2b2c8574455d
+# ╠═9c595b59-39a2-42c6-a1fc-081ca6a91df1
+# ╟─90573c0e-ee3a-4b75-9d92-1677e644df08
+# ╠═5e0ecc11-1ce7-4542-ab45-4c1da3484b32
+# ╠═89246a65-ef7f-4697-875c-eb0da534d557
+# ╟─9be8af6c-c35d-4824-8041-9a49c763ebf1
+# ╠═9541d8c2-1b5b-4fe2-bec4-754a5a431b40
+# ╠═89f6ae83-2c91-456e-807c-9585e3f029e6
+# ╠═ad26cc0b-d5f7-45fb-bb30-a9c9a5901c34
+# ╠═16db3a02-7614-4bcb-9eb7-43f695cfb81e
+# ╠═05d6a990-55de-48e4-b620-eaf326e3a208
+# ╠═bd0b16ef-ea0f-4028-9d1c-3cf7e69d7c43
+# ╟─54d07958-b2c9-41d7-973a-44bef3067b93
+# ╟─1f08025c-f326-4d7f-b031-4dad002daa14
+# ╟─ce58f6f6-c0e4-41f5-a77b-5f7a01351446
+# ╠═7c46403c-21fd-41d2-80c5-e42168cf7c72
+# ╠═c1f2bfb6-5860-4af2-9926-b6acd00189d7
+# ╟─87ec1484-9e5b-41e5-a7a1-94d4803188b4
+# ╠═3897a45c-e7d2-4406-9a4e-a4dd427ce5cb
+# ╟─1f6ff3a6-489e-4149-9eab-d9473a9f15ff
+# ╠═2829e8a3-7eab-4c2b-9745-b01c5362428a
+# ╟─2ac67a93-383d-4420-a5b7-0a10a0bfa3d6
+# ╠═00389fea-d2da-49a4-b5c4-daca3f79857f
+# ╠═7627848b-4421-4002-afce-313244b56697
+# ╟─0ae2a51f-ec55-4fc9-a2b6-a68d75745045
+# ╠═98dbcf02-7703-402d-a307-65aa7a0c653f
+# ╠═06033041-bf24-4f8f-b7da-1642d27c31a3
+# ╠═48882170-9362-4990-b001-8f616395f92f
+# ╠═0130ad0f-9aad-4f2c-88b1-83f25ff5fcfa
+# ╠═37f9c0f0-0be3-4628-941f-f26e0dd2ece2
+# ╠═0194aa4a-e363-45b2-a37a-78cc7e9be9b0
+# ╟─a2d49d55-a715-4623-87f3-e6d9079e1c13
+# ╟─80c3eb0e-20ed-46a7-a112-8562d79eb514
+# ╟─547dad9f-2856-45e6-aa66-eddb2041f82a
+# ╠═2a84d850-0d54-4a0a-9be3-d03a7fa16ba7
+# ╠═b90e187e-e5a7-4e1a-8944-1b8e5e6fb96f
+# ╠═f66f1f95-f35f-414f-b4d6-193822f16376
+# ╟─4d13c232-a4ae-4193-9697-9c93c1446af2
+# ╟─37d0e6f9-2c73-43bd-88cb-a20583483abc
+# ╟─94dc1c51-561c-4404-a91a-0721f4065f66
+# ╠═c19df90c-41ab-4dd7-accb-ab059ddb8195
+# ╠═46b4d4aa-b9bc-4557-a713-52ce2191e8d3
+# ╠═9fb19a68-7fe4-4117-8892-206f1fa4eaa1
+# ╠═c0e8f5af-c0e2-4c7f-9c94-3d580ce2520f
+# ╟─e1e24e06-7063-4851-afd2-b25dd414b4d7
+# ╟─19049b16-bacc-49b9-8533-546deea85775
+# ╟─ea678826-dc11-4c22-9b84-17b21ac59002
