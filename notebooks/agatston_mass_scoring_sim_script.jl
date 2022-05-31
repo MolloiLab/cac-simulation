@@ -74,7 +74,7 @@ begin
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -85,9 +85,27 @@ begin
 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
 			
 				# Segment Calcium Rod
+				# local thresh
+				# if DENSITY == "low" && SIZE == "large"
+				# 	thresh = 75
+				# elseif DENSITY == "low" && SIZE == "medium"
+				# 	thresh = 75
+				# elseif DENSITY == "low"
+				# 	thresh = 60
+				# elseif DENSITY ==  "normal"
+				# 	thresh = 130
+				# end
+
+				# Segment Calcium Rod (reproducibility1)
 				local thresh
-				if DENSITY == "low" && SIZE == "large"
+				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+					thresh = 80
+				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+					thresh = 70
+				elseif DENSITY == "low" && SIZE == "large"
 					thresh = 75
+				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+					thresh = 55
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -317,14 +335,14 @@ md"""
 dfs
 
 # ╔═╡ ad45f9c8-b82f-4015-b912-f548ee988e05
-if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+if ~isdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
 end
 
 # ╔═╡ 99aee610-1b33-4b64-b752-ac8fe602bdcb
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_repeated/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 

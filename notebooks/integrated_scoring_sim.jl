@@ -71,13 +71,13 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 begin
 	SCAN_NUMBER = 1
 	VENDER = "135"
-	SIZE = "small"
-	# SIZE = "medium"
+	# SIZE = "small"
+	SIZE = "medium"
 	# SIZE = "large"
-	# DENSITY = "low"
-	DENSITY = "normal"
+	DENSITY = "low"
+	# DENSITY = "normal"
 	TYPE = "integrated_scoring"
-	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
+	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 end
 
 # ╔═╡ 1df1a491-6207-4b5c-a5e8-15a07323b6e7
@@ -241,7 +241,7 @@ begin
 end
 
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
+calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=55);
 
 # ╔═╡ 417d150e-0df9-4963-b59e-ebd9acf6d4a0
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=5, show_value=true)

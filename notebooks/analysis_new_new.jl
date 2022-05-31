@@ -1594,6 +1594,186 @@ let
 	f
 end
 
+# ╔═╡ 7ec78f71-6b20-4c8c-a9da-a216404bee72
+md"""
+## Figure 5. Reproducibility
+"""
+
+# ╔═╡ 387fafb4-4a14-482f-8a8e-4214217f82a5
+md"""
+#### Integrated (Repeated)
+"""
+
+# ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
+path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/integrated_scoring";
+
+# ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
+df_i_r = CSV.read(string(path_integrated, "/full.csv"), DataFrame);
+
+# ╔═╡ 4f5328e7-66dd-433c-a7f6-5dc461c83a4c
+df_i_low_r, df_i_normal_r = groupby(df_i_r, :DENSITY);
+
+# ╔═╡ 6e515ee8-2836-4285-a0a9-131e1e7b4b7f
+df_i_low_small_r, df_i_low_medium_r, df_i_low_large_r = groupby(df_i_low_r, :SIZE);
+
+# ╔═╡ 9ae3b4cb-fac5-4168-868d-724de9b0c9d2
+df_i_normal_small_r, df_i_normal_medium_r, df_i_normal_large_r = groupby(df_i_normal_r, :SIZE);
+
+# ╔═╡ 5248fac3-4dc2-4579-a52b-8d04ebf45b07
+md"""
+#### Agatston (Repeated)
+"""
+
+# ╔═╡ fcd83805-06e2-4cda-aa56-0c13c69424d8
+path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/agatston";
+
+# ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
+df_a_r = CSV.read(string(path_agat, "/full.csv"), DataFrame);
+
+# ╔═╡ 869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
+df_a_low_r, df_a_normal_r = groupby(df_a_r, :DENSITY);
+
+# ╔═╡ 43b3ba9b-247c-41cd-968e-3a27736426b0
+df_a_low_small_r, df_a_low_medium_r, df_a_low_large_r = groupby(df_a_low_r, :SIZE);
+
+# ╔═╡ b16090b5-a232-4e71-9148-b71296efa999
+df_a_normal_small_r, df_a_normal_medium_r, df_a_normal_large_r= groupby(df_a_normal_r, :SIZE);
+
+# ╔═╡ c1d820ac-d0ca-4c18-b61d-849402ae647e
+md"""
+#### SWCS (Repeated)
+"""
+
+# ╔═╡ 594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
+path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/swcs";
+
+# ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
+df_s_r = CSV.read(string(path_swcs_r, "/full.csv"), DataFrame);
+
+# ╔═╡ a9f68d7e-7818-47d5-ba1f-965634225b30
+df_s_low_r, df_s_normal_r = groupby(df_s_r, :DENSITY);
+
+# ╔═╡ f2177e1f-2a55-4f81-9a69-ab985ae3b7c2
+df_s_low_small_r, df_s_low_medium_r, df_s_low_large_r = groupby(df_s_low_r, :SIZE);
+
+# ╔═╡ 35bc90e2-9d70-4daf-a825-b462831c5bf6
+df_s_normal_small_r, df_s_normal_medium_r, df_s_normal_large_r = groupby(df_s_normal_r, :SIZE);
+
+# ╔═╡ de038336-aa35-417c-a723-17d6745dca3d
+df_s_r
+
+# ╔═╡ a85f777a-76f2-4c64-9973-ea9dec245600
+let
+	f = Figure()
+	
+	ga = f[1, 1] = GridLayout()
+	gb = f[2, 1] = GridLayout()
+	gcd = f[1:2, 2] = GridLayout()
+	gc = gcd[1, 1] = GridLayout()
+	gd = gcd[2, 1] = GridLayout()
+	ge = f[1:2, 3] = GridLayout()
+
+	##-- A --##
+	axtop = Axis(ga[1, 1])
+	
+	df = df_i
+	df_r = df_i_r
+	scatter!(axtop, df_r[!, :calculated_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axtop, df_r[!, :calculated_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axtop, df_r[!, :calculated_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axtop, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axtop, low=0, high=200)
+	ylims!(axtop, low=0, high=200)
+	axtop.xticks = [0, 50, 100, 150, 200]
+	axtop.yticks = [0, 50, 100, 150, 200]
+	axtop.xlabel = "Calculated Mass 1 (mg)"
+	axtop.ylabel = "Calculated Mass 2 (mg)"
+
+	# ##-- B --##
+	# axbottom = Axis(gb[1, 1])
+	
+	# df2 = df_i_low
+	# df2_r = df_i_low_r
+	# scatter!(axbottom, df2_r[!, :calculated_mass_large], df2[!, :calculated_mass_large], label="Large Inserts")
+	# scatter!(axbottom, df2_r[!, :calculated_mass_medium], df2[!, :calculated_mass_medium], label="Medium Inserts")
+	# scatter!(axbottom, df2_r[!, :calculated_mass_small], df2[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	# lines!(axbottom, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	# xlims!(axbottom, low=0, high=25)
+	# ylims!(axbottom, low=0, high=25)
+	# axbottom.xticks = [0, 5, 10, 15, 20, 25]
+	# axbottom.yticks = [0, 5, 10, 15, 20, 25]
+	# axbottom.xlabel = "Known Mass (mg)"
+	# axbottom.ylabel = "Calculated Mass (mg)"
+	axbottomright = Axis(gb[1, 1])
+	
+	df4 = df_s
+	df4_r = df_s_r
+	scatter!(axbottomright, df4_r[!, :calculated_swcs_large], df4[!, :calculated_swcs_large], label="Large Inserts")
+	scatter!(axbottomright, df4_r[!, :calculated_swcs_medium], df4[!, :calculated_swcs_medium], label="Medium Inserts")
+	scatter!(axbottomright, df4_r[!, :calculated_swcs_small], df4[!, :calculated_swcs_small], label="Small Inserts", color=:red)
+	lines!(axbottomright, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axbottomright, low=0, high=500)
+	ylims!(axbottomright, low=0, high=500)
+	# axbottomright.xticks = [0, 5, 10, 15, 20, 25]
+	# axbottomright.yticks = [0, 5, 10, 15, 20, 25]
+	axbottomright.xlabel = "SWCS 1"
+	axbottomright.ylabel = "SWCS 2"
+
+	##-- C --##
+	axtopright = Axis(gc[1, 1])
+	
+	df3 = df_a
+	df3_r = df_a_r
+	scatter!(axtopright, df3_r[!, :calculated_mass_large], df3[!, :calculated_mass_large], label="Large Inserts")
+	scatter!(axtopright, df3_r[!, :calculated_mass_medium], df3[!, :calculated_mass_medium], label="Medium Inserts")
+	scatter!(axtopright, df3_r[!, :calculated_mass_small], df3[!, :calculated_mass_small], label="Small Inserts", color=:red)
+	lines!(axtopright, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	xlims!(axtopright, low=0, high=200)
+	ylims!(axtopright, low=0, high=200)
+	axtopright.xticks = [0, 50, 100, 150, 200]
+	axtopright.yticks = [0, 50, 100, 150, 200]
+	axtopright.xlabel = "Calculated Mass 1 (mg)"
+	axtopright.ylabel = "Calculated Mass 2 (mg)"
+
+	# ##-- D --##
+	# axbottomright = Axis(gd[1, 1])
+	
+	# df4 = df_s
+	# df4_r = df_s_r
+	# scatter!(axbottomright, df4_r[!, :calculated_swcs_large], df4[!, :calculated_swcs_large], label="Large Inserts")
+	# scatter!(axbottomright, df4_r[!, :calculated_swcs_medium], df4[!, :calculated_swcs_medium], label="Medium Inserts")
+	# scatter!(axbottomright, df4_r[!, :calculated_swcs_small], df4[!, :calculated_swcs_small], label="Small Inserts", color=:red)
+	# lines!(axbottomright, [-1000, 1000], [-1000, 1000], label="Unity")
+
+	# xlims!(axbottomright, low=0, high=500)
+	# ylims!(axbottomright, low=0, high=500)
+	# # axbottomright.xticks = [0, 5, 10, 15, 20, 25]
+	# # axbottomright.yticks = [0, 5, 10, 15, 20, 25]
+	# axbottomright.xlabel = "SWCS 1"
+	# axbottomright.ylabel = "SWCS 1"
+
+	##-- LABELS --##
+
+	f[1:2, 3] = Legend(f, axbottomright, framevisible = false)
+
+	
+	for (label, layout) in zip(["A", "B", "C"], [ga, gb, gc])
+	    Label(layout[1, 1, TopLeft()], label,
+	        textsize = 25,
+	        padding = (0, 60, 25, 0),
+	        halign = :right)
+	end
+
+	# colsize!(f.layout, 1, Auto(0.5))
+	# rowsize!(gcd, 1, Auto(1.5))
+
+	f
+end
+
 # ╔═╡ 40f443f8-6e6b-4de3-9c2e-b70599640c5d
 md"""
 ## TEMPLATE FIGURE
@@ -1845,17 +2025,38 @@ end
 # ╠═c05610e1-ecc6-4391-b6cf-964bb4696362
 # ╟─3b3269ef-1e0a-4335-b0a1-e14223670682
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
-# ╟─d04ce8a0-8224-49c7-a057-f1c7d0d65ef8
+# ╠═d04ce8a0-8224-49c7-a057-f1c7d0d65ef8
 # ╠═1ef8e352-7e89-461f-9ac8-8a39cf2c14d7
 # ╠═c86c3d16-ace0-4de2-a7fb-267ea2925302
 # ╠═d4c89efd-fb4b-4553-8920-847c393cb4bc
 # ╠═564644cc-cfe7-40d5-a660-637e140a46cd
 # ╠═2be9bf56-bd59-434d-bd99-3285d50771b8
-# ╠═dd07e78f-1f65-4510-891d-ce4f56fdac05
+# ╟─dd07e78f-1f65-4510-891d-ce4f56fdac05
 # ╠═e0a3618d-9686-41a9-932e-0381df126a2d
 # ╠═787ba4f2-8747-48c6-a03e-705ee8e07aa3
 # ╠═de4d6989-969a-4a4d-a089-7252031df010
 # ╠═73dd7766-befd-41e9-bdfb-0632e9500326
-# ╠═8f4de118-39af-44b9-a408-3f5026c33fe5
+# ╟─8f4de118-39af-44b9-a408-3f5026c33fe5
+# ╟─7ec78f71-6b20-4c8c-a9da-a216404bee72
+# ╟─387fafb4-4a14-482f-8a8e-4214217f82a5
+# ╠═53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
+# ╠═89b28ac5-dd69-4812-84fd-64b54606d146
+# ╠═4f5328e7-66dd-433c-a7f6-5dc461c83a4c
+# ╠═6e515ee8-2836-4285-a0a9-131e1e7b4b7f
+# ╠═9ae3b4cb-fac5-4168-868d-724de9b0c9d2
+# ╟─5248fac3-4dc2-4579-a52b-8d04ebf45b07
+# ╠═fcd83805-06e2-4cda-aa56-0c13c69424d8
+# ╠═5f2eb2d2-84c4-4160-a92a-f181b4126450
+# ╠═869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
+# ╠═43b3ba9b-247c-41cd-968e-3a27736426b0
+# ╠═b16090b5-a232-4e71-9148-b71296efa999
+# ╟─c1d820ac-d0ca-4c18-b61d-849402ae647e
+# ╠═594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
+# ╠═1d208fd8-b847-4afe-84b5-3a553f50a858
+# ╠═a9f68d7e-7818-47d5-ba1f-965634225b30
+# ╠═f2177e1f-2a55-4f81-9a69-ab985ae3b7c2
+# ╠═35bc90e2-9d70-4daf-a825-b462831c5bf6
+# ╠═de038336-aa35-417c-a723-17d6745dca3d
+# ╠═a85f777a-76f2-4c64-9973-ea9dec245600
 # ╟─40f443f8-6e6b-4de3-9c2e-b70599640c5d
 # ╠═f33bd1c6-009a-4071-9cb5-93f4f71c5415

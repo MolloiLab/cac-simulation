@@ -74,7 +74,7 @@ begin
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -86,12 +86,14 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				if DENSITY == "low" && SIZE == "large"
+				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+					thresh = 80
+				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+					thresh = 70
+				elseif DENSITY == "low" && SIZE == "large"
 					thresh = 75
-				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "80"
-				# 	thresh = 75
-				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-				# 	thresh = 75
+				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+					thresh = 55
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -136,7 +138,7 @@ begin
 				end
 
 				arr = masked_array[:, :, 4:6]
-				single_arr = masked_array[:, :, slice_CCI]
+				single_arr = masked_array[:, :, 5]
 				pixel_size = DICOMUtils.get_pixel_size(header)
 
 				mask_L_HD_3D = Array{Bool}(undef, size(arr))
@@ -376,14 +378,14 @@ md"""
 dfs
 
 # ╔═╡ bb622f09-0da5-4c38-a7d3-de898af42490
-if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+if ~isdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
 end
 
 # ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_repeated/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 
