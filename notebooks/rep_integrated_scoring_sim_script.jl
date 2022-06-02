@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 4a32bbbd-4a72-4bb4-941e-ae732c50154d
+# ╔═╡ 70410feb-aa21-405d-8d26-9cb7c1ecdb9e
 # ╠═╡ show_logs = false
 begin
 	let
@@ -41,10 +41,10 @@ begin
 	using CalciumScoring
 end
 
-# ╔═╡ cdc4e135-fa3c-4cee-aee7-b57b094d2896
+# ╔═╡ f2845431-56a1-4fa4-a31f-a515c686d85a
 TableOfContents()
 
-# ╔═╡ da50cb92-2222-4bfd-8dc1-b9c24499baab
+# ╔═╡ 71b9dc8f-8879-43c3-a94b-c3efbeb672a6
 function create_mask(array, mask)
 	@assert size(array) == size(mask)
 	idxs = findall(x -> x == true, mask)
@@ -55,26 +55,26 @@ function create_mask(array, mask)
 	return overlayed_mask
 end
 
-# ╔═╡ 43a4c90d-6838-4c82-885e-5aa90fae6e4a
+# ╔═╡ 26110c25-c288-4e5a-a3d1-260ca0c15a84
 TYPE = "integrated_scoring"
 
-# ╔═╡ 661ddf71-d7e7-4e88-90b8-32aee6f97c1a
+# ╔═╡ 442943d0-9a1e-46ff-a924-91b5537a9b6a
 VENDERS = ["80", "100", "120", "135"]
 
-# ╔═╡ 0ae8ad2f-2831-4578-841d-d71a443c5df7
+# ╔═╡ 57656cb2-146a-43ec-abbb-1b5a6a1f3afb
 SIZES = ["small", "medium", "large"]
 
-# ╔═╡ 9fba2c30-b1bd-4980-b44c-ccbc7dd5e84c
+# ╔═╡ 6e98101e-f052-4b19-9915-429166605ced
 DENSITIES = ["low", "normal"]
 
-# ╔═╡ 4490f5d3-5617-409b-946d-7ba959227441
+# ╔═╡ 40454c15-d8fa-4530-8b74-39a934afc257
 begin
 	dfs = []
 	for VENDER in VENDERS
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -86,8 +86,14 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				if DENSITY == "low" && SIZE == "large"
+				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+					thresh = 80
+				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+					thresh = 70
+				elseif DENSITY == "low" && SIZE == "large"
 					thresh = 75
+				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+					thresh = 55
 				elseif DENSITY == "low" && SIZE == "medium"
 					thresh = 75
 				elseif DENSITY == "low"
@@ -95,23 +101,6 @@ begin
 				elseif DENSITY ==  "normal"
 					thresh = 130
 				end
-				
-				# local thresh
-				# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-				# 	thresh = 80
-				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-				# 	thresh = 70
-				# elseif DENSITY == "low" && SIZE == "large"
-				# 	thresh = 75
-				# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-				# 	thresh = 55
-				# elseif DENSITY == "low" && SIZE == "medium"
-				# 	thresh = 75
-				# elseif DENSITY == "low"
-				# 	thresh = 60
-				# elseif DENSITY ==  "normal"
-				# 	thresh = 130
-				# end
 
 				@info DENSITY, SIZE, VENDER, thresh
 				
@@ -380,36 +369,36 @@ begin
 	end
 end
 
-# ╔═╡ 31805744-a20b-4403-8d96-be6c5b029271
+# ╔═╡ 1b95b391-cad0-4aad-8885-fd0c79cd94c1
 md"""
 # Save Results
 """
 
-# ╔═╡ 6f5a5bf7-e6c2-49d3-ac54-8c60e87b5425
+# ╔═╡ cc20b566-f645-4ae5-8fe2-19ba5697aa6c
 dfs
 
-# ╔═╡ dc5414f6-2305-42ba-8543-88eb5bb8009f
-if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+# ╔═╡ bb622f09-0da5-4c38-a7d3-de898af42490
+if ~isdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
 end
 
-# ╔═╡ bec37533-2e23-45e3-9db2-67f6007b53ef
+# ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_repeated/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 
 # ╔═╡ Cell order:
-# ╠═4a32bbbd-4a72-4bb4-941e-ae732c50154d
-# ╠═cdc4e135-fa3c-4cee-aee7-b57b094d2896
-# ╠═da50cb92-2222-4bfd-8dc1-b9c24499baab
-# ╠═43a4c90d-6838-4c82-885e-5aa90fae6e4a
-# ╠═661ddf71-d7e7-4e88-90b8-32aee6f97c1a
-# ╠═0ae8ad2f-2831-4578-841d-d71a443c5df7
-# ╠═9fba2c30-b1bd-4980-b44c-ccbc7dd5e84c
-# ╠═4490f5d3-5617-409b-946d-7ba959227441
-# ╟─31805744-a20b-4403-8d96-be6c5b029271
-# ╠═6f5a5bf7-e6c2-49d3-ac54-8c60e87b5425
-# ╠═dc5414f6-2305-42ba-8543-88eb5bb8009f
-# ╠═bec37533-2e23-45e3-9db2-67f6007b53ef
+# ╠═70410feb-aa21-405d-8d26-9cb7c1ecdb9e
+# ╠═f2845431-56a1-4fa4-a31f-a515c686d85a
+# ╟─71b9dc8f-8879-43c3-a94b-c3efbeb672a6
+# ╠═26110c25-c288-4e5a-a3d1-260ca0c15a84
+# ╠═442943d0-9a1e-46ff-a924-91b5537a9b6a
+# ╠═57656cb2-146a-43ec-abbb-1b5a6a1f3afb
+# ╠═6e98101e-f052-4b19-9915-429166605ced
+# ╠═40454c15-d8fa-4530-8b74-39a934afc257
+# ╟─1b95b391-cad0-4aad-8885-fd0c79cd94c1
+# ╠═cc20b566-f645-4ae5-8fe2-19ba5697aa6c
+# ╠═bb622f09-0da5-4c38-a7d3-de898af42490
+# ╠═30e1d9a6-868c-4d29-8752-48a3092d0759

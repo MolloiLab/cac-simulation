@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 6e3c5404-386a-4bbb-b911-2b314e589a36
+# ╔═╡ 6876b340-b075-11ec-385c-75b3de984c11
 # ╠═╡ show_logs = false
 begin
 	let
@@ -41,10 +41,10 @@ begin
 	using CalciumScoring
 end
 
-# ╔═╡ 6319ab98-eae2-45ce-b18c-29fda037fb77
+# ╔═╡ bd839543-88ed-41c8-b6e1-0489a9d27714
 TableOfContents()
 
-# ╔═╡ 76d9f096-194f-4981-9b46-ea78b5a15ce6
+# ╔═╡ 47510e0b-7af8-420a-8313-0581004c63e2
 function create_mask(array, mask)
 	@assert size(array) == size(mask)
 	idxs = findall(x -> x == true, mask)
@@ -55,26 +55,26 @@ function create_mask(array, mask)
 	return overlayed_mask
 end
 
-# ╔═╡ 0d10d0e3-5833-4330-9c6a-a6a620b56d9e
-TYPE = "swcs"
+# ╔═╡ 012ffe6c-b929-4b8f-87c0-9254cf36d643
+TYPE = "agatston"
 
-# ╔═╡ af7aaaa6-4333-4157-b77c-dad9e07b3c46
+# ╔═╡ f4ed0461-50ff-4156-82cb-b270478c9075
 VENDERS = ["80", "100", "120", "135"]
 
-# ╔═╡ dd4d15fc-02af-42ab-a3b7-fdeaf1b1eb09
+# ╔═╡ 8d431b04-9251-4096-a8f0-1892d0f8b12a
 SIZES = ["small", "medium", "large"]
 
-# ╔═╡ 02940e5d-22db-4f71-adba-b4d9807d5974
+# ╔═╡ 27f09e79-5152-4618-8b8b-da1c92da584f
 DENSITIES = ["low", "normal"]
 
-# ╔═╡ 9e8a0097-6680-4210-9cc7-582272de49c3
+# ╔═╡ 653f4b85-58f1-4bd7-a81e-86a8366c8395
 begin
 	dfs = []
 	for VENDER in VENDERS
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -85,27 +85,9 @@ begin
 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
 			
 				# Segment Calcium Rod
-				local thresh
-				if DENSITY == "low" && SIZE == "large"
-					thresh = 75
-				elseif DENSITY == "low" && SIZE == "medium"
-					thresh = 75
-				elseif DENSITY == "low"
-					thresh = 60
-				elseif DENSITY ==  "normal"
-					thresh = 130
-				end
-
-				# # Segment Calcium Rod (reproducibility1)
 				# local thresh
-				# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-				# 	thresh = 80
-				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-				# 	thresh = 70
-				# elseif DENSITY == "low" && SIZE == "large"
+				# if DENSITY == "low" && SIZE == "large"
 				# 	thresh = 75
-				# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-				# 	thresh = 55
 				# elseif DENSITY == "low" && SIZE == "medium"
 				# 	thresh = 75
 				# elseif DENSITY == "low"
@@ -114,20 +96,27 @@ begin
 				# 	thresh = 130
 				# end
 
+				# Segment Calcium Rod (reproducibility1)
+				local thresh
+				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+					thresh = 80
+				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+					thresh = 70
+				elseif DENSITY == "low" && SIZE == "large"
+					thresh = 75
+				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+					thresh = 55
+				elseif DENSITY == "low" && SIZE == "medium"
+					thresh = 75
+				elseif DENSITY == "low"
+					thresh = 60
+				elseif DENSITY ==  "normal"
+					thresh = 130
+				end
+
 				@info DENSITY, SIZE, VENDER
 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)
-				
-				local μ, σ
-				if VENDER == "80"
-					μ, σ = 170, 40
-				elseif VENDER == "100"
-					μ, σ = 165, 40
-				elseif VENDER == "120"
-					μ, σ = 160, 40
-				else VENDER == "135"
-					μ, σ = 155, 40
-				end
-				
+		
 				# Segment Calcium Inserts
 				# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
 				# 		dcm_array, masked_array, header, slice_CCI, center_insert
@@ -151,16 +140,21 @@ begin
 				pixel_size = DICOMUtils.get_pixel_size(header)
 				mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, 2, cols, rows, pixel_size)
 
-				# Background
-				arr = masked_array[:, :, 4:6]
-				alg2 = SpatiallyWeighted()
-				
-				background_mask = zeros(size(arr)...)
-				background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
-				background_mask = Bool.(background_mask)
-				swcs_bkg = score(background_mask, μ, σ, alg2)
+				local agat_thresh
+				agat_thresh = 130
+				# if VENDER == "80"
+				# 	agat_thresh = 110
+				# elseif VENDER == "100"
+				# 	agat_thresh = 87
+				# elseif VENDER == "120"
+				# 	agat_thresh = 77
+				# else VENDER == "135"
+				# 	agat_thresh = 72
+				# end
 				
 				# Score Large Inserts
+				arr = masked_array[:, :, 4:6]
+				
 				## High Density
 				mask_L_HD_3D = Array{Bool}(undef, size(arr))
 				for z in 1:size(arr, 3)
@@ -169,8 +163,7 @@ begin
 				dilated_mask_L_HD = dilate(dilate(mask_L_HD_3D))
 				alg = Agatston()
 				overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
-				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
-				swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
+				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_L_MD_3D = Array{Bool}(undef, size(arr))
@@ -179,8 +172,7 @@ begin
 				end
 				dilated_mask_L_MD = dilate(dilate(mask_L_MD_3D))
 				overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
-				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
-				swcs_l_md = score(overlayed_mask_l_md, μ, σ, alg2)
+				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_L_LD_3D = Array{Bool}(undef, size(arr))
@@ -189,8 +181,7 @@ begin
 				end
 				dilated_mask_L_LD = dilate(dilate(mask_L_LD_3D))
 				overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
-				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
-				swcs_l_ld = score(overlayed_mask_l_ld, μ, σ, alg2)
+				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 			
 			
 				# Score Medium Inserts
@@ -201,8 +192,7 @@ begin
 				end
 				dilated_mask_M_HD = dilate(dilate(dilate(dilate(mask_M_HD_3D))))
 				overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
-				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
-				swcs_m_hd = score(overlayed_mask_m_hd, μ, σ, alg2)
+				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_M_MD_3D = Array{Bool}(undef, size(arr))
@@ -211,8 +201,7 @@ begin
 				end
 				dilated_mask_M_MD = dilate(dilate(dilate(dilate(mask_M_MD_3D))))
 				overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
-				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
-				swcs_m_md = score(overlayed_mask_m_md, μ, σ, alg2)
+				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_M_LD_3D = Array{Bool}(undef, size(arr))
@@ -221,8 +210,7 @@ begin
 				end
 				dilated_mask_M_LD = dilate(dilate(dilate(dilate(mask_M_LD_3D))))
 				overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
-				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
-				swcs_m_ld = score(overlayed_mask_m_ld, μ, σ, alg2)
+				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				# Score Small Inserts
 				## High Density
@@ -232,8 +220,7 @@ begin
 				end
 				dilated_mask_S_HD = dilate((dilate(dilate(dilate((mask_S_HD_3D))))))
 				overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
-				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
-				swcs_s_hd = score(overlayed_mask_s_hd, μ, σ, alg2)
+				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Medium Density
 				mask_S_MD_3D = Array{Bool}(undef, size(arr))
@@ -242,8 +229,7 @@ begin
 				end
 				dilated_mask_S_MD = dilate((dilate(dilate(dilate(mask_S_MD_3D)))))
 				overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
-				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
-				swcs_s_md = score(overlayed_mask_s_md, μ, σ, alg2)
+				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				## Low Density
 				mask_S_LD_3D = Array{Bool}(undef, size(arr))
@@ -252,8 +238,7 @@ begin
 				end
 				dilated_mask_S_LD = dilate((dilate(dilate(dilate(mask_S_LD_3D)))))
 				overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
-				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
-				swcs_s_ld = score(overlayed_mask_s_ld, μ, σ, alg2)
+				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg; threshold=agat_thresh)
 				
 				# Results
 				local density_array
@@ -321,21 +306,6 @@ begin
 					mass_s_md,
 					mass_s_hd
 				]
-				calculated_swcs_large = [
-					swcs_l_ld,
-					swcs_l_md,
-					swcs_l_hd
-				]
-				calculated_swcs_medium = [
-					swcs_m_ld,
-					swcs_m_md,
-					swcs_m_hd
-				]
-				calculated_swcs_small = [
-					swcs_s_ld,
-					swcs_s_md,
-					swcs_s_hd
-				]
 			
 				df = DataFrame(
 					VENDER = VENDER,
@@ -348,11 +318,7 @@ begin
 					ground_truth_mass_medium = ground_truth_mass_medium,
 					calculated_mass_medium = calculated_mass_medium,
 					ground_truth_mass_small = ground_truth_mass_small,
-					calculated_mass_small = calculated_mass_small,
-					calculated_swcs_large = calculated_swcs_large,
-					calculated_swcs_medium = calculated_swcs_medium,
-					calculated_swcs_small = calculated_swcs_small,
-					swcs_bkg = swcs_bkg
+					calculated_mass_small = calculated_mass_small
 				)
 				push!(dfs, df)
 			end
@@ -360,48 +326,36 @@ begin
 	end
 end
 
-# ╔═╡ ee765a05-820e-441e-a000-64fed9346d25
+# ╔═╡ ed2d91ef-73c7-48cd-bcd9-4bfb5d1f4ae5
 md"""
 # Save results
 """
 
-# ╔═╡ d54279d4-494a-4430-9587-449a32e6cece
+# ╔═╡ a005fc54-44e3-43d1-8b4a-4767dc0e180e
 dfs
 
-# ╔═╡ c7b29675-2392-40f9-b4c8-94afe85a9a9c
-if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+# ╔═╡ ad45f9c8-b82f-4015-b912-f548ee988e05
+if ~isdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
 end
 
-# ╔═╡ b60b6d28-d1a3-46bd-b59a-37d1663452ca
+# ╔═╡ 99aee610-1b33-4b64-b752-ac8fe602bdcb
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_repeated/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 
-# ╔═╡ 99d772a2-e178-4f6b-94bc-1987c7a952ec
-
-
-# ╔═╡ 7a3b633f-3045-42b9-9722-cd9a1b0b7217
-
-
-# ╔═╡ dc4686c4-e59a-4b74-95ce-8ac66a4ed9cd
-
-
 # ╔═╡ Cell order:
-# ╠═6e3c5404-386a-4bbb-b911-2b314e589a36
-# ╠═6319ab98-eae2-45ce-b18c-29fda037fb77
-# ╟─76d9f096-194f-4981-9b46-ea78b5a15ce6
-# ╠═0d10d0e3-5833-4330-9c6a-a6a620b56d9e
-# ╠═af7aaaa6-4333-4157-b77c-dad9e07b3c46
-# ╠═dd4d15fc-02af-42ab-a3b7-fdeaf1b1eb09
-# ╠═02940e5d-22db-4f71-adba-b4d9807d5974
-# ╠═9e8a0097-6680-4210-9cc7-582272de49c3
-# ╟─ee765a05-820e-441e-a000-64fed9346d25
-# ╠═d54279d4-494a-4430-9587-449a32e6cece
-# ╠═c7b29675-2392-40f9-b4c8-94afe85a9a9c
-# ╠═b60b6d28-d1a3-46bd-b59a-37d1663452ca
-# ╠═99d772a2-e178-4f6b-94bc-1987c7a952ec
-# ╠═7a3b633f-3045-42b9-9722-cd9a1b0b7217
-# ╠═dc4686c4-e59a-4b74-95ce-8ac66a4ed9cd
+# ╠═6876b340-b075-11ec-385c-75b3de984c11
+# ╠═bd839543-88ed-41c8-b6e1-0489a9d27714
+# ╟─47510e0b-7af8-420a-8313-0581004c63e2
+# ╠═012ffe6c-b929-4b8f-87c0-9254cf36d643
+# ╠═f4ed0461-50ff-4156-82cb-b270478c9075
+# ╠═8d431b04-9251-4096-a8f0-1892d0f8b12a
+# ╠═27f09e79-5152-4618-8b8b-da1c92da584f
+# ╠═653f4b85-58f1-4bd7-a81e-86a8366c8395
+# ╟─ed2d91ef-73c7-48cd-bcd9-4bfb5d1f4ae5
+# ╠═a005fc54-44e3-43d1-8b4a-4767dc0e180e
+# ╠═ad45f9c8-b82f-4015-b912-f548ee988e05
+# ╠═99aee610-1b33-4b64-b752-ac8fe602bdcb

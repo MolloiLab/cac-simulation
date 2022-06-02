@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 6e3c5404-386a-4bbb-b911-2b314e589a36
+# ╔═╡ 17f7c8f3-b2bc-4c41-bec6-2e662b85dadf
 # ╠═╡ show_logs = false
 begin
 	let
@@ -41,10 +41,10 @@ begin
 	using CalciumScoring
 end
 
-# ╔═╡ 6319ab98-eae2-45ce-b18c-29fda037fb77
+# ╔═╡ 523393ee-0b74-4ece-84ef-ae6b13b70139
 TableOfContents()
 
-# ╔═╡ 76d9f096-194f-4981-9b46-ea78b5a15ce6
+# ╔═╡ 67f2e345-171c-4ed4-8a1c-e1e0be3e33c5
 function create_mask(array, mask)
 	@assert size(array) == size(mask)
 	idxs = findall(x -> x == true, mask)
@@ -55,26 +55,26 @@ function create_mask(array, mask)
 	return overlayed_mask
 end
 
-# ╔═╡ 0d10d0e3-5833-4330-9c6a-a6a620b56d9e
+# ╔═╡ 2304c588-078f-48c3-9afc-ceceebb06f33
 TYPE = "swcs"
 
-# ╔═╡ af7aaaa6-4333-4157-b77c-dad9e07b3c46
+# ╔═╡ 20a9edb7-5fa3-4175-861f-16bb15a1d030
 VENDERS = ["80", "100", "120", "135"]
 
-# ╔═╡ dd4d15fc-02af-42ab-a3b7-fdeaf1b1eb09
+# ╔═╡ 901cf173-f94a-4fde-9014-f001e04138aa
 SIZES = ["small", "medium", "large"]
 
-# ╔═╡ 02940e5d-22db-4f71-adba-b4d9807d5974
+# ╔═╡ 3bcf713b-61d7-4ebd-a282-d49c244e6723
 DENSITIES = ["low", "normal"]
 
-# ╔═╡ 9e8a0097-6680-4210-9cc7-582272de49c3
+# ╔═╡ e85beb08-b29b-4725-bb84-e38bbe1d12a3
 begin
 	dfs = []
 	for VENDER in VENDERS
 		for SIZE in SIZES
 			for DENSITY in DENSITIES
 				SCAN_NUMBER = 1
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
 				root_path = string(BASE_PATH, VENDER)
 				dcm_path_list = dcm_list_builder(root_path)
 				pth = dcm_path_list[SCAN_NUMBER]
@@ -85,27 +85,9 @@ begin
 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
 			
 				# Segment Calcium Rod
-				local thresh
-				if DENSITY == "low" && SIZE == "large"
-					thresh = 75
-				elseif DENSITY == "low" && SIZE == "medium"
-					thresh = 75
-				elseif DENSITY == "low"
-					thresh = 60
-				elseif DENSITY ==  "normal"
-					thresh = 130
-				end
-
-				# # Segment Calcium Rod (reproducibility1)
 				# local thresh
-				# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-				# 	thresh = 80
-				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-				# 	thresh = 70
-				# elseif DENSITY == "low" && SIZE == "large"
+				# if DENSITY == "low" && SIZE == "large"
 				# 	thresh = 75
-				# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-				# 	thresh = 55
 				# elseif DENSITY == "low" && SIZE == "medium"
 				# 	thresh = 75
 				# elseif DENSITY == "low"
@@ -113,6 +95,24 @@ begin
 				# elseif DENSITY ==  "normal"
 				# 	thresh = 130
 				# end
+
+				# Segment Calcium Rod (reproducibility1)
+				local thresh
+				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+					thresh = 80
+				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+					thresh = 70
+				elseif DENSITY == "low" && SIZE == "large"
+					thresh = 75
+				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+					thresh = 55
+				elseif DENSITY == "low" && SIZE == "medium"
+					thresh = 75
+				elseif DENSITY == "low"
+					thresh = 60
+				elseif DENSITY ==  "normal"
+					thresh = 130
+				end
 
 				@info DENSITY, SIZE, VENDER
 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)
@@ -360,48 +360,36 @@ begin
 	end
 end
 
-# ╔═╡ ee765a05-820e-441e-a000-64fed9346d25
+# ╔═╡ a04b25ce-8322-45e8-8df3-ad1cac7d7f3e
 md"""
 # Save results
 """
 
-# ╔═╡ d54279d4-494a-4430-9587-449a32e6cece
+# ╔═╡ 78ed7a73-d325-4dd4-bf1c-340300c1288a
 dfs
 
-# ╔═╡ c7b29675-2392-40f9-b4c8-94afe85a9a9c
-if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
-	mkdir(string(cd(pwd, "..") , "/output_new/", TYPE))
+# ╔═╡ 0d6776a5-9a21-4ce7-a61b-d47b97fdd6d8
+if ~isdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
+	mkdir(string(cd(pwd, "..") , "/output_repeated/", TYPE))
 end
 
-# ╔═╡ b60b6d28-d1a3-46bd-b59a-37d1663452ca
+# ╔═╡ a3ab5f45-c061-4c15-8c5c-4d689dcdaa0a
 if length(dfs) == 24
 	new_df = vcat(dfs[1:24]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_repeated/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 
-# ╔═╡ 99d772a2-e178-4f6b-94bc-1987c7a952ec
-
-
-# ╔═╡ 7a3b633f-3045-42b9-9722-cd9a1b0b7217
-
-
-# ╔═╡ dc4686c4-e59a-4b74-95ce-8ac66a4ed9cd
-
-
 # ╔═╡ Cell order:
-# ╠═6e3c5404-386a-4bbb-b911-2b314e589a36
-# ╠═6319ab98-eae2-45ce-b18c-29fda037fb77
-# ╟─76d9f096-194f-4981-9b46-ea78b5a15ce6
-# ╠═0d10d0e3-5833-4330-9c6a-a6a620b56d9e
-# ╠═af7aaaa6-4333-4157-b77c-dad9e07b3c46
-# ╠═dd4d15fc-02af-42ab-a3b7-fdeaf1b1eb09
-# ╠═02940e5d-22db-4f71-adba-b4d9807d5974
-# ╠═9e8a0097-6680-4210-9cc7-582272de49c3
-# ╟─ee765a05-820e-441e-a000-64fed9346d25
-# ╠═d54279d4-494a-4430-9587-449a32e6cece
-# ╠═c7b29675-2392-40f9-b4c8-94afe85a9a9c
-# ╠═b60b6d28-d1a3-46bd-b59a-37d1663452ca
-# ╠═99d772a2-e178-4f6b-94bc-1987c7a952ec
-# ╠═7a3b633f-3045-42b9-9722-cd9a1b0b7217
-# ╠═dc4686c4-e59a-4b74-95ce-8ac66a4ed9cd
+# ╠═17f7c8f3-b2bc-4c41-bec6-2e662b85dadf
+# ╠═523393ee-0b74-4ece-84ef-ae6b13b70139
+# ╠═67f2e345-171c-4ed4-8a1c-e1e0be3e33c5
+# ╠═2304c588-078f-48c3-9afc-ceceebb06f33
+# ╠═20a9edb7-5fa3-4175-861f-16bb15a1d030
+# ╠═901cf173-f94a-4fde-9014-f001e04138aa
+# ╠═3bcf713b-61d7-4ebd-a282-d49c244e6723
+# ╠═e85beb08-b29b-4725-bb84-e38bbe1d12a3
+# ╟─a04b25ce-8322-45e8-8df3-ad1cac7d7f3e
+# ╠═78ed7a73-d325-4dd4-bf1c-340300c1288a
+# ╠═0d6776a5-9a21-4ce7-a61b-d47b97fdd6d8
+# ╠═a3ab5f45-c061-4c15-8c5c-4d689dcdaa0a
