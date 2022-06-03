@@ -70,309 +70,8 @@ df_i_low_small, df_i_low_medium, df_i_low_large = groupby(df_i_low, :SIZE);
 # ╔═╡ 0c367cb1-d959-4c10-b31c-18d3cb396255
 df_i_normal_small, df_i_normal_medium, df_i_normal_large = groupby(df_i_normal, :SIZE);
 
-# ╔═╡ bab5cbcc-2193-49c1-8baa-f1e3d83ebaeb
-md"""
-### Normal Density
-"""
-
-# ╔═╡ 05074eb9-996b-40e9-8c66-c56562d54f84
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_normal_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 25, 50, 75, 100]
-	ax.yticks = [0, 25, 50, 75, 100]
-
-	xlims!(ax, 0, 100)
-	ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 1874695d-4aba-443c-b71e-c071d49025ef
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_normal_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 25, 50, 75, 100]
-	ax.yticks = [0, 25, 50, 75, 100]
-
-	xlims!(ax, 0, 100)
-	ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ a97dbbed-31d2-44a8-b7f2-1d1b59e3f493
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_normal_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 25, 50, 75, 100]
-	ax.yticks = [0, 25, 50, 75, 100]
-
-	xlims!(ax, 0, 100)
-	ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ a4c255ee-1f96-466a-87a6-6963f03da0b3
-md"""
-### -- Small Inserts
-"""
-
-# ╔═╡ 3a6a0850-62c0-48c9-a793-901267ea7912
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_normal_large
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([-100, 100], [-100, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, -1, 10)
-	ylims!(ax, -1, 10)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 7f103d79-215d-4a5c-9ee3-1afc90eae60d
-let
-	df = df_i_normal_small
-	global int_normal_small_rmsd
-	int_normal_small_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ 1f5eae73-2a34-4266-8e9d-3c1c448920f8
-let
-	df = df_i_normal_medium
-	global int_normal_medium_rmsd
-	int_normal_medium_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ eb82b841-2942-4830-a3eb-4c339c0a3f81
-let
-	df = df_i_normal_large
-	global int_normal_large_rmsd
-	int_normal_large_rmsd = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
-end
-
-# ╔═╡ 0b64b3cd-ce34-4842-90f6-7135bf9f0029
-df_i_rmsd_normal = DataFrame(
-	small_rmsd = int_normal_small_rmsd,
-	medium_rmsd = int_normal_medium_rmsd,
-	large_rmsd = int_normal_large_rmsd
-)
-
-# ╔═╡ 1dcd69da-1781-436d-9f54-be6d1599f073
-let
-	f = Figure()
-	df = df_i_rmsd_normal
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
-	)
-	ax.title = "RMS (Large)"
-	ax.ylabel = "RMSD"
-	
-	barplot!(ax, [1], df[!, :small_rmsd])
-	barplot!(ax, [2], df[!, :medium_rmsd])
-	barplot!(ax, [3], df[!, :large_rmsd])
-
-	f
-end
-
-# ╔═╡ cb049113-fd9c-4ce0-a326-44ba65dbf735
-md"""
-### Low Density
-"""
-
-# ╔═╡ 39328eb2-6fe9-4156-a51b-845b6621443a
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_low_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 5, 10, 15, 20]
-	ax.yticks = [0, 5, 10, 15, 20]
-
-	xlims!(ax, 0, 20)
-	ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 27e0fabf-6d24-4335-b04b-32e4096885a8
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_low_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 5, 10, 15, 20]
-	ax.yticks = [0, 5, 10, 15, 20]
-
-	xlims!(ax, 0, 20)
-	ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 0e2f7272-84d0-4f91-ae20-85814af65199
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_low_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	ax.xticks = [0, 5, 10, 15, 20]
-	ax.yticks = [0, 5, 10, 15, 20]
-
-	xlims!(ax, 0, 20)
-	ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ b29500f3-38e4-48c2-ac8f-bbe7650c364b
-md"""
-### -- Small Inserts
-"""
-
-# ╔═╡ 83c3d582-abaf-49cf-a7e5-7a06cc322cbf
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_i_low_large
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([-100, 100], [-100, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 1)
-	ylims!(ax, -1.5, 2.5)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ d13b9731-0a9e-4995-bde0-d369c2e8e3be
-let
-	df = df_i_low_small
-	global int_low_small_rms
-	int_low_small_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ fd562c23-d505-4ec3-9d84-0dcf3c7c8d52
-let
-	df = df_i_low_medium
-	global int_low_medium_rms
-	int_low_medium_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ 551528f7-2df3-46a6-be34-a959de286cb3
-let
-	df = df_i_low_large
-	global int_low_large_rms
-	int_low_large_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
-end
-
-# ╔═╡ b58b6d36-b170-4a2f-9937-c0f04ec0cd3e
-df_i_rms_low = DataFrame(
-	small_rms = int_low_small_rms,
-	medium_rms = int_low_medium_rms,
-	large_rms = int_low_large_rms
-)
-
-# ╔═╡ 7cdc22f2-1301-48ec-a62a-747dc0b549b1
-let
-	f = Figure()
-	df = df_i_rms_low
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
-	)
-	ax.title = "RMS (Large)"
-	ax.ylabel = "RMSD"
-	
-	barplot!(ax, [1], df[!, :small_rms])
-	barplot!(ax, [2], df[!, :medium_rms])
-	barplot!(ax, [3], df[!, :large_rms])
-
-	f
-end
+# ╔═╡ 5144e2a2-91e2-49ab-9dcf-df57ed767a36
+df_i
 
 # ╔═╡ a58beea4-b186-44c6-bf75-98d368f7ebe4
 md"""
@@ -394,259 +93,6 @@ df_a_low_small, df_a_low_medium, df_a_low_large = groupby(df_a_low, :SIZE);
 # ╔═╡ 7223ae32-7241-463f-be13-2d2ce6bc7de7
 df_a_normal_small, df_a_normal_medium, df_a_normal_large = groupby(df_a_normal, :SIZE);
 
-# ╔═╡ de8c33f2-e75d-4753-a04c-c1f95f600382
-df_a_low
-
-# ╔═╡ ac2136d9-6100-4304-ad84-d7b6cd75e648
-md"""
-### Normal Density
-"""
-
-# ╔═╡ e5050b8a-2c93-4da7-a209-9b405566dfda
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_normal_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 200], [0, 200], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	# xlims!(ax, 0, 100)
-	# ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 3602c899-8558-424c-91bb-c881ada941bf
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_normal_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 200], [0, 200], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	# xlims!(ax, 0, 100)
-	# ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 73bc295c-47e6-42ae-96ed-abed9f4fcb0d
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_normal_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 200], [0, 200], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	# xlims!(ax, 0, 100)
-	# ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 7ea77749-7cf4-430f-9ec3-c60c08003f19
-let
-	df = df_a_normal_small
-	global agat_normal_small_rms
-	agat_normal_small_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ 3e00829f-9b69-41da-8c0d-8d230d00a647
-let
-	df = df_a_normal_medium
-	global agat_normal_medium_rms
-	agat_normal_medium_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ fc587c42-2f3c-442f-a744-144b0150da87
-let
-	df = df_a_normal_large
-	global agat_normal_large_rms
-	agat_normal_large_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
-end
-
-# ╔═╡ b230c46b-f7b4-48e9-816a-d0b50d91f7a0
-df_a_rms = DataFrame(
-	normal_small_rms = agat_normal_small_rms,
-	normal_medium_rms = agat_normal_medium_rms,
-	normal_large_rms = agat_normal_large_rms
-)
-
-# ╔═╡ 787c27bf-250f-413d-98df-8a637001f522
-let
-	f = Figure()
-	df = df_a_rms
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"])
-	)
-	ax.title = "RMS"
-	ax.ylabel = "RMSD"
-	barplot!(ax, [1], df[!, :normal_small_rms])
-	barplot!(ax, [2], df[!, :normal_medium_rms])
-	barplot!(ax, [3], df[!, :normal_large_rms])
-	f
-end
-
-# ╔═╡ c91266a8-ff76-43c9-abb9-548ae789b74e
-md"""
-### Low Density
-"""
-
-# ╔═╡ 431b5585-c6c6-4f67-a7ea-471a63892bba
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_low_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 30], [0, 30], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 5, 10, 15, 20]
-	# ax.yticks = [0, 5, 10, 15, 20]
-
-	# xlims!(ax, 0, 20)
-	# ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 6c0744c3-9977-4094-be58-a47208c18356
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_low_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 30], [0, 30], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 5, 10, 15, 20]
-	# ax.yticks = [0, 5, 10, 15, 20]
-
-	# xlims!(ax, 0, 20)
-	# ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 15161fba-5577-4ad3-bdfc-ef51a46a8728
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_a_low_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	lines!([0, 80], [0, 80], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 5, 10, 15, 20]
-	# ax.yticks = [0, 5, 10, 15, 20]
-
-	# xlims!(ax, 0, 20)
-	# ylims!(ax, 0, 20)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 1a7e89a2-a8ca-48b3-ac8f-0ce4256a3bc3
-let
-	df = df_a_low_small
-	global agat_low_small_rms
-	agat_low_small_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ 9b8d2206-0f33-4b2b-af6f-01547b1a8e23
-let
-	df = df_a_low_medium
-	global agat_low_medium_rms
-	agat_low_medium_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small]))/ 3
-end
-
-# ╔═╡ 21d86397-2984-4ad7-9886-81910749eae1
-let
-	df = df_a_low_large
-	global agat_low_large_rms
-	agat_low_large_rms = (rmsd(df[!, :calculated_mass_large], df[!, :ground_truth_mass_large]) + rmsd(df[!, :calculated_mass_medium], df[!, :ground_truth_mass_medium]) + rmsd(df[!, :calculated_mass_small], df[!, :ground_truth_mass_small])) / 3
-end
-
-# ╔═╡ 7ae079cd-333e-4143-9f31-116785181a67
-df_a_rms_low = DataFrame(
-	small_rms = agat_low_small_rms,
-	medium_rms = agat_low_medium_rms,
-	large_rms = agat_low_large_rms
-)
-
-# ╔═╡ c45ce6b0-1efd-4d72-8851-aff501131fd3
-let
-	f = Figure()
-	df = df_a_rms_low
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"])
-	)
-	ax.title = "RMS"
-	ax.ylabel = "RMSD"
-	barplot!(ax, [1], df[!, :small_rms])
-	barplot!(ax, [2], df[!, :medium_rms])
-	barplot!(ax, [3], df[!, :large_rms])
-	f
-end
-
 # ╔═╡ f39a9ed5-c897-4b90-8494-bf231312970e
 md"""
 ## Spatially Weighted
@@ -666,461 +112,6 @@ df_s_low_small, df_s_low_medium, df_s_low_large = groupby(df_s_low, :SIZE);
 
 # ╔═╡ d5d8e9da-eba8-4788-b787-95b3a2b41329
 df_s_normal_small, df_s_normal_medium, df_s_normal_large = groupby(df_s_normal, :SIZE);
-
-# ╔═╡ 9d88ebf5-300e-42ec-bf71-d50ae3e96868
-df_s_low
-
-# ╔═╡ aa7260ed-f91f-4b77-aa8f-05d082f4f28b
-md"""
-### Normal Density
-"""
-
-# ╔═╡ e9d4030b-f3de-4266-bff5-5497f10c67b6
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_normal_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Spatially Weighted (Small Patient)"
-	ax.ylabel = "SWCS"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 500)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ dc945c2b-3799-4013-8740-758c7b478298
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_normal_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Spatially Weighted (Medium Patient)"
-	ax.ylabel = "SWCS"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 500)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ b33a3456-05ac-44bf-83e8-515af110bbf3
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_normal_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 500], [0, 500], label="Unity")
-	
-	ax.title = "Spatially Weighted (Large Patient)"
-	ax.ylabel = "SWCS"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-	
-	xlims!(ax, 0, 150)
-	ylims!(ax, 0, 500)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 5c89f8ce-7ce2-4738-b380-5c0a8a417bdc
-md"""
-### -- Small Inserts
-"""
-
-# ╔═╡ 5407c9ae-6300-4bbe-98e1-64091c7a9342
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_normal_large
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-
-	# xlims!(ax, 0, 10)
-	# ylims!(ax, 0, 70)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 1b1d7f6d-b251-47dd-bf83-74dde6c43614
-md"""
-### Low Density
-"""
-
-# ╔═╡ a894efec-d5b4-42a0-8542-f8e255b25180
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_low_small
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Small Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	# xlims!(ax, 0, 30)
-	# ylims!(ax, 0, 200)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 8b00cc41-fcfd-422a-b4b9-4ffabcee5c10
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_low_medium
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Medium Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-
-	# xlims!(ax, 0, 30)
-	# ylims!(ax, 0, 200)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 32f8096d-672b-45a7-b81e-8ae8af4cd610
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_low_large
-
-	scatter!(df[!, :ground_truth_mass_large], df[!, :calculated_swcs_large], label="Large Inserts")
-	scatter!(df[!, :ground_truth_mass_medium], df[!, :calculated_swcs_medium], label="Medium Inserts")
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-	# ax.xticks = [0, 25, 50, 75, 100]
-	# ax.yticks = [0, 25, 50, 75, 100]
-	
-	# xlims!(ax, 0, 30)
-	# ylims!(ax, 0, 200)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 38d2e535-0eb4-4805-898a-49b597f7b00b
-md"""
-### -- Small Inserts
-"""
-
-# ╔═╡ 42bb0c22-db46-4d90-ab78-d4ddaf623560
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df = df_s_low_large
-	scatter!(df[!, :ground_truth_mass_small], df[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	
-	ax.title = "Mass vs Known Mass (Large Patient)"
-	ax.ylabel = "Calculated Mass (mg)"
-	ax.xlabel = "Known Mass (mg)"
-
-	# xlims!(ax, 0, 1)
-	# ylims!(ax, 0, 45)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 9b202cd7-0c47-43be-a703-30c239e6f3b3
-md"""
-## Comparisons
-"""
-
-# ╔═╡ 11b3703d-77b1-4a01-8080-4d826761691e
-let
-	f = Figure()
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
-	)
-
-	
-	colors = Makie.wong_colors()
-	labels = ["Agatston", "Integrated"]
-	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
-	title = "Groups"
-	
-	ax.title = "RMS Agatston vs Integrated (Normal Density)"
-	ax.ylabel = "RMSD"
-	labels = ["Agatston", "Integrated"]
-
-	table = [1, 1, 2, 2, 3, 3]
-	grp = [1, 2, 1, 2, 1, 2]
-	heights = [agat_normal_small_rms, int_normal_small_rmsd, agat_normal_medium_rms, int_normal_medium_rmsd, agat_normal_large_rms, int_normal_medium_rmsd]
-	barplot!(ax, table, heights, dodge=grp, color=colors[grp])
-
-	Legend(f[1, 2], elements, labels, title)
-
-	f
-end
-
-# ╔═╡ 16203ff4-e60d-4c59-88b2-f18d10b46a25
-let
-	f = Figure()
-	
-	ax = Makie.Axis(
-		f[1, 1],
-		xticks = (1:3, ["Small Patient", "Medium Patient", "Large Patient"]),
-	)
-
-
-	colors = Makie.wong_colors()
-	labels = ["Agatston", "Integrated"]
-	elements = [PolyElement(polycolor = colors[i]) for i in 1:length(labels)]
-	title = "Groups"
-	
-	ax.title = "RMS Agatston vs Integrated (Low Density)"
-	ax.ylabel = "RMSD"
-	
-	table = [1, 1, 2, 2, 3, 3]
-	grp = [1, 2, 1, 2, 1, 2]
-	heights = [agat_low_small_rms, int_low_small_rms, agat_low_medium_rms, int_low_medium_rms, agat_low_large_rms, int_low_medium_rms]
-	barplot!(ax, table, heights, dodge=grp, color=colors[grp])
-	
-	Legend(f[1, 2], elements, labels, title)
-
-	f
-end
-
-# ╔═╡ 6af2f1b2-452a-450b-a1ec-92c066f88abb
-md"""
-### Normal Density
-"""
-
-# ╔═╡ d444ca27-669a-4855-bb72-bdd466aded38
-md"""
-### --SWCS
-"""
-
-# ╔═╡ cd78f5a4-9cf8-4cea-ae91-f8bb70d04f73
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_s_normal_large
-	df2 = df_s_normal_medium
-	df3 = df_s_normal_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_swcs_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_swcs_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_swcs_small], label="Small Patient", color=:green)
-	# lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "SWCS"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 8)
-	ylims!(ax, 0, 200)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 30a5c203-dea7-4018-b2f8-b7662d5af43c
-md"""
-### --Integrated Score
-"""
-
-# ╔═╡ d173391f-441f-4d80-9b73-02111d3f6f7c
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_i_normal_large
-	df2 = df_i_normal_medium
-	df3 = df_i_normal_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "Integrated Mass Score"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 7)
-	ylims!(ax, 0, 7)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 31c907b5-0e94-4805-8684-521e07a6ecf5
-md"""
-### --Agatston Score
-"""
-
-# ╔═╡ 4798270f-2a98-4573-8f09-4cbbbff7e631
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_a_normal_large
-	df2 = df_a_normal_medium
-	df3 = df_a_normal_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "Agatston Mass Score"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 7)
-	ylims!(ax, 0, 15)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ cf008537-8b66-48cb-b432-75c18c9b4af6
-md"""
-### Low Density
-"""
-
-# ╔═╡ 39899ec2-cde0-450f-92c3-2165f23dbe27
-md"""
-### --SWCS
-"""
-
-# ╔═╡ a526508c-5e0f-4211-99dc-17f951d0556d
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_s_low_large
-	df2 = df_s_low_medium
-	df3 = df_s_low_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_swcs_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_swcs_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_swcs_small], label="Small Patient", color=:green)
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "SWCS"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 1)
-	ylims!(ax, 0, 100)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 1f3f75e2-c680-4651-840e-adb6712ce9f9
-md"""
-### --Integrated Score
-"""
-
-# ╔═╡ e902c002-6181-4f26-b855-146616a34715
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_i_low_large
-	df2 = df_i_low_medium
-	df3 = df_i_low_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
-	lines!([0, 100], [0, 100], label="Unity")
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "Integrated Mass"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 1)
-	ylims!(ax, -0.1, 1)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
-
-# ╔═╡ 4208fa71-8441-4de8-95b3-1c075ab7c94c
-md"""
-### --Agatston Score
-"""
-
-# ╔═╡ 522a64dc-3c4e-4892-80a0-8e2383087e4b
-let
-	f = Figure()
-	ax = Axis(f[1, 1])
-
-	df1 = df_a_low_large
-	df2 = df_a_low_medium
-	df3 = df_a_low_small
-	scatter!(df1[!, :ground_truth_mass_small], df1[!, :calculated_mass_small], label="Large Patient", color=:red)
-	scatter!(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small], label="Medium Patient", color=:blue)
-	scatter!(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], label="Small Patient", color=:green)
-	
-	ax.title = "Small Inserts"
-	ax.ylabel = "Agatston Mass"
-	ax.xlabel = "Known Mass (mg)"
-
-	xlims!(ax, 0, 1)
-	ylims!(ax, -0.1, 1)
-	
-	f[1, 2] = Legend(f, ax, framevisible = false)
-	f
-end
 
 # ╔═╡ 310c1999-77a6-432e-850c-4111411cceb0
 md"""
@@ -1219,7 +210,7 @@ begin
 end;
 
 # ╔═╡ f4b51729-d53a-40e2-919b-5d4562cffbc0
-total_zero_i
+total_zero_i, total_zero_s, num_zero_a
 
 # ╔═╡ b702760a-9d9b-4d2a-992c-37ed4f8bcfdf
 let
@@ -1287,7 +278,7 @@ md"""
 """
 
 # ╔═╡ 6372b044-a4c1-4a67-888e-1d473f3d6a87
-array_i = hcat(df_i[!, 7], df_i[!, 9], df_i[!, 11])
+array_i = hcat(df_i[!, 7], df_i[!, 9], df_i[!, 11]);
 
 # ╔═╡ 1bca72fc-adb9-4d54-8e30-8b23ba4da329
 vec_i = vec(array_i)
@@ -1502,36 +493,6 @@ let
 	r2 = r2(model)
 end
 
-# ╔═╡ 564644cc-cfe7-40d5-a660-637e140a46cd
-# let
-# 	df = df_i_low
-# 	# gt_array = Array(df[!, :ground_truth_mass_large])
-# 	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small]))
-# 	# calc_array = Array(df[!, :calculated_mass_large])
-# 	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
-# 	data = DataFrame(
-# 		X = gt_array,
-# 		Y= calc_array
-# 	)
-# 	model = lm(@formula(Y ~ X), data)
-# 	r2 = r2(model)
-# end
-
-# ╔═╡ 2be9bf56-bd59-434d-bd99-3285d50771b8
-# let
-# 	df = df_a_low
-# 	# gt_array = Array(df[!, :ground_truth_mass_large])
-# 	gt_array = vec(hcat(df[!, :ground_truth_mass_large], df[!, :ground_truth_mass_medium], df[!, :ground_truth_mass_small]))
-# 	# calc_array = Array(df[!, :calculated_mass_large])
-# 	calc_array = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
-# 	data = DataFrame(
-# 		X = gt_array,
-# 		Y= calc_array
-# 	)
-# 	model = lm(@formula(Y ~ X), data)
-# 	r2 = r2(model)
-# end
-
 # ╔═╡ dd07e78f-1f65-4510-891d-ce4f56fdac05
 md"""
 ## Figure 4. RMSE Mass Score
@@ -1608,7 +569,10 @@ md"""
 path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/integrated_scoring";
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
-df_i_r = CSV.read(string(path_integrated, "/full.csv"), DataFrame);
+df_i_r = CSV.read(string(path_integrated_r, "/full.csv"), DataFrame);
+
+# ╔═╡ 8ade536a-6ed2-481d-8b4b-cb6e1d57aca4
+df_i_r
 
 # ╔═╡ 4f5328e7-66dd-433c-a7f6-5dc461c83a4c
 df_i_low_r, df_i_normal_r = groupby(df_i_r, :DENSITY);
@@ -1628,7 +592,7 @@ md"""
 path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/agatston";
 
 # ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
-df_a_r = CSV.read(string(path_agat, "/full.csv"), DataFrame);
+df_a_r = CSV.read(string(path_agat_r, "/full.csv"), DataFrame);
 
 # ╔═╡ 869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
 df_a_low_r, df_a_normal_r = groupby(df_a_r, :DENSITY);
@@ -1659,18 +623,14 @@ df_s_low_small_r, df_s_low_medium_r, df_s_low_large_r = groupby(df_s_low_r, :SIZ
 # ╔═╡ 35bc90e2-9d70-4daf-a825-b462831c5bf6
 df_s_normal_small_r, df_s_normal_medium_r, df_s_normal_large_r = groupby(df_s_normal_r, :SIZE);
 
-# ╔═╡ de038336-aa35-417c-a723-17d6745dca3d
-df_s_r
-
 # ╔═╡ a85f777a-76f2-4c64-9973-ea9dec245600
 let
 	f = Figure()
 	
 	ga = f[1, 1] = GridLayout()
 	gb = f[2, 1] = GridLayout()
-	gcd = f[1:2, 2] = GridLayout()
-	gc = gcd[1, 1] = GridLayout()
-	gd = gcd[2, 1] = GridLayout()
+	gc = f[1, 2] = GridLayout()
+	gd = f[2, 2] = GridLayout()
 	ge = f[1:2, 3] = GridLayout()
 
 	##-- A --##
@@ -1691,21 +651,6 @@ let
 	axtop.ylabel = "Calculated Mass 2 (mg)"
 
 	# ##-- B --##
-	# axbottom = Axis(gb[1, 1])
-	
-	# df2 = df_i_low
-	# df2_r = df_i_low_r
-	# scatter!(axbottom, df2_r[!, :calculated_mass_large], df2[!, :calculated_mass_large], label="Large Inserts")
-	# scatter!(axbottom, df2_r[!, :calculated_mass_medium], df2[!, :calculated_mass_medium], label="Medium Inserts")
-	# scatter!(axbottom, df2_r[!, :calculated_mass_small], df2[!, :calculated_mass_small], label="Small Inserts", color=:red)
-	# lines!(axbottom, [-1000, 1000], [-1000, 1000], label="Unity")
-
-	# xlims!(axbottom, low=0, high=25)
-	# ylims!(axbottom, low=0, high=25)
-	# axbottom.xticks = [0, 5, 10, 15, 20, 25]
-	# axbottom.yticks = [0, 5, 10, 15, 20, 25]
-	# axbottom.xlabel = "Known Mass (mg)"
-	# axbottom.ylabel = "Calculated Mass (mg)"
 	axbottomright = Axis(gb[1, 1])
 	
 	df4 = df_s
@@ -1739,29 +684,13 @@ let
 	axtopright.xlabel = "Calculated Mass 1 (mg)"
 	axtopright.ylabel = "Calculated Mass 2 (mg)"
 
-	# ##-- D --##
-	# axbottomright = Axis(gd[1, 1])
-	
-	# df4 = df_s
-	# df4_r = df_s_r
-	# scatter!(axbottomright, df4_r[!, :calculated_swcs_large], df4[!, :calculated_swcs_large], label="Large Inserts")
-	# scatter!(axbottomright, df4_r[!, :calculated_swcs_medium], df4[!, :calculated_swcs_medium], label="Medium Inserts")
-	# scatter!(axbottomright, df4_r[!, :calculated_swcs_small], df4[!, :calculated_swcs_small], label="Small Inserts", color=:red)
-	# lines!(axbottomright, [-1000, 1000], [-1000, 1000], label="Unity")
-
-	# xlims!(axbottomright, low=0, high=500)
-	# ylims!(axbottomright, low=0, high=500)
-	# # axbottomright.xticks = [0, 5, 10, 15, 20, 25]
-	# # axbottomright.yticks = [0, 5, 10, 15, 20, 25]
-	# axbottomright.xlabel = "SWCS 1"
-	# axbottomright.ylabel = "SWCS 1"
+	##-- D --##
 
 	##-- LABELS --##
-
 	f[1:2, 3] = Legend(f, axbottomright, framevisible = false)
 
 	
-	for (label, layout) in zip(["A", "B", "C"], [ga, gb, gc])
+	for (label, layout) in zip(["A", "B", "C", "D"], [ga, gb, gc, gd])
 	    Label(layout[1, 1, TopLeft()], label,
 	        textsize = 25,
 	        padding = (0, 60, 25, 0),
@@ -1774,9 +703,52 @@ let
 	f
 end
 
+# ╔═╡ 4f19aa51-ba28-4433-bc75-dc21e55da969
+let
+	df = df_i
+	df2 = df_i_r
+	# gt_array = Array(df[!, :ground_truth_mass_large])
+	arr1 = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
+	arr2 = vec(hcat(df2[!, :calculated_mass_large], df2[!, :calculated_mass_medium], df2[!, :calculated_mass_small]))
+	data = DataFrame(
+		X = arr1,
+		Y= arr2
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = GLM.r2(model)
+end
+
+# ╔═╡ 6b61bd3d-4d4b-4304-9591-06f8338b75cc
+let
+	df = df_s
+	df2 = df_s_r
+	arr1 = vec(hcat(df[!, :calculated_swcs_large], df[!, :calculated_swcs_medium], df[!, :calculated_swcs_small]))
+	arr2 = vec(hcat(df2[!, :calculated_swcs_large], df2[!, :calculated_swcs_medium], df2[!, :calculated_swcs_small]))
+	data = DataFrame(
+		X = arr1,
+		Y= arr2
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = GLM.r2(model)
+end
+
+# ╔═╡ 84d5724b-de74-40e8-a5c7-e22b982e99d7
+let
+	df = df_a
+	df2 = df_a_r
+	arr1 = vec(hcat(df[!, :calculated_mass_large], df[!, :calculated_mass_medium], df[!, :calculated_mass_small]))
+	arr2 = vec(hcat(df2[!, :calculated_mass_large], df2[!, :calculated_mass_medium], df2[!, :calculated_mass_small]))
+	data = DataFrame(
+		X = arr1,
+		Y= arr2
+	)
+	model = lm(@formula(Y ~ X), data)
+	r2 = GLM.r2(model)
+end
+
 # ╔═╡ 40f443f8-6e6b-4de3-9c2e-b70599640c5d
 md"""
-## TEMPLATE FIGURE
+# TEMPLATE FIGURE
 """
 
 # ╔═╡ f33bd1c6-009a-4071-9cb5-93f4f71c5415
@@ -1902,89 +874,20 @@ end
 # ╠═7f4fae09-7916-4a98-a102-7f861900c457
 # ╠═c987e55d-9ffd-40a5-9d64-1653d4000837
 # ╠═0c367cb1-d959-4c10-b31c-18d3cb396255
-# ╟─bab5cbcc-2193-49c1-8baa-f1e3d83ebaeb
-# ╟─05074eb9-996b-40e9-8c66-c56562d54f84
-# ╟─1874695d-4aba-443c-b71e-c071d49025ef
-# ╟─a97dbbed-31d2-44a8-b7f2-1d1b59e3f493
-# ╟─a4c255ee-1f96-466a-87a6-6963f03da0b3
-# ╟─3a6a0850-62c0-48c9-a793-901267ea7912
-# ╠═7f103d79-215d-4a5c-9ee3-1afc90eae60d
-# ╠═1f5eae73-2a34-4266-8e9d-3c1c448920f8
-# ╠═eb82b841-2942-4830-a3eb-4c339c0a3f81
-# ╠═0b64b3cd-ce34-4842-90f6-7135bf9f0029
-# ╟─1dcd69da-1781-436d-9f54-be6d1599f073
-# ╟─cb049113-fd9c-4ce0-a326-44ba65dbf735
-# ╟─39328eb2-6fe9-4156-a51b-845b6621443a
-# ╟─27e0fabf-6d24-4335-b04b-32e4096885a8
-# ╟─0e2f7272-84d0-4f91-ae20-85814af65199
-# ╟─b29500f3-38e4-48c2-ac8f-bbe7650c364b
-# ╟─83c3d582-abaf-49cf-a7e5-7a06cc322cbf
-# ╠═d13b9731-0a9e-4995-bde0-d369c2e8e3be
-# ╠═fd562c23-d505-4ec3-9d84-0dcf3c7c8d52
-# ╠═551528f7-2df3-46a6-be34-a959de286cb3
-# ╠═b58b6d36-b170-4a2f-9937-c0f04ec0cd3e
-# ╟─7cdc22f2-1301-48ec-a62a-747dc0b549b1
+# ╠═5144e2a2-91e2-49ab-9dcf-df57ed767a36
+# ╠═8ade536a-6ed2-481d-8b4b-cb6e1d57aca4
 # ╟─a58beea4-b186-44c6-bf75-98d368f7ebe4
 # ╠═4fd5b649-cea1-4d1f-95ac-35aa12f8fbff
 # ╠═3fa3748a-22d6-49d8-9888-a749dca99ce2
 # ╠═c38b9994-7698-4c81-b65b-534b994d8ff0
 # ╠═79952ee5-3ccd-4d85-95b4-f7610c90d63d
 # ╠═7223ae32-7241-463f-be13-2d2ce6bc7de7
-# ╠═de8c33f2-e75d-4753-a04c-c1f95f600382
-# ╟─ac2136d9-6100-4304-ad84-d7b6cd75e648
-# ╟─e5050b8a-2c93-4da7-a209-9b405566dfda
-# ╟─3602c899-8558-424c-91bb-c881ada941bf
-# ╟─73bc295c-47e6-42ae-96ed-abed9f4fcb0d
-# ╠═7ea77749-7cf4-430f-9ec3-c60c08003f19
-# ╠═3e00829f-9b69-41da-8c0d-8d230d00a647
-# ╠═fc587c42-2f3c-442f-a744-144b0150da87
-# ╠═b230c46b-f7b4-48e9-816a-d0b50d91f7a0
-# ╟─787c27bf-250f-413d-98df-8a637001f522
-# ╟─c91266a8-ff76-43c9-abb9-548ae789b74e
-# ╟─431b5585-c6c6-4f67-a7ea-471a63892bba
-# ╟─6c0744c3-9977-4094-be58-a47208c18356
-# ╟─15161fba-5577-4ad3-bdfc-ef51a46a8728
-# ╠═1a7e89a2-a8ca-48b3-ac8f-0ce4256a3bc3
-# ╠═9b8d2206-0f33-4b2b-af6f-01547b1a8e23
-# ╠═21d86397-2984-4ad7-9886-81910749eae1
-# ╠═7ae079cd-333e-4143-9f31-116785181a67
-# ╟─c45ce6b0-1efd-4d72-8851-aff501131fd3
 # ╟─f39a9ed5-c897-4b90-8494-bf231312970e
 # ╠═32623778-9a19-4318-81c6-1fc7aa0157fe
 # ╠═317f8c26-7b39-45c3-b9d3-02925d4b0514
 # ╠═06deefa7-9170-4e2f-ac49-d6dc65c0af76
 # ╠═5a4cc121-fd02-49bf-bdf5-07b71b48ce19
 # ╠═d5d8e9da-eba8-4788-b787-95b3a2b41329
-# ╠═9d88ebf5-300e-42ec-bf71-d50ae3e96868
-# ╟─aa7260ed-f91f-4b77-aa8f-05d082f4f28b
-# ╟─e9d4030b-f3de-4266-bff5-5497f10c67b6
-# ╟─dc945c2b-3799-4013-8740-758c7b478298
-# ╟─b33a3456-05ac-44bf-83e8-515af110bbf3
-# ╟─5c89f8ce-7ce2-4738-b380-5c0a8a417bdc
-# ╟─5407c9ae-6300-4bbe-98e1-64091c7a9342
-# ╟─1b1d7f6d-b251-47dd-bf83-74dde6c43614
-# ╟─a894efec-d5b4-42a0-8542-f8e255b25180
-# ╟─8b00cc41-fcfd-422a-b4b9-4ffabcee5c10
-# ╟─32f8096d-672b-45a7-b81e-8ae8af4cd610
-# ╟─38d2e535-0eb4-4805-898a-49b597f7b00b
-# ╟─42bb0c22-db46-4d90-ab78-d4ddaf623560
-# ╟─9b202cd7-0c47-43be-a703-30c239e6f3b3
-# ╟─11b3703d-77b1-4a01-8080-4d826761691e
-# ╟─16203ff4-e60d-4c59-88b2-f18d10b46a25
-# ╟─6af2f1b2-452a-450b-a1ec-92c066f88abb
-# ╟─d444ca27-669a-4855-bb72-bdd466aded38
-# ╟─cd78f5a4-9cf8-4cea-ae91-f8bb70d04f73
-# ╟─30a5c203-dea7-4018-b2f8-b7662d5af43c
-# ╟─d173391f-441f-4d80-9b73-02111d3f6f7c
-# ╟─31c907b5-0e94-4805-8684-521e07a6ecf5
-# ╟─4798270f-2a98-4573-8f09-4cbbbff7e631
-# ╟─cf008537-8b66-48cb-b432-75c18c9b4af6
-# ╟─39899ec2-cde0-450f-92c3-2165f23dbe27
-# ╟─a526508c-5e0f-4211-99dc-17f951d0556d
-# ╟─1f3f75e2-c680-4651-840e-adb6712ce9f9
-# ╟─e902c002-6181-4f26-b855-146616a34715
-# ╟─4208fa71-8441-4de8-95b3-1c075ab7c94c
-# ╟─522a64dc-3c4e-4892-80a0-8e2383087e4b
 # ╟─310c1999-77a6-432e-850c-4111411cceb0
 # ╟─3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
 # ╟─932e1a11-ec52-48bc-af27-bb3e09e6b27f
@@ -2025,12 +928,10 @@ end
 # ╠═c05610e1-ecc6-4391-b6cf-964bb4696362
 # ╟─3b3269ef-1e0a-4335-b0a1-e14223670682
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
-# ╠═d04ce8a0-8224-49c7-a057-f1c7d0d65ef8
+# ╟─d04ce8a0-8224-49c7-a057-f1c7d0d65ef8
 # ╠═1ef8e352-7e89-461f-9ac8-8a39cf2c14d7
 # ╠═c86c3d16-ace0-4de2-a7fb-267ea2925302
 # ╠═d4c89efd-fb4b-4553-8920-847c393cb4bc
-# ╠═564644cc-cfe7-40d5-a660-637e140a46cd
-# ╠═2be9bf56-bd59-434d-bd99-3285d50771b8
 # ╟─dd07e78f-1f65-4510-891d-ce4f56fdac05
 # ╠═e0a3618d-9686-41a9-932e-0381df126a2d
 # ╠═787ba4f2-8747-48c6-a03e-705ee8e07aa3
@@ -2056,7 +957,9 @@ end
 # ╠═a9f68d7e-7818-47d5-ba1f-965634225b30
 # ╠═f2177e1f-2a55-4f81-9a69-ab985ae3b7c2
 # ╠═35bc90e2-9d70-4daf-a825-b462831c5bf6
-# ╠═de038336-aa35-417c-a723-17d6745dca3d
-# ╠═a85f777a-76f2-4c64-9973-ea9dec245600
+# ╟─a85f777a-76f2-4c64-9973-ea9dec245600
+# ╠═4f19aa51-ba28-4433-bc75-dc21e55da969
+# ╠═6b61bd3d-4d4b-4304-9591-06f8338b75cc
+# ╠═84d5724b-de74-40e8-a5c7-e22b982e99d7
 # ╟─40f443f8-6e6b-4de3-9c2e-b70599640c5d
 # ╠═f33bd1c6-009a-4071-9cb5-93f4f71c5415

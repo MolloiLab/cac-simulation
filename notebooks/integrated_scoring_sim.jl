@@ -74,10 +74,10 @@ begin
 	# SIZE = "small"
 	SIZE = "medium"
 	# SIZE = "large"
-	DENSITY = "low"
-	# DENSITY = "normal"
+	# DENSITY = "low"
+	DENSITY = "normal"
 	TYPE = "integrated_scoring"
-	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/", SIZE, "/", DENSITY, "/")
+	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 end
 
 # ╔═╡ 1df1a491-6207-4b5c-a5e8-15a07323b6e7
@@ -292,7 +292,7 @@ end;
 masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
 
 # ╔═╡ 4862496e-464d-40c3-baef-e5c507028d66
-heatmap(masks, colormap=:grays)
+heatmap(transpose(masks), colormap=:grays)
 
 # ╔═╡ 997952cd-dc01-4528-a30a-fdc11a46dad8
 md"""
