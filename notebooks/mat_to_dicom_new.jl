@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ for density in densities
 				ENERGY = energy
 				ROD = string("QRM", ENERGY, "rod.mat")
 				VESSEL = string("QRM", ENERGY, "vessels.mat")
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/with_noise/", _size, "/", density, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/new_exposure/", _size, "/", density, "/")
 
 				path = string(BASE_PATH, ROD)
 				vars1 = matread(path)

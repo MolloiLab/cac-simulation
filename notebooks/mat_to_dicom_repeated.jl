@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ for density in densities
 				ENERGY = energy
 				ROD = string("QRM", ENERGY, "rod.mat")
 				VESSEL = string("QRM", ENERGY, "vessels.mat")
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/reproducibility1/", _size, "/", density, "/")
+				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/new_exposure_repro1/", _size, "/", density, "/")
 
 				path = string(BASE_PATH, ROD)
 				vars1 = matread(path)
@@ -119,7 +119,7 @@ md"""
 """
 
 # ╔═╡ 23d5c197-a07f-4d5d-9227-2f080a95d325
-path = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/large/normal/80"
+path = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/large/low/80"
 
 # ╔═╡ 26be7a8d-84df-4e1d-a362-fbcadad80dbd
 dcmdir_combined = dcmdir_parse(path);
@@ -145,5 +145,5 @@ heatmap(transpose(vol_combined[:, :, c]), colormap=:grays)
 # ╠═23d5c197-a07f-4d5d-9227-2f080a95d325
 # ╠═26be7a8d-84df-4e1d-a362-fbcadad80dbd
 # ╠═953e417e-351a-42fc-b4c0-75490179b44b
-# ╠═2404e806-88ce-4941-a2e1-fc0d471477bb
+# ╟─2404e806-88ce-4941-a2e1-fc0d471477bb
 # ╠═fbf72446-9b2a-45b6-94a7-7f53e2d6e817
