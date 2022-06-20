@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -72,10 +72,10 @@ begin
 	SCAN_NUMBER = 1
 	VENDER = "135"
 	# SIZE = "small"
-	SIZE = "medium"
-	# SIZE = "large"
-	# DENSITY = "low"
-	DENSITY = "normal"
+	# SIZE = "medium"
+	SIZE = "large"
+	DENSITY = "low"
+	# DENSITY = "normal"
 	TYPE = "integrated_scoring"
 	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 end
@@ -232,12 +232,35 @@ md"""
 
 # ╔═╡ ac9d2652-6d69-4cf3-acbf-2e141fb633f0
 begin
+	# Segment Calcium Rod 
 	global thresh
-	if DENSITY == "low"
+	if DENSITY == "low" && SIZE == "large"
+		thresh = 75
+	elseif DENSITY == "low" && SIZE == "medium"
+		thresh = 75
+	elseif DENSITY == "low"
 		thresh = 60
 	elseif DENSITY ==  "normal"
 		thresh = 130
 	end
+	
+	# Segment Calcium Rod (rep)
+	# global thresh
+	# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+	# 	thresh = 80
+	# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+	# 	thresh = 70
+	# elseif DENSITY == "low" && SIZE == "large"
+	# 	thresh = 75
+	# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+	# 	thresh = 55
+	# elseif DENSITY == "low" && SIZE == "medium"
+	# 	thresh = 75
+	# elseif DENSITY == "low"
+	# 	thresh = 60
+	# elseif DENSITY ==  "normal"
+	# 	thresh = 130
+	# end
 end
 
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202

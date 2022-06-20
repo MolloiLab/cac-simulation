@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -85,6 +85,14 @@ begin
 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
 			
 				# Segment Calcium Rod
+				local thresh
+				if DENSITY == "low"
+					thresh = 55
+				elseif DENSITY ==  "normal"
+					thresh = 130
+				end
+				
+				# Segment Calcium Rod
 				# local thresh
 				# if DENSITY == "low" && SIZE == "large"
 				# 	thresh = 75
@@ -96,23 +104,23 @@ begin
 				# 	thresh = 130
 				# end
 
-				# Segment Calcium Rod (reproducibility1)
-				local thresh
-				if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-					thresh = 80
-				elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-					thresh = 70
-				elseif DENSITY == "low" && SIZE == "large"
-					thresh = 75
-				elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-					thresh = 55
-				elseif DENSITY == "low" && SIZE == "medium"
-					thresh = 75
-				elseif DENSITY == "low"
-					thresh = 60
-				elseif DENSITY ==  "normal"
-					thresh = 130
-				end
+				# # Segment Calcium Rod (reproducibility1)
+				# local thresh
+				# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+				# 	thresh = 80
+				# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+				# 	thresh = 70
+				# elseif DENSITY == "low" && SIZE == "large"
+				# 	thresh = 75
+				# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+				# 	thresh = 55
+				# elseif DENSITY == "low" && SIZE == "medium"
+				# 	thresh = 75
+				# elseif DENSITY == "low"
+				# 	thresh = 60
+				# elseif DENSITY ==  "normal"
+				# 	thresh = 130
+				# end
 
 				@info DENSITY, SIZE, VENDER
 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.8
 
 using Markdown
 using InteractiveUtils
@@ -86,15 +86,23 @@ begin
 			
 				# Segment Calcium Rod
 				local thresh
-				if DENSITY == "low" && SIZE == "large"
-					thresh = 75
-				elseif DENSITY == "low" && SIZE == "medium"
-					thresh = 75
-				elseif DENSITY == "low"
-					thresh = 60
+				if DENSITY == "low"
+					thresh = 55
 				elseif DENSITY ==  "normal"
 					thresh = 130
 				end
+				
+				# # Segment Calcium Rod
+				# local thresh
+				# if DENSITY == "low" && SIZE == "large"
+				# 	thresh = 75
+				# elseif DENSITY == "low" && SIZE == "medium"
+				# 	thresh = 75
+				# elseif DENSITY == "low"
+				# 	thresh = 60
+				# elseif DENSITY ==  "normal"
+				# 	thresh = 130
+				# end
 
 				# # Segment Calcium Rod (reproducibility1)
 				# local thresh
