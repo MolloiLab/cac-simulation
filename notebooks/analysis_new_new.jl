@@ -227,7 +227,7 @@ let
 	hidedecorations!(axtop, ticklabels=false, ticks=false)
 	
 	Label(f[1:end, 1:end, Top()], "Zero CAC Scores", valign = :center, padding = (0, 0, 0, 0), textsize=25)
-	Label(f[1:end, 1:end, Left()], "% Zero CAC Scores", valign = :center, padding = (0, 50, 0, 0), rotation=π/2, textsize=17)
+	Label(f[1:end, 1:end, Left()], "% false-negative zero CAC scores", valign = :center, padding = (0, 50, 0, 0), rotation=π/2, textsize=17)
 
 	save("/Users/daleblack/Google Drive/Research/2022-AAPM/zero_cac.png", f)
 	f
@@ -525,7 +525,7 @@ let
 	axtop.xlabel = "Known Mass (mg)"
 	axtop.ylabel = "Calculated Mass (mg)"
 	axtop.title = "Integrated (Normal-Density)"
-	hidedecorations!(axtop, ticklabels=false, ticks=false)
+	hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 	
 	##-- B --##
 	axtopright = Axis(f[2, 1])
@@ -557,7 +557,7 @@ let
 	axtopright.xlabel = "Known Mass (mg)"
 	axtopright.ylabel = "Calculated Mass (mg)"
 	axtopright.title = "Agatston (Normal-Density)"
-	hidedecorations!(axtopright, ticklabels=false, ticks=false)
+	hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 	
 	##-- LABELS --##
 
@@ -642,7 +642,7 @@ let
 	axbottom.xlabel = "Known Mass (mg)"
 	axbottom.ylabel = "Calculated Mass (mg)"
 	axbottom.title = "Integrated (Low-Density)"
-	hidedecorations!(axbottom, ticklabels=false, ticks=false)
+	hidedecorations!(axbottom, ticklabels=false, ticks=false, label=false)
 	
 	
 	##-- D --##
@@ -675,7 +675,7 @@ let
 	axbottomright.xlabel = "Known Mass (mg)"
 	axbottomright.ylabel = "Calculated Mass (mg)"
 	axbottomright.title = "Agatston (Low-Density)"
-	hidedecorations!(axbottomright, ticklabels=false, ticks=false)
+	hidedecorations!(axbottomright, ticklabels=false, ticks=false, label=false)
 
 	
 
@@ -1008,7 +1008,7 @@ let
 	axtop.xlabel = "Mass (mg)"
 	axtop.ylabel = "Mass (mg)"
 	axtop.title = "Integrated"
-	hidedecorations!(axtop, ticklabels=false, ticks=false)
+	hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
 
 	##-- B --##
 	axtopright = Axis(f[2, 1])
@@ -1038,7 +1038,7 @@ let
 	axtopright.xlabel = "Mass (mg)"
 	axtopright.ylabel = "Mass (mg)"
 	axtopright.title = "Agatston"
-	hidedecorations!(axtopright, ticklabels=false, ticks=false)
+	hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
 
 	# ##-- C --##
 	axbottomright = Axis(f[3, 1])
@@ -1066,7 +1066,7 @@ let
 	axbottomright.xlabel = "SWCS"
 	axbottomright.ylabel = "SWCS"
 	axbottomright.title = "Spatially Weighted"
-	hidedecorations!(axbottomright, ticklabels=false, ticks=false)
+	hidedecorations!(axbottomright, ticklabels=false, ticks=false, label=false)
 
 	##-- LABELS --##
 	f[2, 2] = Legend(f, axbottomright, framevisible = false)
@@ -1172,6 +1172,101 @@ DataFrame(
 	RMS_values_r = RMS_values_r,
 	R_Squared = r_squaredr
 )
+
+# ╔═╡ 3e361d54-19f3-48d0-8e85-7351ec2f3335
+md"""
+## Blurring
+"""
+
+# ╔═╡ 620ad304-cb77-4a7c-afc7-76a49d220cfd
+df_ii = CSV.read(string(path_integrated, "/full2.csv"), DataFrame);
+
+# ╔═╡ 663a9cab-3235-486b-97c2-23a4a3c86c10
+df_ii0, df_ii05, df_ii1, df_ii15, df_ii2 = groupby(df_ii, :blur);
+
+# ╔═╡ f00cfcc7-9ecc-4a84-a23d-2a30845be8f8
+let
+	f = Figure()
+
+	##-- A --##
+	axtop = Axis(f[1, 1])
+	
+	df = df_ii2
+	scatter!(axtop, df[!, :ground_truth_mass_large], df[!, :calculated_mass_large])
+	errorbars!(axtop, df[!, :ground_truth_mass_large], df[!, :calculated_mass_large], rms(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large]))
+	scatter!(axtop, df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium])
+	errorbars!(axtop, df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium], rms(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium]))
+	scatter!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], color=:red)
+	errorbars!(axtop, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small], rms(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]))
+	lines!(axtop, [-1000, 1000], [-1000, 1000],)
+	# lines!(axtop, collect(1:1000), pred_i_norm, linestyle=:dashdot)
+	# Textbox(
+	# 	f[1, 1], 
+	# 	placeholder = "y = $(trunc(co1[2]; digits=3))x + $(trunc(co1[1]; digits=3)) \nr = $(trunc(r2_1; digits=3)) \nRMSE: $(trunc(rms_values1[1]; digits=3)) \nRMSD: $(trunc(rms_values1[2]; digits=3))", 
+	# 	tellheight = false,
+ #        tellwidth = false,
+	# 	boxcolor=:white,
+	# 	halign=:left,
+	# 	valign=:top,
+	# 	textsize=12
+	# )
+
+	xlims!(axtop, low=0, high=200)
+	ylims!(axtop, low=0, high=200)
+	axtop.xticks = [0, 50, 100, 150, 200]
+	axtop.yticks = [0, 50, 100, 150, 200]
+	axtop.xlabel = "Known Mass (mg)"
+	axtop.ylabel = "Calculated Mass (mg)"
+	axtop.title = "Integrated (Max Blur)"
+	hidedecorations!(axtop, ticklabels=false, ticks=false, label=false)
+	
+	##-- B --##
+	axtopright = Axis(f[2, 1])
+	
+	df3 = df_ii0
+	sc1=scatter!(axtopright, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large])
+	errorbars!(axtopright, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large], rms(df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]))
+	sc2=scatter!(axtopright, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium])
+	errorbars!(axtopright, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium], rms(df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]))
+	sc3=scatter!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], color=:red)
+	errorbars!(axtopright, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small], rms(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]))
+	ln1=lines!(axtopright, [-1000, 1000], [-1000, 1000])
+	# ln2=lines!(axtopright, collect(1:1000), pred_a_norm, linestyle=:dashdot)
+	# Textbox(
+	# 	f[2, 1], 
+	# 	placeholder = "y = $(trunc(co3[2]; digits=3))x + $(trunc(co3[1]; digits=3)) \nr = $(trunc(r2_3; digits=3)) \nRMSE: $(trunc(rms_values3[1]; digits=3)) \nRMSD: $(trunc(rms_values3[2]; digits=3))", 
+	# 	tellheight = false,
+ #        tellwidth = false,
+	# 	boxcolor=:white,
+	# 	halign=:left,
+	# 	valign=:top,
+	# 	textsize=12
+	# )
+	
+	xlims!(axtopright, low=0, high=200)
+	ylims!(axtopright, low=0, high=200)
+	axtopright.xticks = [0, 50, 100, 150, 200]
+	axtopright.yticks = [0, 50, 100, 150, 200]
+	axtopright.xlabel = "Known Mass (mg)"
+	axtopright.ylabel = "Calculated Mass (mg)"
+	axtopright.title = "Integrated (No Blur)"
+	hidedecorations!(axtopright, ticklabels=false, ticks=false, label=false)
+	
+	##-- LABELS --##
+
+	f[1:2, 2] = Legend(f, [sc1, sc2, sc3, ln1], ["Large Inserts", "Medium Inserts", "Small Inserts", "Unity"], framevisible = false)
+
+	
+	for (label, layout) in zip(["A", "B"], [f[1,1], f[2,1]])
+	    Label(layout[1, 1, TopLeft()], label,
+	        textsize = 25,
+	        padding = (0, 60, 25, 0),
+	        halign = :right)
+	end
+
+	save("/Users/daleblack/Google Drive/Research/2022-AAPM/linear_reg_norm.png", f)
+	f
+end
 
 # ╔═╡ 40f443f8-6e6b-4de3-9c2e-b70599640c5d
 md"""
@@ -1419,5 +1514,9 @@ end
 # ╠═f7462b73-cc72-4d74-8e87-d4ce96a7ea50
 # ╠═59940087-c5f2-44be-85be-b19121b7930d
 # ╠═1210ab1b-aa88-4aa6-90d3-3380fe43d0aa
+# ╟─3e361d54-19f3-48d0-8e85-7351ec2f3335
+# ╟─f00cfcc7-9ecc-4a84-a23d-2a30845be8f8
+# ╠═620ad304-cb77-4a7c-afc7-76a49d220cfd
+# ╠═663a9cab-3235-486b-97c2-23a4a3c86c10
 # ╟─40f443f8-6e6b-4de3-9c2e-b70599640c5d
 # ╟─f33bd1c6-009a-4071-9cb5-93f4f71c5415
