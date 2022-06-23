@@ -70,52 +70,15 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
 	SCAN_NUMBER = 1
-	VENDER = "135"
+	VENDER = "120"
 	# SIZE = "small"
-	# SIZE = "medium"
-	SIZE = "large"
-	DENSITY = "low"
-	# DENSITY = "normal"
+	SIZE = "medium"
+	# SIZE = "large"
+	# DENSITY = "low"
+	DENSITY = "normal"
 	TYPE = "integrated_scoring"
 	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
 end
-
-# ╔═╡ 1df1a491-6207-4b5c-a5e8-15a07323b6e7
-md"""
-**Scans**
-- normal (consistent underestimation of HD inserts; probably solved by using all inserts for calibration line instead of calibration rod)
-  - small
-    - 80 (thresh: 130, ✅)
-    - 100 (thresh: 130, ✅)
-    - 120 (thresh: 130, ✅)
-    - 135 (thresh: 130, ✅)
-  - medium
-    - 80 (thresh: 130, ✅)
-    - 100 (thresh: 130, ✅)
-    - 120 (thresh: 130, ✅)
-    - 135 (thresh: 130, ✅)
-  - large
-    - 80 (thresh: 130, ✅)
-    - 100 (thresh: 130, ✅)
-    - 120 (thresh: 130, ✅)
-    - 135 (thresh: 130, ✅)
-- low
-  - small
-    - 80 (thresh: 60, ✅)
-    - 100 (thresh: 60, ✅)
-    - 120 (thresh: 60, ✅)
-    - 135 (thresh: 60, ✅)
-  - medium
-    - 80 (thresh: 75, ✅)
-    - 100 (thresh: 75, ✅)
-    - 120 (thresh: 75, ✅)
-    - 135 (thresh: 70, ✅)
-  - large
-    - 80
-    - 100
-    - 120
-    - 135
-"""
 
 # ╔═╡ 6aa51429-981a-4dea-a0f6-2935867d5b2a
 md"""
@@ -134,8 +97,16 @@ pth = dcm_path_list[SCAN_NUMBER]
 # ╔═╡ b44d18f8-1b86-4235-bb5b-7a77a1af55e0
 scan = basename(pth)
 
+# ╔═╡ eec406df-e8f8-467c-9824-2593b782564c
+blurs = [0, 0.5, 1, 1.5, 2]
+
 # ╔═╡ b7e0b678-0627-44fe-b0cb-3ef2bccae6a7
-header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
+begin
+	header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
+	for z in size(dcm_array, 3)
+		dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blurs[5])
+	end
+end
 
 # ╔═╡ 66f5fc66-d5ba-45ba-8624-55adc58085e4
 md"""
@@ -1231,13 +1202,13 @@ push!(dfs, df)
 # ╠═e7c4aaab-83ef-4256-b392-f8ef7a899a05
 # ╟─48e3097f-0767-4dad-9d7c-94e0899f790b
 # ╠═bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
-# ╟─1df1a491-6207-4b5c-a5e8-15a07323b6e7
 # ╟─6aa51429-981a-4dea-a0f6-2935867d5b2a
 # ╠═e849cf69-65c7-4e5e-9688-fc249d471f2c
 # ╠═3e649fee-a2e9-4f0f-b705-3966f69d97ea
 # ╠═a327ef18-2941-4783-9266-7332826eaf58
 # ╠═b44d18f8-1b86-4235-bb5b-7a77a1af55e0
 # ╠═b7e0b678-0627-44fe-b0cb-3ef2bccae6a7
+# ╠═eec406df-e8f8-467c-9824-2593b782564c
 # ╟─66f5fc66-d5ba-45ba-8624-55adc58085e4
 # ╟─6e812172-6371-4461-9365-22f68ef16e53
 # ╟─483a14dd-e798-41ed-9144-13678f8b8461

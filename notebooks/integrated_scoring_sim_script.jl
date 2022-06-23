@@ -197,14 +197,87 @@ begin
 					eroded_mask_L_LD = erode(erode(mask_L_LD_3D))
 					low_density_cal = mean(arr[eroded_mask_L_LD])
 					density_array_cal = [0, 200]
+
+					# if DENSITY == "low"
+					# 	density_arr = [
+					# 		25
+					# 		50
+					# 		100
+					# 	]
+					# 	if VENDER == "80"
+					# 		intensity_array = [
+					# 			70.6327
+					# 			124.204
+					# 			202.143
+					# 		]
+					# 	elseif VENDER == "100"
+					# 		intensity_array = [
+					# 			62.2041
+					# 			104.612
+					# 			183.0
+					# 		]
+					# 	elseif VENDER == "120"
+					# 		intensity_array = [
+					# 			64.0408
+					# 			93.8571
+					# 			167.551
+					# 		]
+					# 	else
+					# 		intensity_array = [
+					# 			59.1429
+					# 			91.898
+					# 			153.429
+					# 		]
+					# 	end
+					# else
+					# 	density_arr = [
+					# 		0
+					# 		200
+					# 		400
+					# 		800
+					# 	]
+					# 	if VENDER == "80"
+					# 		intensity_array = [
+					# 			0
+					# 			395.918
+					# 			727.735
+					# 			1432.67
+					# 		]
+					# 	elseif VENDER == "100"
+					# 		intensity_array = [
+					# 			0
+					# 			321.612
+					# 			620.837
+					# 			1217.04
+					# 		]
+					# 	elseif VENDER == "120"
+					# 		intensity_array = [
+					# 			0
+					# 			301.204
+					# 			571.204
+					# 			1105.53
+					# 		]
+					# 	else
+					# 		intensity_array = [
+					# 			0
+					# 			283.673
+					# 			549.51
+					# 			1053.27
+					# 		]
+					# 	end
+					# end
+					
 					intensity_array = [0, low_density_cal, med_density_cal, high_density_cal] # HU
 					intensity_array_cal = [0, cal_insert_mean]
+					
 					local df_cal
 					if DENSITY == "low"
 						df_cal = DataFrame(:density => density_array[2:end], :intensity => intensity_array[2:end])
 					elseif DENSITY == "normal"
 						df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
 					end
+					
+					# df_cal = DataFrame(:density => density_arr, :intensity => intensity_array)
 					linearRegressor = lm(@formula(intensity ~ density), df_cal);
 					linearFit = predict(linearRegressor)
 					m = linearRegressor.model.pp.beta0[2]
@@ -451,14 +524,14 @@ end
 # ╔═╡ bec37533-2e23-45e3-9db2-67f6007b53ef
 begin
 	new_df = vcat(dfs[1:length(dfs)]...)
-	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full2.csv")
+	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full.csv")
 	CSV.write(output_path_new, new_df)
 end
 
 # ╔═╡ Cell order:
 # ╠═4a32bbbd-4a72-4bb4-941e-ae732c50154d
 # ╠═cdc4e135-fa3c-4cee-aee7-b57b094d2896
-# ╠═da50cb92-2222-4bfd-8dc1-b9c24499baab
+# ╟─da50cb92-2222-4bfd-8dc1-b9c24499baab
 # ╠═43a4c90d-6838-4c82-885e-5aa90fae6e4a
 # ╠═661ddf71-d7e7-4e88-90b8-32aee6f97c1a
 # ╠═0ae8ad2f-2831-4578-841d-d71a443c5df7

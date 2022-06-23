@@ -84,16 +84,16 @@ begin
 					pth = dcm_path_list[SCAN_NUMBER]
 					scan = basename(pth)
 					header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
-		
-					# Segment Heart
-					masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
-
+					
 					# Motion Blur
 					if blur != 0
 						for z in size(dcm_array, 3)
 							dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blur)
 						end
 					end
+		
+					# Segment Heart
+					masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
 				
 					# Segment Calcium Rod
 					local thresh
@@ -133,7 +133,7 @@ begin
 					# 	thresh = 130
 					# end
 	
-					@info DENSITY, SIZE, VENDER
+					@info blur, DENSITY, SIZE, VENDER, thresh
 					calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh)
 			
 					# Segment Calcium Inserts
@@ -327,6 +327,7 @@ begin
 					]
 				
 					df = DataFrame(
+						blur = blur,
 						VENDER = VENDER,
 						SIZE = SIZE,
 						DENSITY = DENSITY,
@@ -369,7 +370,7 @@ end
 # ╔═╡ Cell order:
 # ╠═fac1755c-3668-4892-a970-27d4341dae01
 # ╠═8c8a2176-b524-44af-a5b2-1fd70e4bf3ad
-# ╠═5433bb5e-062e-4bfe-9ff3-b19653b2574a
+# ╟─5433bb5e-062e-4bfe-9ff3-b19653b2574a
 # ╠═879a8e4c-1002-49f1-b4d2-e471e342c387
 # ╠═7189b87c-b0d2-4622-bd27-ddad13694c4c
 # ╠═a044c5a1-3a40-4b00-9235-6e58351afb4b
