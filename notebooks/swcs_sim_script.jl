@@ -395,8 +395,8 @@ if ~isdir(string(cd(pwd, "..") , "/output_new/", TYPE))
 end
 
 # ╔═╡ b60b6d28-d1a3-46bd-b59a-37d1663452ca
-if length(dfs) == 24
-	new_df = vcat(dfs[1:24]...)
+begin
+	new_df = vcat(dfs[1:length(dfs)]...)
 	output_path_new = string(cd(pwd, "..") , "/output_new/", TYPE, "/", "full2.csv")
 	CSV.write(output_path_new, new_df)
 end
