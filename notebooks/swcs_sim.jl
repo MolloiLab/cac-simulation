@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -17,40 +24,40 @@ end
 # ╔═╡ 98114689-d1cc-4aa9-b88f-c048059e95d3
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("CairoMakie")
-		Pkg.add("Statistics")
-		Pkg.add("Images")
-		Pkg.add("ImageMorphology")
-		Pkg.add("ImageFiltering")
-		Pkg.add("CSV")
-		Pkg.add("DataFrames")
-		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
-		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
-		Pkg.add("Distributions")
-		Pkg.add("DSP")
-	end
-	
-	using PlutoUI
-	using CairoMakie
-	using Statistics
-	using Images
-	using ImageMorphology
-	using ImageFiltering
-	using CSV
-	using DataFrames
-	using DICOM
-	using DICOMUtils
-	using PhantomSegmentation
-	using CalciumScoring
-	using Distributions
-	using DSP
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("CairoMakie")
+        Pkg.add("Statistics")
+        Pkg.add("Images")
+        Pkg.add("ImageMorphology")
+        Pkg.add("ImageFiltering")
+        Pkg.add("CSV")
+        Pkg.add("DataFrames")
+        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
+        Pkg.add("Distributions")
+        Pkg.add("DSP")
+    end
+
+    using PlutoUI
+    using CairoMakie
+    using Statistics
+    using Images
+    using ImageMorphology
+    using ImageFiltering
+    using CSV
+    using DataFrames
+    using DICOM
+    using DICOMUtils
+    using PhantomSegmentation
+    using CalciumScoring
+    using Distributions
+    using DSP
 end
 
 # ╔═╡ 33bd4068-abd8-45d4-babd-7b397310a645
@@ -63,15 +70,21 @@ md"""
 
 # ╔═╡ c02953cc-0020-452e-938b-694c7f7de44e
 begin
-	SCAN_NUMBER = 1
-	VENDER = "80"
-	# SIZE = "small"
-	# SIZE = "medium"
-	SIZE = "large"
-	DENSITY = "low"
-	# DENSITY = "normal"
-	TYPE = "agatston"
-	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/", SIZE, "/", DENSITY, "/")
+    SCAN_NUMBER = 1
+    VENDER = "80"
+    # SIZE = "small"
+    # SIZE = "medium"
+    SIZE = "large"
+    DENSITY = "low"
+    # DENSITY = "normal"
+    TYPE = "agatston"
+    BASE_PATH = string(
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/",
+        SIZE,
+        "/",
+        DENSITY,
+        "/",
+    )
 end
 
 # ╔═╡ bdc233e2-a17f-42cf-a782-0b040c5b870d
@@ -101,67 +114,72 @@ md"""
 
 # ╔═╡ 818788f1-fb7b-4adc-9111-1f5cca892f86
 function collect_tuple(tuple_array)
-	row_num = size(tuple_array)
-	col_num = length(tuple_array[1])
-	container = zeros(Int64, row_num..., col_num)
-	for i in 1:length(tuple_array)
-		container[i,:] = collect(tuple_array[i])
-	end
-	return container
+    row_num = size(tuple_array)
+    col_num = length(tuple_array[1])
+    container = zeros(Int64, row_num..., col_num)
+    for i in 1:length(tuple_array)
+        container[i, :] = collect(tuple_array[i])
+    end
+    return container
 end
 
 # ╔═╡ 78e52610-fae1-44fa-b931-275434a3ba73
 function overlay_mask_bind(mask)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	return PlutoUI.Slider(1:length(zs), default=3, show_value=true)
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    return PlutoUI.Slider(1:length(zs); default=3, show_value=true)
 end
 
 # ╔═╡ e1147d97-3f08-4a2f-ae30-ed3cb82df965
 function overlay_mask_plot(array, mask, var, title::AbstractString)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	indices_lbl = findall(x -> x == zs[var], label_array[:,3])
-	
-	fig = Figure()
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = title
-	heatmap!(array[:, :, zs[var]], colormap=:grays)
-	scatter!(label_array[:, 1][indices_lbl], label_array[:, 2][indices_lbl], markersize=1, color=:red)
-	fig
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    indices_lbl = findall(x -> x == zs[var], label_array[:, 3])
+
+    fig = Figure()
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = title
+    heatmap!(array[:, :, zs[var]]; colormap=:grays)
+    scatter!(
+        label_array[:, 1][indices_lbl],
+        label_array[:, 2][indices_lbl];
+        markersize=1,
+        color=:red,
+    )
+    return fig
 end
 
 # ╔═╡ 9466ff87-9cef-4f4e-905c-d19070dd6890
 function show_matrix(A::Matrix, red::Union{BitMatrix,Matrix{Bool}}=zeros(Bool, size(A)))
-	base = RGB.(Gray.(A))
+    base = RGB.(Gray.(A))
 
-	base[red] .= RGB(1.0, 0.1, 0.1)
+    base[red] .= RGB(1.0, 0.1, 0.1)
 
-	# some tricks to show the pixels more clearly:
-	s = max(size(A)...)
-	if s >= 20
-		min_size = 1200
-		factor = min(5,min_size ÷ s)
-		
-		kron(base, ones(factor, factor))
-	else
-		base
-	end
+    # some tricks to show the pixels more clearly:
+    s = max(size(A)...)
+    if s >= 20
+        min_size = 1200
+        factor = min(5, min_size ÷ s)
+
+        kron(base, ones(factor, factor))
+    else
+        base
+    end
 end
 
 # ╔═╡ 1c2fa6f8-201d-40ae-8c03-7e5c5893fc1e
 function create_mask(array, mask)
-	@assert size(array) == size(mask)
-	idxs = findall(x -> x == true, mask)
-	overlayed_mask = zeros(size(array))
-	for idx in idxs
-		overlayed_mask[idx] = array[idx]
-	end
-	return overlayed_mask
+    @assert size(array) == size(mask)
+    idxs = findall(x -> x == true, mask)
+    overlayed_mask = zeros(size(array))
+    for idx in idxs
+        overlayed_mask[idx] = array[idx]
+    end
+    return overlayed_mask
 end
 
 # ╔═╡ a4ae678d-a7f1-4bfa-8d22-554583683089
@@ -170,7 +188,7 @@ md"""
 """
 
 # ╔═╡ d8b8d96e-16ac-4412-b049-6287a933730c
-masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2);
+masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3) ÷ 2);
 
 # ╔═╡ 043cffd4-1cc1-4a73-9fef-0a4519b45ee4
 center_insert
@@ -179,39 +197,54 @@ center_insert
 @bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 1ec97def-1513-4309-a6e8-19d7ecfddc25
-heatmap(masked_array[:, :, a], colormap=:grays)
+heatmap(masked_array[:, :, a]; colormap=:grays)
 
 # ╔═╡ fdad818f-1aff-44f7-8fd8-d625b7b873dc
 begin
-	fig = Figure()
-	
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = "Raw DICOM Array"
-	heatmap!(transpose(dcm_array[:, :, 4]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig
+    fig = Figure()
+
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = "Raw DICOM Array"
+    heatmap!(transpose(dcm_array[:, :, 4]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig
 end
 
 # ╔═╡ ce1cb4e1-9515-463b-b5c7-79c7bc295f49
 begin
-	fig2 = Figure()
-	
-	ax2 = Makie.Axis(fig2[1, 1])
-	ax2.title = "Mask Array"
-	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig2
+    fig2 = Figure()
+
+    ax2 = Makie.Axis(fig2[1, 1])
+    ax2.title = "Mask Array"
+    heatmap!(transpose(mask); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig2
 end
 
 # ╔═╡ 7d341908-e452-4975-bed6-d7f1d3e858af
 begin
-	fig3 = Figure()
-	
-	ax3 = Makie.Axis(fig3[1, 1])
-	ax3.title = "Masked DICOM Array"
-	heatmap!(transpose(masked_array[:, :, 5]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig3
+    fig3 = Figure()
+
+    ax3 = Makie.Axis(fig3[1, 1])
+    ax3.title = "Masked DICOM Array"
+    heatmap!(transpose(masked_array[:, :, 5]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig3
 end
 
 # ╔═╡ 1de1ae0b-5c08-4035-be82-53a9fdf2a7a9
@@ -221,28 +254,30 @@ md"""
 
 # ╔═╡ 47081781-ad0c-4ebb-af72-ee6ea6ccf335
 begin
-	global thresh
-	if DENSITY == "low" && SIZE == "small"
-		thresh = 60
-	elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
-		thresh = 75
-	elseif DENSITY == "low" && SIZE == "medium"
-		thresh = 75
-	elseif DENSITY == "low"
-		thresh = 60
-	elseif DENSITY ==  "normal"
-		thresh = 130
-	end
+    global thresh
+    if DENSITY == "low" && SIZE == "small"
+        thresh = 60
+    elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
+        thresh = 75
+    elseif DENSITY == "low" && SIZE == "medium"
+        thresh = 75
+    elseif DENSITY == "low"
+        thresh = 60
+    elseif DENSITY == "normal"
+        thresh = 130
+    end
 end
 
 # ╔═╡ daa65953-ac65-4689-bb28-344e822b2ba2
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=thresh);
+calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
+    masked_array, header; calcium_threshold=thresh
+);
 
 # ╔═╡ e1a9f2b8-be8d-4119-9a4a-e1c73e74b33e
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=cal_rod_slice, show_value=true)
 
 # ╔═╡ 3ef8300d-56a6-4d72-9287-5e4eda72ee24
-heatmap(transpose(calcium_image[:, :, c]), colormap=:grays)
+heatmap(transpose(calcium_image[:, :, c]); colormap=:grays)
 
 # ╔═╡ 8351f18e-7fc7-4c3b-8688-cae0a1e6ec3b
 array_filtered = abs.(mapwindow(median, calcium_image[:, :, 2], (3, 3)));
@@ -254,20 +289,20 @@ bool_arr = array_filtered .> 0;
 bool_arr_erode = ((erode(erode(erode(bool_arr)))));
 
 # ╔═╡ 436ee3b5-a140-4a7a-a50b-1d90eeb04df6
-heatmap(transpose(bool_arr), colormap=:grays)
+heatmap(transpose(bool_arr); colormap=:grays)
 
 # ╔═╡ 6ad451a3-6693-4355-8346-9469f7d94167
-heatmap(transpose(bool_arr_erode), colormap=:grays)
+heatmap(transpose(bool_arr_erode); colormap=:grays)
 
 # ╔═╡ 67cf1029-ebea-4b48-9168-b0d0b491a277
 c_img = calcium_image[:, :, 1:3];
 
 # ╔═╡ da901979-3472-48c7-81d5-ff36c1cb0366
 begin
-	mask_cal_3D = Array{Bool}(undef, size(c_img))
-	for z in 1:size(c_img, 3)
-		mask_cal_3D[:, :, z] = bool_arr_erode
-	end
+    mask_cal_3D = Array{Bool}(undef, size(c_img))
+    for z in 1:size(c_img, 3)
+        mask_cal_3D[:, :, z] = bool_arr_erode
+    end
 end;
 
 # ╔═╡ 28445fd5-9798-4ace-bc96-ab57a402d56e
@@ -293,18 +328,21 @@ md"""
 # );
 
 # ╔═╡ 7208bc08-acad-44f7-854c-cea5d0190b24
-begin 
-	root_new = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
-	mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
-	mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
-	mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
-	mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame;
-	header=false))
-	mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
-	mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
-	mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
-	mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
-	mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
+begin
+    root_new = string(
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+        SIZE,
+        "/",
+    )
+    mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
+    mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
+    mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
+    mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame; header=false))
+    mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
+    mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
+    mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
+    mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
+    mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
 end;
 
 # ╔═╡ c3b659fe-b9bc-44d6-8cf1-5ad18c4fa346
@@ -345,9 +383,13 @@ md"""
 
 # ╔═╡ c604fc41-00ef-498b-ac8b-b5e5cd438306
 begin
-	background_mask = zeros(size(arr)...)
-	background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
-	background_mask = Bool.(background_mask)
+    background_mask = zeros(size(arr)...)
+    background_mask[
+        (center_insert[1] - 5):(center_insert[1] + 5),
+        (center_insert[2] - 5):(center_insert[2] + 5),
+        2,
+    ] .= 1
+    background_mask = Bool.(background_mask)
 end;
 
 # ╔═╡ 1f353ddd-4e9a-4437-8d2e-97a4c466ee28
@@ -357,10 +399,10 @@ md"""
 
 # ╔═╡ a228cbf8-4d79-41a4-b419-afe26b981a1c
 begin
-	mask_L_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_HD_3D[:, :, z] = dilate(dilate(mask_L_HD))
-	end
+    mask_L_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_HD_3D[:, :, z] = dilate(dilate(mask_L_HD))
+    end
 end;
 
 # ╔═╡ 334e9473-fc4f-466c-a046-6c66bf65b738
@@ -381,7 +423,9 @@ overlay_mask_plot(arr, dilated_mask_L_HD, g2, "dilated mask")
 pixel_size = DICOMUtils.get_pixel_size(header)
 
 # ╔═╡ 03e64fbb-49b0-4b68-ae1a-c5d155651146
-mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, center_large_LD, center_insert, 2, cols, rows, pixel_size)
+mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(
+    masked_array, center_large_LD, center_insert, 2, cols, rows, pixel_size
+)
 
 # ╔═╡ 268ad486-9907-4aaa-a271-a77664fea675
 overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD);
@@ -397,16 +441,17 @@ agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, a
 
 # ╔═╡ 385df0f4-bd29-4702-a699-f70ea0093d06
 begin
-	global μ, σ
-	if VENDER == "80"
-		μ, σ = 170, 30
-	elseif VENDER == "100"
-		μ, σ = 165, 30
-	elseif VENDER == "120"
-		μ, σ = 160, 30
-	else VENDER == "135"
-		μ, σ = 155, 30
-	end
+    global μ, σ
+    if VENDER == "80"
+        μ, σ = 170, 30
+    elseif VENDER == "100"
+        μ, σ = 165, 30
+    elseif VENDER == "120"
+        μ, σ = 160, 30
+    else
+        VENDER == "135"
+        μ, σ = 155, 30
+    end
 end
 
 # ╔═╡ d1905ee6-9f61-408c-8362-7b148045859e
@@ -422,9 +467,9 @@ md"""
 
 # ╔═╡ f6a0b43f-a56a-41d2-a89f-c1f17f0c6154
 begin
-	dens_calicium_rod = 200 # mg/cc
-	mean_calcium_rod = mean(c_img[mask_cal_3D])
-	calibration_factor = dens_calicium_rod / mean_calcium_rod
+    dens_calicium_rod = 200 # mg/cc
+    mean_calcium_rod = mean(c_img[mask_cal_3D])
+    calibration_factor = dens_calicium_rod / mean_calcium_rod
 end
 
 # ╔═╡ 5a09303d-5360-48c9-9554-c769e63b1ee0
@@ -434,10 +479,10 @@ md"""
 
 # ╔═╡ 20a53747-25a1-4642-9043-64109ff28711
 begin
-	mask_L_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_MD_3D[:, :, z] = mask_L_MD
-	end
+    mask_L_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_MD_3D[:, :, z] = mask_L_MD
+    end
 end;
 
 # ╔═╡ 5f0f4233-ae8b-432f-93e9-f2b3a54dc890
@@ -470,10 +515,10 @@ md"""
 
 # ╔═╡ 8f125f2e-ec57-40f0-96d6-e04a544db0c3
 begin
-	mask_L_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_LD_3D[:, :, z] = mask_L_LD
-	end
+    mask_L_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_LD_3D[:, :, z] = mask_L_LD
+    end
 end;
 
 # ╔═╡ ad1c418f-a4b7-45fa-8798-534b5e474b99
@@ -511,10 +556,10 @@ md"""
 
 # ╔═╡ 12240afd-a739-4c51-8570-23770faf48fd
 begin
-	mask_M_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_HD_3D[:, :, z] = mask_M_HD
-	end
+    mask_M_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_HD_3D[:, :, z] = mask_M_HD
+    end
 end;
 
 # ╔═╡ 89eab716-678e-407e-acc5-3bd4a490aaf5
@@ -547,10 +592,10 @@ md"""
 
 # ╔═╡ 602601ca-081a-4abc-8726-6007be5558cf
 begin
-	mask_M_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_MD_3D[:, :, z] = mask_M_MD
-	end
+    mask_M_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_MD_3D[:, :, z] = mask_M_MD
+    end
 end;
 
 # ╔═╡ ac3acca8-868d-47a4-a14a-9696876fdc78
@@ -583,10 +628,10 @@ md"""
 
 # ╔═╡ 4a769949-2e00-4825-b852-d419149b47fd
 begin
-	mask_M_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_LD_3D[:, :, z] = mask_M_LD
-	end
+    mask_M_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_LD_3D[:, :, z] = mask_M_LD
+    end
 end;
 
 # ╔═╡ 81bcc301-c5a9-4ac6-92d9-0f7dcd8676b8
@@ -624,10 +669,10 @@ md"""
 
 # ╔═╡ 38aa73f8-9ec2-43b8-983f-688c7caefa15
 begin
-	mask_S_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_HD_3D[:, :, z] = mask_S_HD
-	end
+    mask_S_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_HD_3D[:, :, z] = mask_S_HD
+    end
 end;
 
 # ╔═╡ b1dda8e1-2e73-4e09-a73a-e151a066b99b
@@ -660,10 +705,10 @@ md"""
 
 # ╔═╡ ff7b8b70-e0ca-4c83-aa3a-ed6a5b60fc55
 begin
-	mask_S_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_MD_3D[:, :, z] = mask_S_MD
-	end
+    mask_S_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_MD_3D[:, :, z] = mask_S_MD
+    end
 end;
 
 # ╔═╡ 60c507e8-e885-491e-a8b3-db61d61ee4fa
@@ -696,10 +741,10 @@ md"""
 
 # ╔═╡ bacc56de-f082-436e-bffa-23379fdb9c61
 begin
-	mask_S_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_LD_3D[:, :, z] = mask_S_LD
-	end
+    mask_S_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_LD_3D[:, :, z] = mask_S_LD
+    end
 end;
 
 # ╔═╡ 3e321593-3949-41c6-a734-cfa05fcc471e
@@ -734,11 +779,7 @@ md"""
 density_array = [0, 200, 400, 800]
 
 # ╔═╡ 52f3d56d-9219-43f3-ba32-925faa2e0e07
-inserts = [
-	"Low Density",
-	"Medium Density",
-	"High Density"
-]
+inserts = ["Low Density", "Medium Density", "High Density"]
 
 # ╔═╡ 260b441d-12eb-44d5-adb2-dc5401abdb20
 md"""
@@ -746,25 +787,13 @@ md"""
 """
 
 # ╔═╡ c0b060b6-ef4d-415e-9f8c-a39ab4373541
-calculated_agat_large = [
-	agat_l_ld,
-	agat_l_md,
-	agat_l_hd
-]
+calculated_agat_large = [agat_l_ld, agat_l_md, agat_l_hd]
 
 # ╔═╡ 3f79ca52-b120-43af-958e-6a0e5edf079f
-calculated_agat_medium = [
-	agat_m_ld,
-	agat_m_md,
-	agat_m_hd
-]
+calculated_agat_medium = [agat_m_ld, agat_m_md, agat_m_hd]
 
 # ╔═╡ 0de07ba8-f1d6-4c01-86fd-82e42e9a29bb
-calculated_agat_small = [
-	agat_s_ld,
-	agat_s_md,
-	agat_s_hd
-]
+calculated_agat_small = [agat_s_ld, agat_s_md, agat_s_hd]
 
 # ╔═╡ 40f4a8e5-8a97-43d6-8d83-4993d5f59b83
 md"""
@@ -772,25 +801,13 @@ md"""
 """
 
 # ╔═╡ e89bd455-71ba-41c0-870c-2dad225e129e
-calculated_swcs_large = [
-	swcs_l_ld,
-	swcs_l_md,
-	swcs_l_hd
-]
+calculated_swcs_large = [swcs_l_ld, swcs_l_md, swcs_l_hd]
 
 # ╔═╡ 36130f3d-8a03-49ce-ab36-f9ff0b452c8d
-calculated_swcs_medium = [
-	swcs_m_ld,
-	swcs_m_md,
-	swcs_m_hd
-]
+calculated_swcs_medium = [swcs_m_ld, swcs_m_md, swcs_m_hd]
 
 # ╔═╡ e53a38e7-ba34-45af-bc39-86026763241f
-calculated_swcs_small = [
-	swcs_s_ld,
-	swcs_s_md,
-	swcs_s_hd
-]
+calculated_swcs_small = [swcs_s_ld, swcs_s_md, swcs_s_hd]
 
 # ╔═╡ bdf7c9e5-765d-40b2-b4ae-19e068348639
 md"""
@@ -808,11 +825,7 @@ md"""
 """
 
 # ╔═╡ d10d9943-948e-4d91-881d-93ac9c8fdf5b
-volume_gt = [
-	7.065,
-	63.585,
-	176.625
-]
+volume_gt = [7.065, 63.585, 176.625]
 
 # ╔═╡ 9b39f9e2-2080-4ab7-ba84-7e58b0047805
 volume_gt
@@ -822,180 +835,186 @@ mass_cal_factor * volume_gt[3] * calibration_factor
 
 # ╔═╡ 5c3f138e-d46e-4a3d-9bc4-e2ade6784907
 ground_truth_mass_large = [
-	volume_gt[3] * density_array[2] * 1e-3,
-	volume_gt[3] * density_array[3] * 1e-3,
-	volume_gt[3] * density_array[4] * 1e-3
+    volume_gt[3] * density_array[2] * 1e-3,
+    volume_gt[3] * density_array[3] * 1e-3,
+    volume_gt[3] * density_array[4] * 1e-3,
 ] # mg
 
 # ╔═╡ c8066892-8ea6-4383-8771-699eb1394a5c
-calculated_mass_large = [
-	mass_l_ld,
-	mass_l_md,
-	mass_l_hd
-]
+calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
 
 # ╔═╡ ee2bd00c-e949-48f9-8e3c-1e05eb749075
 ground_truth_mass_medium = [
-	volume_gt[2] * density_array[2] * 1e-3,
-	volume_gt[2] * density_array[3] * 1e-3,
-	volume_gt[2] * density_array[4] * 1e-3
+    volume_gt[2] * density_array[2] * 1e-3,
+    volume_gt[2] * density_array[3] * 1e-3,
+    volume_gt[2] * density_array[4] * 1e-3,
 ]
 
 # ╔═╡ 455c1094-548f-4983-918e-2a7eaa47ff00
-calculated_mass_medium = [
-	mass_m_ld,
-	mass_m_md,
-	mass_m_hd
-]
+calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
 
 # ╔═╡ acf1c58f-24c3-4b6a-a003-67774960112e
 ground_truth_mass_small = [
-	volume_gt[1] * density_array[2] * 1e-3,
-	volume_gt[1] * density_array[3] * 1e-3,
-	volume_gt[1] * density_array[4] * 1e-3
+    volume_gt[1] * density_array[2] * 1e-3,
+    volume_gt[1] * density_array[3] * 1e-3,
+    volume_gt[1] * density_array[4] * 1e-3,
 ]
 
 # ╔═╡ 5c94eae2-9e45-49c9-a123-fbd46932c95f
-calculated_mass_small = [
-	mass_s_ld,
-	mass_s_md,
-	mass_s_hd
-]
+calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
 
 # ╔═╡ 7ee1efe9-d6ac-4076-a5f0-8e18b5d64702
-df = DataFrame(
-	scan = scan,
-	inserts = inserts,
-	calculated_agat_large = calculated_agat_large,
-	calculated_agat_medium = calculated_agat_medium,
-	calculated_agat_small = calculated_agat_small,
-	calculated_swcs_large = calculated_swcs_large,
-	calculated_swcs_medium = calculated_swcs_medium,
-	calculated_swcs_small = calculated_swcs_small,
-	ground_truth_mass_large = ground_truth_mass_large,
-	calculated_mass_large = calculated_mass_large,
-	ground_truth_mass_medium = ground_truth_mass_medium,
-	calculated_mass_medium = calculated_mass_medium,
-	ground_truth_mass_small = ground_truth_mass_small,
-	calculated_mass_small = calculated_mass_small,
-	mass_cal_factor = mass_cal_factor
+df = DataFrame(;
+    scan=scan,
+    inserts=inserts,
+    calculated_agat_large=calculated_agat_large,
+    calculated_agat_medium=calculated_agat_medium,
+    calculated_agat_small=calculated_agat_small,
+    calculated_swcs_large=calculated_swcs_large,
+    calculated_swcs_medium=calculated_swcs_medium,
+    calculated_swcs_small=calculated_swcs_small,
+    ground_truth_mass_large=ground_truth_mass_large,
+    calculated_mass_large=calculated_mass_large,
+    ground_truth_mass_medium=ground_truth_mass_medium,
+    calculated_mass_medium=calculated_mass_medium,
+    ground_truth_mass_small=ground_truth_mass_small,
+    calculated_mass_small=calculated_mass_small,
+    mass_cal_factor=mass_cal_factor,
 )
 
 # ╔═╡ 59a17ced-27c0-415f-a95a-7a8af8aba7e3
 begin
-	fswcs222 = Figure()
-	axswcs222 = Makie.Axis(fswcs222[1, 1])
-	
-	scatter!(df[!, :calculated_agat_large], df[!, :calculated_swcs_large], label="label")
-	
-	axswcs222.title = "SWCS vs Agatston(Large)"
-	axswcs222.ylabel = "SWCS"
-	axswcs222.xlabel = "Agatston"
+    fswcs222 = Figure()
+    axswcs222 = Makie.Axis(fswcs222[1, 1])
 
-	# xlims!(axswcs222, 0, 400)
-	# ylims!(axswcs222, 0, 400)
-	
-	fswcs222[1, 2] = Legend(fswcs222, axswcs222, framevisible = false)
-	
-	fswcs222
+    scatter!(df[!, :calculated_agat_large], df[!, :calculated_swcs_large]; label="label")
+
+    axswcs222.title = "SWCS vs Agatston(Large)"
+    axswcs222.ylabel = "SWCS"
+    axswcs222.xlabel = "Agatston"
+
+    # xlims!(axswcs222, 0, 400)
+    # ylims!(axswcs222, 0, 400)
+
+    fswcs222[1, 2] = Legend(fswcs222, axswcs222; framevisible=false)
+
+    fswcs222
 end
 
 # ╔═╡ adacf893-01ef-4cd3-bcc5-66b27e77e3be
 begin
-	fswcs223 = Figure()
-	axswcs223 = Makie.Axis(fswcs223[1, 1])
-	
-	scatter!(df[!, :calculated_agat_medium], df[!, :calculated_swcs_medium],  label="label")
-	
-	axswcs223.title = "SWCS vs Agatston (Medium)"
-	axswcs223.ylabel = "SWCS"
-	axswcs223.xlabel = "Agatston"
+    fswcs223 = Figure()
+    axswcs223 = Makie.Axis(fswcs223[1, 1])
 
-	# xlims!(axswcs223, 0, 200)
-	# ylims!(axswcs223, 0, 200)
-	
-	fswcs223[1, 2] = Legend(fswcs223, axswcs223, framevisible = false)
-	
-	fswcs223
+    scatter!(df[!, :calculated_agat_medium], df[!, :calculated_swcs_medium]; label="label")
+
+    axswcs223.title = "SWCS vs Agatston (Medium)"
+    axswcs223.ylabel = "SWCS"
+    axswcs223.xlabel = "Agatston"
+
+    # xlims!(axswcs223, 0, 200)
+    # ylims!(axswcs223, 0, 200)
+
+    fswcs223[1, 2] = Legend(fswcs223, axswcs223; framevisible=false)
+
+    fswcs223
 end
 
 # ╔═╡ b24231d2-aa2e-45ad-80f4-e875fa282cd0
 begin
-	fswcs224 = Figure()
-	axswcs224 = Makie.Axis(fswcs224[1, 1])
-	
-	scatter!(df[!, :calculated_agat_small], df[!, :calculated_swcs_small], label="label")
-	
-	axswcs224.title = "SWCS vs Agatston (Small)"
-	axswcs224.ylabel = "SWCS"
-	axswcs224.xlabel = "Agatston"
+    fswcs224 = Figure()
+    axswcs224 = Makie.Axis(fswcs224[1, 1])
 
-	# xlims!(axswcs224, 0, 1)
-	# ylims!(axswcs224, 0, 1)
-	
-	fswcs224[1, 2] = Legend(fswcs224, axswcs224, framevisible = false)
-	
-	fswcs224
+    scatter!(df[!, :calculated_agat_small], df[!, :calculated_swcs_small]; label="label")
+
+    axswcs224.title = "SWCS vs Agatston (Small)"
+    axswcs224.ylabel = "SWCS"
+    axswcs224.xlabel = "Agatston"
+
+    # xlims!(axswcs224, 0, 1)
+    # ylims!(axswcs224, 0, 1)
+
+    fswcs224[1, 2] = Legend(fswcs224, axswcs224; framevisible=false)
+
+    fswcs224
 end
 
 # ╔═╡ e9d6989d-93fb-43ee-b18a-582dd637eed4
 begin
-	fmass22 = Figure()
-	axmass22 = Makie.Axis(fmass22[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_large], label="ground_truth_mass_large")
-	scatter!(density_array[2:end], df[!, :calculated_mass_large], label="calculated_mass_large")
-	
-	axmass22.title = "Mass Measurements (Large)"
-	axmass22.ylabel = "Mass (mg)"
-	axmass22.xlabel = "Density (mg/cm^3)"
+    fmass22 = Figure()
+    axmass22 = Makie.Axis(fmass22[1, 1])
 
-	xlims!(axmass22, 0, 850)
-	ylims!(axmass22, 0, 200)
-	
-	fmass22[1, 2] = Legend(fmass22, axmass22, framevisible = false)
-	
-	fmass22
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_large];
+        label="ground_truth_mass_large",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_large]; label="calculated_mass_large"
+    )
+
+    axmass22.title = "Mass Measurements (Large)"
+    axmass22.ylabel = "Mass (mg)"
+    axmass22.xlabel = "Density (mg/cm^3)"
+
+    xlims!(axmass22, 0, 850)
+    ylims!(axmass22, 0, 200)
+
+    fmass22[1, 2] = Legend(fmass22, axmass22; framevisible=false)
+
+    fmass22
 end
 
 # ╔═╡ 9e533473-6fd4-4155-9c35-d6901580b45f
 begin
-	fmass32 = Figure()
-	axmass32 = Makie.Axis(fmass32[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_medium], label="ground_truth_mass_medium")
-	scatter!(density_array[2:end], df[!, :calculated_mass_medium], label="calculated_mass_medium")
-	
-	axmass32.title = "Mass Measurements (Medium)"
-	axmass32.ylabel = "Mass (mg)"
-	axmass32.xlabel = "Density (mg/cm^3)"
+    fmass32 = Figure()
+    axmass32 = Makie.Axis(fmass32[1, 1])
 
-	xlims!(axmass32, 0, 850)
-	ylims!(axmass32, 0, 85)
-	
-	fmass32[1, 2] = Legend(fmass32, axmass32, framevisible = false)
-	
-	fmass32
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_medium];
+        label="ground_truth_mass_medium",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_medium]; label="calculated_mass_medium"
+    )
+
+    axmass32.title = "Mass Measurements (Medium)"
+    axmass32.ylabel = "Mass (mg)"
+    axmass32.xlabel = "Density (mg/cm^3)"
+
+    xlims!(axmass32, 0, 850)
+    ylims!(axmass32, 0, 85)
+
+    fmass32[1, 2] = Legend(fmass32, axmass32; framevisible=false)
+
+    fmass32
 end
 
 # ╔═╡ 27be579e-87fc-4b77-833c-01c3361375af
 begin
-	fmass42 = Figure()
-	axmass42 = Makie.Axis(fmass42[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_small], label="ground_truth_mass_small")
-	scatter!(density_array[2:end], df[!, :calculated_mass_small], label="calculated_mass_small")
-	
-	axmass42.title = "Mass Measurements (Small)"
-	axmass42.ylabel = "Mass (mg)"
-	axmass42.xlabel = "Density (mg/cm^3)"
+    fmass42 = Figure()
+    axmass42 = Makie.Axis(fmass42[1, 1])
 
-	xlims!(axmass42, 0, 850)
-	ylims!(axmass42, 0, 10)
-	
-	fmass42[1, 2] = Legend(fmass42, axmass42, framevisible = false)
-	
-	fmass42
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_small];
+        label="ground_truth_mass_small",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_small]; label="calculated_mass_small"
+    )
+
+    axmass42.title = "Mass Measurements (Small)"
+    axmass42.ylabel = "Mass (mg)"
+    axmass42.xlabel = "Density (mg/cm^3)"
+
+    xlims!(axmass42, 0, 850)
+    ylims!(axmass42, 0, 10)
+
+    fmass42[1, 2] = Legend(fmass42, axmass42; framevisible=false)
+
+    fmass42
 end
 
 # ╔═╡ ade95452-1c8d-4888-9313-b092409ca609
@@ -1024,9 +1043,9 @@ push!(dfs, df)
 
 # ╔═╡ 92be24c9-e0a5-4539-9501-93a8d6c52f10
 if length(dfs) == 12
-	global new_df = vcat(dfs[1:12]...)
-	output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
-	CSV.write(output_path_new, new_df)
+    global new_df = vcat(dfs[1:12]...)
+    output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
+    CSV.write(output_path_new, new_df)
 end
 
 # ╔═╡ 1723c48d-341f-4898-9b57-4202664a9415
@@ -1034,9 +1053,7 @@ end
 
 # ╔═╡ 4d1825ea-b5cd-4445-99d5-a218845e629c
 
-
 # ╔═╡ 3912fb58-7431-40f7-9823-9a4c91487bf6
-
 
 # ╔═╡ Cell order:
 # ╠═98114689-d1cc-4aa9-b88f-c048059e95d3

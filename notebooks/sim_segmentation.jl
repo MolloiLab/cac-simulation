@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -17,42 +24,42 @@ end
 # ╔═╡ 946debe7-078f-4db6-a383-d0b5a973bd4c
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("ImageFiltering")
-		Pkg.add("Images")
-		Pkg.add("ImageMorphology")
-		Pkg.add("ImageSegmentation")
-		Pkg.add("ImageComponentAnalysis")
-		Pkg.add("DataFrames")
-		Pkg.add("Statistics")
-		Pkg.add("CairoMakie")
-		Pkg.add("DataStructures")
-		Pkg.add("MAT")
-		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
-		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-		Pkg.add("LinearAlgebra")
-	end
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("ImageFiltering")
+        Pkg.add("Images")
+        Pkg.add("ImageMorphology")
+        Pkg.add("ImageSegmentation")
+        Pkg.add("ImageComponentAnalysis")
+        Pkg.add("DataFrames")
+        Pkg.add("Statistics")
+        Pkg.add("CairoMakie")
+        Pkg.add("DataStructures")
+        Pkg.add("MAT")
+        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
+        Pkg.add("LinearAlgebra")
+    end
 
-	using PlutoUI
-	using ImageFiltering
-	using Images
-	using ImageMorphology
-	using ImageSegmentation
-	using ImageComponentAnalysis
-	using DataFrames
-	using Statistics
-	using CairoMakie
-	using DataStructures
-	using MAT
-	using DICOM
-	using DICOMUtils
-	using PhantomSegmentation
-	using LinearAlgebra
+    using PlutoUI
+    using ImageFiltering
+    using Images
+    using ImageMorphology
+    using ImageSegmentation
+    using ImageComponentAnalysis
+    using DataFrames
+    using Statistics
+    using CairoMakie
+    using DataStructures
+    using MAT
+    using DICOM
+    using DICOMUtils
+    using PhantomSegmentation
+    using LinearAlgebra
 end
 
 # ╔═╡ 601c4b6d-ca82-4fb0-b66b-5b50d507fa83
@@ -60,9 +67,9 @@ TableOfContents()
 
 # ╔═╡ 3a43e3e5-adc3-4a0d-ad98-1a7e39dc6a69
 begin
-	root_dir = dirname(pwd())
-	# root = string(root_dir, "/data/simulated/combined")
-	root = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/small/normal/120"
+    root_dir = dirname(pwd())
+    # root = string(root_dir, "/data/simulated/combined")
+    root = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/small/normal/120"
 end
 
 # ╔═╡ 20e6e9ba-2d70-4d47-9187-95b903d95814
@@ -76,7 +83,7 @@ md"""
 # ╔═╡ cfb8b5b9-cfaa-4b4f-81bd-3bc7b2eb30ba
 function dcm_list_builder(path)
     dcm_path_list = []
-    for (dirpath, dirnames, filenames) in walkdir(path, topdown=true)
+    for (dirpath, dirnames, filenames) in walkdir(path; topdown=true)
         if (dirpath in dcm_path_list) == false
             for filename in filenames
                 try
@@ -84,15 +91,15 @@ function dcm_list_builder(path)
                     ds = dcm_parse(tmp_str)
                     if (dirpath in dcm_path_list) == false
                         push!(dcm_path_list, dirpath)
-					end
-				catch
+                    end
+                catch
                     nothing
-				end
-			end
+                end
+            end
         else
-                nothing
-		end
-	end
+            nothing
+        end
+    end
     return dcm_path_list
 end
 
@@ -104,72 +111,72 @@ md"""
 # ╔═╡ defe2c1c-576f-451f-b4b9-ac88411bf45e
 function dcm_reader(dcm_path)
     dcm_files = []
-    for (dirpath, dirnames, filenames) in walkdir(dcm_path, topdown=false)
+    for (dirpath, dirnames, filenames) in walkdir(dcm_path; topdown=false)
         for filename in filenames
             try
-                if (filename == "DIRFILE") == false   
+                if (filename == "DIRFILE") == false
                     dcm_file = string(dirpath, "/", filename)
                     dcm_parse(dcm_file)
                     push!(dcm_files, dcm_file)
-				end
-			catch
-				nothing
-			end
-		end
-	end
+                end
+            catch
+                nothing
+            end
+        end
+    end
 
     read_RefDs = true
-	local RefDs
+    local RefDs
     while read_RefDs
         for index in range(1, length(dcm_files))
             try
                 RefDs = dcm_parse(dcm_files[index])
                 read_RefDs = false
                 break
-			catch
+            catch
                 nothing
-			end
-		end
-	end
+            end
+        end
+    end
 
-	header = RefDs.meta
-	slice_thick_ori = header[(0x0018, 0x0050)]
-	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
-    
+    header = RefDs.meta
+    slice_thick_ori = header[(0x0018, 0x0050)]
+    rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
+
     ConstPixelDims = (rows, cols, length(dcm_files))
     dcm_array = zeros(ConstPixelDims...)
 
-    instances = []    
+    instances = []
     for filenameDCM in dcm_files
         try
             ds = dcm_parse(filenameDCM)
-			head = ds.meta
-			InstanceNumber = head[(0x0020, 0x0013)]
+            head = ds.meta
+            InstanceNumber = head[(0x0020, 0x0013)]
             push!(instances, InstanceNumber)
-		catch
+        catch
             nothing
-		end
-	end
-    
+        end
+    end
+
     sort!(instances)
 
     index = 0
     for filenameDCM in dcm_files
         try
             ds = dcm_parse(filenameDCM)
-			head = ds.meta
-			InstanceNumber = head[(0x0020, 0x0013)]
-			index = findall(x -> x==InstanceNumber, instances)
-			pixel_array = head[(0x7fe0, 0x0010)]
+            head = ds.meta
+            InstanceNumber = head[(0x0020, 0x0013)]
+            index = findall(x -> x == InstanceNumber, instances)
+            pixel_array = head[(0x7fe0, 0x0010)]
             dcm_array[:, :, index] = pixel_array
             index += 1
-		catch
+        catch
             nothing
-		end
-	end
-	
+        end
+    end
+
     RescaleSlope = header[(0x0028, 0x1053)]
-	RescaleIntercept = header[(0x0028, 0x1052)]
+    RescaleIntercept = header[(0x0028, 0x1052)]
     dcm_array = dcm_array .* RescaleSlope .+ RescaleIntercept
     return RefDs.meta, dcm_array, slice_thick_ori
 end
@@ -189,7 +196,7 @@ dcm_reader(dcm_path_list[1]);
 header, dcm_array, slice_thick_ori = dcm_reader(dcm_path_list[1]);
 
 # ╔═╡ d39cd4ac-8fa4-46d6-b0ae-0d99c912b8d7
-heatmap(transpose(dcm_array[:, :, 1]), colormap=:grays)
+heatmap(transpose(dcm_array[:, :, 1]); colormap=:grays)
 
 # ╔═╡ 936c2be7-072f-4774-8261-3780e7e0897e
 maximum(dcm_array)
@@ -207,25 +214,31 @@ function find_circle(point_1, point_2, point_3)
     x1, y1 = point_1
     x2, y2 = point_2
     x3, y3 = point_3
-    
-    x12 = x1 - x2 
-    x13 = x1 - x3  
-    y12 = y1 - y2  
-    y13 = y1 - y3 
-    y31 = y3 - y1  
+
+    x12 = x1 - x2
+    x13 = x1 - x3
+    y12 = y1 - y2
+    y13 = y1 - y3
+    y31 = y3 - y1
     y21 = y2 - y1
-    x31 = x3 - x1  
-    x21 = x2 - x1 
- 
-    sx13 = x1^2 - x3^2  
+    x31 = x3 - x1
+    x21 = x2 - x1
+
+    sx13 = x1^2 - x3^2
     sy13 = y1^2 - y3^2
-    sx21 = x2^2 - x1^2  
-    sy21 = y2^2 - y1^2  
-  
-    f = (((sx13) * (x12) + (sy13) * (x12) + (sx21) * (x13) + (sy21) * (x13)) ÷ (2 * ((y31) * (x12) - (y21) * (x13)))) 
-              
-    g = (((sx13) * (y12) + (sy13) * (y12) + (sx21) * (y13) + (sy21) * (y13)) ÷ (2 * ((x31) * (y12) - (x21) * (y13))))  
-  
+    sx21 = x2^2 - x1^2
+    sy21 = y2^2 - y1^2
+
+    f = (
+        ((sx13) * (x12) + (sy13) * (x12) + (sx21) * (x13) + (sy21) * (x13)) ÷
+        (2 * ((y31) * (x12) - (y21) * (x13)))
+    )
+
+    g = (
+        ((sx13) * (y12) + (sy13) * (y12) + (sx21) * (y13) + (sy21) * (y13)) ÷
+        (2 * ((x31) * (y12) - (x21) * (y13)))
+    )
+
     # eqn of circle be x^2 + y^2 + 2*g*x + 2*f*y + c = 0 where center is (h = -g, k = -f)  
     center_insert = [-g, -f]
 
@@ -241,111 +254,131 @@ md"""
 """
 
 # ╔═╡ 5f389fbc-655f-4c32-97b8-1584f5990181
-function mask_heart(
-	header, array_used, slice_used_center; 
-	radius_val=95, 
-	)
-	
-	pixel_size = PhantomSegmentation.get_pixel_size(header)
-    
+function mask_heart(header, array_used, slice_used_center; radius_val=95)
+    pixel_size = PhantomSegmentation.get_pixel_size(header)
+
     radius = (radius_val / 2) / pixel_size[1]
     central_image = copy(array_used[:, :, slice_used_center])
     central_image = Int.(central_image .< -200)
     kern = Int.(round(5 / pixel_size[1]))
     if kern % 2 == 0
         kern += 1
-	end
+    end
     central_image = mapwindow(median, central_image, (kern, kern))
     center = [size(central_image, 1) ÷ 2, size(central_image, 2) ÷ 2]
     a = copy(central_image)
     local point_1
-	for index in 1:size(central_image, 2) ÷ 2
-		if (central_image[center[1] + index, center[2] + index] == 1 && central_image[center[1] + index, center[2] + index + 5] == 1) 
-			point_1 = [center[1] + index, center[2] + index]
-			break
-		else
-			a[center[1] + index, center[2] + index] = 2
-		end
-	end
-    
-	local point_2
-	for index in 1:size(central_image, 2) ÷ 2
-		if (central_image[center[1] + index, center[2] - index] == 1 && central_image[center[1] + index, center[2] - index - 5] == 1) 
-			point_2 = [center[1] + index, center[2] - index]
-			break
-		else
-			a[center[1] + index, center[2] - index] = 2
-		end
-	end
-	
-	local point_3
-	for index in 1:size(central_image, 2) ÷ 2
-		if (central_image[center[1] - index, center[2] - index] == 1 && central_image[center[1] - index, center[2] - index - 5] == 1)
-			point_3 = [center[1] - index, center[2] - index]
-			break
-		else
-			a[center[1] - index, center[2] - index] = 2
-		end
-	end
-	
-    center_insert = find_circle(point_1, point_2, point_3)
-	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
-    Y, X = collect(1:rows), collect(1:cols)'
-    dist_from_center = @. sqrt((X - center_insert[2])^2 + (Y-center_insert[1])^2)
+    for index in 1:(size(central_image, 2) ÷ 2)
+        if (
+            central_image[center[1] + index, center[2] + index] == 1 &&
+            central_image[center[1] + index, center[2] + index + 5] == 1
+        )
+            point_1 = [center[1] + index, center[2] + index]
+            break
+        else
+            a[center[1] + index, center[2] + index] = 2
+        end
+    end
 
-    mask = dist_from_center .<= radius[1]  
+    local point_2
+    for index in 1:(size(central_image, 2) ÷ 2)
+        if (
+            central_image[center[1] + index, center[2] - index] == 1 &&
+            central_image[center[1] + index, center[2] - index - 5] == 1
+        )
+            point_2 = [center[1] + index, center[2] - index]
+            break
+        else
+            a[center[1] + index, center[2] - index] = 2
+        end
+    end
+
+    local point_3
+    for index in 1:(size(central_image, 2) ÷ 2)
+        if (
+            central_image[center[1] - index, center[2] - index] == 1 &&
+            central_image[center[1] - index, center[2] - index - 5] == 1
+        )
+            point_3 = [center[1] - index, center[2] - index]
+            break
+        else
+            a[center[1] - index, center[2] - index] = 2
+        end
+    end
+
+    center_insert = find_circle(point_1, point_2, point_3)
+    rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
+    Y, X = collect(1:rows), collect(1:cols)'
+    dist_from_center = @. sqrt((X - center_insert[2])^2 + (Y - center_insert[1])^2)
+
+    mask = dist_from_center .<= radius[1]
     masked_array = zeros(size(array_used))
     for index in 1:size(array_used, 3)
         masked_array[:, :, index] = array_used[:, :, index] .* mask
-	end
+    end
 
     return masked_array, center_insert, mask
 end
 
 # ╔═╡ 26b57188-0d11-4f4d-bed3-37f7d8b37a96
-masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2);
+masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3) ÷ 2);
 
 # ╔═╡ 544734b7-a7de-41ac-b2ea-9587d1409bab
 center_insert
 
 # ╔═╡ f1f2f519-2ee3-4392-94f0-6114da0c98f4
 begin
-	fig = Figure()
-	
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = "Raw DICOM Array"
-	heatmap!(transpose(dcm_array[:, :, 2]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig
+    fig = Figure()
+
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = "Raw DICOM Array"
+    heatmap!(transpose(dcm_array[:, :, 2]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig
 end
 
 # ╔═╡ 0b40f43c-78d1-4714-a840-3788ba8867b6
 begin
-	fig2 = Figure()
-	
-	ax2 = Makie.Axis(fig2[1, 1])
-	ax2.title = "Mask Array"
-	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig2
+    fig2 = Figure()
+
+    ax2 = Makie.Axis(fig2[1, 1])
+    ax2.title = "Mask Array"
+    heatmap!(transpose(mask); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig2
 end
 
 # ╔═╡ 6ce0efe4-6d4f-4ff4-983b-3932d75b5dc9
 begin
-	fig3 = Figure()
-	
-	ax3 = Makie.Axis(fig3[1, 1])
-	ax3.title = "Masked DICOM Array"
-	heatmap!(transpose(masked_array[:, :, 2]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig3
+    fig3 = Figure()
+
+    ax3 = Makie.Axis(fig3[1, 1])
+    ax3.title = "Masked DICOM Array"
+    heatmap!(transpose(masked_array[:, :, 2]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig3
 end
 
 # ╔═╡ 3b0263c8-280d-4081-a1ef-b24bf1a841fe
 @bind a2 PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 278f03d7-6f86-432f-9d48-6574e596fad4
-heatmap(transpose(masked_array[:, :, a2]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, a2]); colormap=:grays)
 
 # ╔═╡ 01e277ce-dfa7-4b8f-bd7e-2bd5c52c8def
 md"""
@@ -366,98 +399,97 @@ function get_calcium_slices(dcm_array, header; calcium_threshold=130)
     array = copy(dcm_array)
     array = Int.(array .> (1.1 * calcium_threshold))
 
-	pixel_size = PhantomSegmentation.get_pixel_size(header)
-    CCI_5mm_num_pixels = Int(round(π * (5/2)^2 / pixel_size[1]^2))
-    cal_rod_num_pixels = Int(round(π * (20/2)^2 / pixel_size[1]^2))
-    
-	kern = Int.(round(5 / pixel_size[1]))
+    pixel_size = PhantomSegmentation.get_pixel_size(header)
+    CCI_5mm_num_pixels = Int(round(π * (5 / 2)^2 / pixel_size[1]^2))
+    cal_rod_num_pixels = Int(round(π * (20 / 2)^2 / pixel_size[1]^2))
+
+    kern = Int.(round(5 / pixel_size[1]))
     if kern % 2 == 0
         kern += 1
-	end
-    
+    end
+
     slice_dict = Dict()
     large_index = []
     cal_rod_dict = Dict()
     for idx in 1:size(array, 3)
-		array_filtered = mapwindow(median, array[:,:,idx], (kern, kern))
+        array_filtered = mapwindow(median, array[:, :, idx], (kern, kern))
         components = ImageComponentAnalysis.label_components(array_filtered)
-		a1 = analyze_components(
-			components, BasicMeasurement(area=true, perimeter=true)
-		)
-		a2 = analyze_components(components, BoundingBox(box_area = true))
-		df = leftjoin(a1, a2, on = :l)
+        a1 = analyze_components(components, BasicMeasurement(; area=true, perimeter=true))
+        a2 = analyze_components(components, BoundingBox(; box_area=true))
+        df = leftjoin(a1, a2; on=:l)
 
-		count_5mm = 0
-		count = 0
-		for row in eachrow(df)
-			count += 1
-			df_area = Int(round(row[:area]))
-			
-			r1_1 = Int(round(CCI_5mm_num_pixels * 0.6))
-			r1_2 = Int(round(CCI_5mm_num_pixels * 1.5))
-			r2_1 = Int(round(cal_rod_num_pixels * 0.7))
-			r2_2 = Int(round(cal_rod_num_pixels * 1.3))
-			
-			if df_area in r1_1:r1_2
-				count_5mm += 1
-			elseif df_area in r2_1:r2_2
-				indices = row[:box_indices]
-				x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
-				y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
-				cal_rod_dict[count] = [x_point, y_point]
-			end
-		end
-		
+        count_5mm = 0
+        count = 0
+        for row in eachrow(df)
+            count += 1
+            df_area = Int(round(row[:area]))
+
+            r1_1 = Int(round(CCI_5mm_num_pixels * 0.6))
+            r1_2 = Int(round(CCI_5mm_num_pixels * 1.5))
+            r2_1 = Int(round(cal_rod_num_pixels * 0.7))
+            r2_2 = Int(round(cal_rod_num_pixels * 1.3))
+
+            if df_area in r1_1:r1_2
+                count_5mm += 1
+            elseif df_area in r2_1:r2_2
+                indices = row[:box_indices]
+                x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
+                y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
+                cal_rod_dict[count] = [x_point, y_point]
+            end
+        end
+
         if count_5mm > 0 && count_5mm < 4
             slice_dict[idx] = count_5mm
-		end
-    
+        end
+
         poppable_keys = []
         for key in cal_rod_dict
             start_coordinate = [key[2][1], key[2][2]]
-			
+
             x_right = 0
             while array_filtered[start_coordinate[1], start_coordinate[2] + x_right] == 1
                 x_right += 1
-			end
-            
+            end
+
             x_left = 0
             while array_filtered[start_coordinate[1], start_coordinate[2] - x_left] == 1
                 x_left += 1
-			end
-            
+            end
+
             y_top = 0
             while array_filtered[start_coordinate[1] + y_top, start_coordinate[2]] == 1
                 y_top += 1
-			end
-            
+            end
+
             y_bottom = 0
             while array_filtered[start_coordinate[1] - y_bottom, start_coordinate[2]] == 1
                 y_bottom += 1
-			end
-                
+            end
+
             x_dist = x_right + x_left
             y_dist = y_top + y_bottom
 
-			range1 = round(0.7 * y_dist):round(1.2 * y_dist)
-            if ((x_dist in range1) == false) || ((round(0.7 * y_dist) == 0) && (round(1.2 * y_dist) == 0))
+            range1 = round(0.7 * y_dist):round(1.2 * y_dist)
+            if ((x_dist in range1) == false) ||
+                ((round(0.7 * y_dist) == 0) && (round(1.2 * y_dist) == 0))
                 push!(poppable_keys, key)
             else
-				nothing
-			end
-		end
-		
+                nothing
+            end
+        end
+
         for key in poppable_keys
-			pop!(cal_rod_dict)
-		end
-                
+            pop!(cal_rod_dict)
+        end
+
         if length(cal_rod_dict) == 0
-			nothing
+            nothing
         else
             append!(large_index, idx)
-		end
-	end
-	return slice_dict, large_index
+        end
+    end
+    return slice_dict, large_index
 end
 
 # ╔═╡ a548b6b9-3777-437b-8575-1f91be77e4be
@@ -475,71 +507,73 @@ Returns the slices that contain the calcium vessel inserts `slice_dict` and the 
 
 # ╔═╡ 3e25a510-1344-4858-b6b3-8787f0886cd2
 function get_calcium_center_slices(dcm_array, slice_dict, large_index)
-	flipped_index = Int(round(median(large_index)))
+    flipped_index = Int(round(median(large_index)))
     edge_index = []
     if flipped_index < (size(dcm_array, 3) / 2)
         flipped = -1
         for element in large_index
             if element > (size(dcm_array, 3) / 2)
                 append!(edge_index, element)
-			end
-		end
+            end
+        end
         if length(edge_index) == 0
             nothing
         else
             for index_edge in minimum(edge_index):size(dcm_array, 3)
                 try
                     delete!(slice_dict, index_edge)
-				catch
+                catch
                     nothing
-				end
-			end
+                end
+            end
             for element2 in edge_index
-				deleteat!(large_index, findall(x->x==element2, large_index))
-			end
-		end
-                
+                deleteat!(large_index, findall(x -> x == element2, large_index))
+            end
+        end
+
         for element in 1:maximum(large_index)
             try
                 delete!(slice_dict, element)
-			catch
+            catch
                 nothing
-			end
-		end
+            end
+        end
     else
         flipped = 1
         for element in large_index
             if element < (size(dcm_array, 3) / 2)
                 append!(edge_index, element)
-			end
-		end
+            end
+        end
         if length(edge_index) == 0
             nothing
         else
             for index_edge in 1:maximum(edge_index)
                 try
                     delete!(slice_dict, index_edge)
-				catch
+                catch
                     nothing
-				end
-			end
+                end
+            end
             for element2 in edge_index
-				deleteat!(large_index, findall(x->x==element2, large_index))
-			end
-		end
+                deleteat!(large_index, findall(x -> x == element2, large_index))
+            end
+        end
         for element in minimum(large_index):size(dcm_array, 3)
             try
                 delete!(slice_dict, element)
-			catch
+            catch
                 nothing
-			end
-		end
-	end
-	return slice_dict, flipped, flipped_index
+            end
+        end
+    end
+    return slice_dict, flipped, flipped_index
 end
 
 # ╔═╡ da0d4727-7726-4ae5-8e61-8ed7a48e5ee7
-slice_dict2, flipped, flipped_index = get_calcium_center_slices(masked_array, slice_dict, large_index)
+slice_dict2, flipped, flipped_index = get_calcium_center_slices(
+    masked_array, slice_dict, large_index
+)
 
 # ╔═╡ afbe2b03-df48-45d6-92f0-f35a12614b02
 md"""
@@ -548,25 +582,25 @@ md"""
 
 # ╔═╡ d77fd459-2207-4a61-825c-527469e5c623
 function poppable_keys(flipped, flipped_index, header, slice_dict)
-	SliceThickness = header[(0x0018,0x0050)]
-	poppable_keys = []        
+    SliceThickness = header[(0x0018, 0x0050)]
+    poppable_keys = []
     if flipped == -1
         for key in slice_dict
             if key[1] > (flipped_index + (55 / SliceThickness))
                 append!(poppable_keys, key)
-			elseif flipped == 1
-		        for key in slice_dict
-		            if key[1] < (flipped_index - (55 / SliceThickness))
-		                append!(poppable_keys, key)
-					end
-				end
-			end
-		end
-	end
+            elseif flipped == 1
+                for key in slice_dict
+                    if key[1] < (flipped_index - (55 / SliceThickness))
+                        append!(poppable_keys, key)
+                    end
+                end
+            end
+        end
+    end
     for key in poppable_keys
-		pop!(slice_dict)           
-	end
-	return slice_dict
+        pop!(slice_dict)
+    end
+    return slice_dict
 end
 
 # ╔═╡ 2aa8ab66-d297-4514-a8ae-56c19dfbb27c
@@ -579,29 +613,31 @@ md"""
 
 # ╔═╡ 29b34c30-a280-48bd-893b-4a3fe788fd20
 function compute_CCI(dcm_array, header, slice_dict, flipped; calcium_threshold=130)
-	SliceThickness = header[(0x0018,0x0050)]
-	max_key, _ = maximum(zip(values(slice_dict), keys(slice_dict)))
+    SliceThickness = header[(0x0018, 0x0050)]
+    max_key, _ = maximum(zip(values(slice_dict), keys(slice_dict)))
     max_keys = []
     for key in slice_dict
         if key[2] == max_key
             append!(max_keys, key[1])
-		end
-	end
+        end
+    end
     slice_CCI = Int(floor(median(max_keys)))
-    
+
     array = copy(dcm_array)
     array = Int.(array .> calcium_threshold)
-    
+
     calcium_image = array .* dcm_array
     quality_slice = Int.(round(slice_CCI - flipped * (20 / SliceThickness)))
 
     cal_rod_slice = slice_CCI + (flipped * Int(30 / SliceThickness))
-    
+
     return calcium_image, slice_CCI, quality_slice, cal_rod_slice
 end
 
 # ╔═╡ df4c740d-cdd8-468a-8699-3e37669f7094
-calcium_image1, slice_CCI1, quality_slice1, cal_rod_slice1 = compute_CCI(masked_array, header, slice_dict2, flipped);
+calcium_image1, slice_CCI1, quality_slice1, cal_rod_slice1 = compute_CCI(
+    masked_array, header, slice_dict2, flipped
+);
 
 # ╔═╡ 8f91a763-3458-443a-a634-ee392ce8d130
 slice_CCI1, quality_slice1, cal_rod_slice1
@@ -611,13 +647,13 @@ slice_CCI1, quality_slice1, cal_rod_slice1
 
 # ╔═╡ 57962d59-66ac-4e88-999d-d3ec825bb8ef
 let
-	f = Figure()
-	
-	ax = Makie.Axis(f[1, 1])
-	heatmap!(transpose(calcium_image1[:, :, a]), colormap=:grays)
-	ax = Makie.Axis(f[1,2])
-	heatmap!(transpose(dcm_array[:, :, a]), colormap=:grays)
-	f
+    f = Figure()
+
+    ax = Makie.Axis(f[1, 1])
+    heatmap!(transpose(calcium_image1[:, :, a]); colormap=:grays)
+    ax = Makie.Axis(f[1, 2])
+    heatmap!(transpose(dcm_array[:, :, a]); colormap=:grays)
+    f
 end
 
 # ╔═╡ 85a3591e-60c2-4522-9e73-1be0d99845d6
@@ -628,17 +664,16 @@ md"""
 # ╔═╡ d46f59c3-a25c-4363-8563-853748a3ee84
 function mask_rod(dcm_array, header; calcium_threshold=130)
     slice_dict, large_index = get_calcium_slices(
-		dcm_array, header; 
-		calcium_threshold=calcium_threshold
-	)
+        dcm_array, header; calcium_threshold=calcium_threshold
+    )
     slice_dict, flipped, flipped_index = get_calcium_center_slices(
-		dcm_array, slice_dict, large_index
-	)
+        dcm_array, slice_dict, large_index
+    )
     slice_dict = poppable_keys(flipped, flipped_index, header, slice_dict)
     calcium_image, slice_CCI, quality_slice, cal_rod_slice = compute_CCI(
-		dcm_array, header, slice_dict, flipped; calcium_threshold=calcium_threshold
-	)
-	return calcium_image, slice_CCI, quality_slice, cal_rod_slice
+        dcm_array, header, slice_dict, flipped; calcium_threshold=calcium_threshold
+    )
+    return calcium_image, slice_CCI, quality_slice, cal_rod_slice
 end
 
 # ╔═╡ 212ed8c0-6aee-448a-aef8-6db18ea94d18
@@ -651,10 +686,10 @@ slice_CCI
 @bind b PlutoUI.Slider(1:size(calcium_image, 3), default=10, show_value=true)
 
 # ╔═╡ fed039bf-2ace-4471-9d44-b55b2e6b5465
-heatmap(transpose(calcium_image[:, :, b]), colormap=:grays)
+heatmap(transpose(calcium_image[:, :, b]); colormap=:grays)
 
 # ╔═╡ e52eb19a-a8cb-4667-82b8-6fcf0db418ee
-heatmap(transpose(calcium_image[:, :, slice_CCI]), colormap=:grays)
+heatmap(transpose(calcium_image[:, :, slice_CCI]); colormap=:grays)
 
 # ╔═╡ b7e7d1d2-8213-4f0d-8fc0-4359c8268537
 md"""
@@ -671,12 +706,12 @@ function angle_calc(side1, side2)
     #Calculate angle between two sides of rectangular triangle
     if side1 == 0
         angle = 0
-	elseif side2 == 0
+    elseif side2 == 0
         angle = π / 2
     else
         angle = atan(side1 / side2)
-	end
-    
+    end
+
     return angle
 end
 
@@ -690,11 +725,11 @@ md"""
 
 # ╔═╡ 7c590aa2-cec9-4860-8cbb-ba44ddda81c1
 function create_circular_mask(h, w, center_circle, radius_circle)
-	Y, X = collect(1:h), collect(1:w)'
-    dist_from_center = sqrt.((X .- center_circle[1]).^2 .+ (Y .- center_circle[2]).^2)
+    Y, X = collect(1:h), collect(1:w)'
+    dist_from_center = sqrt.((X .- center_circle[1]) .^ 2 .+ (Y .- center_circle[2]) .^ 2)
 
     mask = dist_from_center .<= radius_circle
-    
+
     return mask
 end
 
@@ -702,7 +737,7 @@ end
 mask1 = create_circular_mask(40, 40, [20, 20], 1);
 
 # ╔═╡ f1b6675a-9755-48ff-9e49-c32b5e8c220b
-heatmap(mask1, colormap=:grays)
+heatmap(mask1; colormap=:grays)
 
 # ╔═╡ 9255a372-52bd-4ea2-a9ce-171ab134e1e9
 md"""
@@ -710,69 +745,80 @@ md"""
 """
 
 # ╔═╡ 72ce8586-1e3d-4da4-8e3f-d70f711e56ba
-function calc_output_sim(dcm_array, header, CCI_slice, calcium_threshold=130, comp_connect=trues(3, 3))
-	# Actual scoring for CCI insert
+function calc_output_sim(
+    dcm_array, header, CCI_slice, calcium_threshold=130, comp_connect=trues(3, 3)
+)
+    # Actual scoring for CCI insert
     # First step is to remove slices without calcium from arrays
-	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-	SliceThickness = header[(0x0018, 0x0050)]
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    SliceThickness = header[(0x0018, 0x0050)]
     CCI_min = Int((CCI_slice - round(5 / SliceThickness, RoundUp)))
     CCI_max = Int((CCI_slice + round(5 / SliceThickness, RoundUp)) + 1)
     central_CCI = Int(round((CCI_max - CCI_min) / 2))
-    
+
     if CCI_min < 0
         CCI_min = 0
-	end
+    end
     if CCI_max > size(dcm_array, 3)
         CCI_max = size(dcm_array, 3)
-	end
-    
-    CCI_array = copy(dcm_array[:, :, CCI_min+1:CCI_max])
+    end
 
-	image_kernel = Int(round(3 / PixelSpacing[1]))
+    CCI_array = copy(dcm_array[:, :, (CCI_min + 1):CCI_max])
+
+    image_kernel = Int(round(3 / PixelSpacing[1]))
     if image_kernel % 2 == 0
         image_kernel += 1
-	end
-    
+    end
+
     CCI_array_binary = copy(CCI_array)
-	CCI_array_binary = Int.(CCI_array_binary .> 1.0*calcium_threshold)
-	inp = CCI_array_binary[:, :, central_CCI - 1] + CCI_array_binary[:, :, central_CCI] + CCI_array_binary[:, :, central_CCI + 1]
-	components = ImageComponentAnalysis.label_components(inp, comp_connect)
-	a1 = analyze_components(components, BasicMeasurement(area=true, perimeter=true))
-	a2 = analyze_components(components, BoundingBox(box_area = true))
-	df = leftjoin(a1, a2, on = :l)
-	centroids = []
-	for row in eachrow(df)
-		indices = row[:box_indices]
-		x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
-		y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
-		push!(centroids, (x_point, y_point))
-	end
-    
+    CCI_array_binary = Int.(CCI_array_binary .> 1.0 * calcium_threshold)
+    inp =
+        CCI_array_binary[:, :, central_CCI - 1] +
+        CCI_array_binary[:, :, central_CCI] +
+        CCI_array_binary[:, :, central_CCI + 1]
+    components = ImageComponentAnalysis.label_components(inp, comp_connect)
+    a1 = analyze_components(components, BasicMeasurement(; area=true, perimeter=true))
+    a2 = analyze_components(components, BoundingBox(; box_area=true))
+    df = leftjoin(a1, a2; on=:l)
+    centroids = []
+    for row in eachrow(df)
+        indices = row[:box_indices]
+        x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
+        y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
+        push!(centroids, (x_point, y_point))
+    end
+
     centroids = deleteat!(centroids, 1)
-        
-	i1 = mapwindow(median, CCI_array_binary[:,:,central_CCI - 1], (image_kernel, image_kernel))
-	i2 = mapwindow(median, CCI_array_binary[:,:,central_CCI], (image_kernel, image_kernel))
-	i3 = mapwindow(median, CCI_array_binary[:,:,central_CCI + 1], (image_kernel, image_kernel))
 
-	image_for_center = i1 + i2 + i3
+    i1 = mapwindow(
+        median, CCI_array_binary[:, :, central_CCI - 1], (image_kernel, image_kernel)
+    )
+    i2 = mapwindow(
+        median, CCI_array_binary[:, :, central_CCI], (image_kernel, image_kernel)
+    )
+    i3 = mapwindow(
+        median, CCI_array_binary[:, :, central_CCI + 1], (image_kernel, image_kernel)
+    )
 
-	components2 = ImageComponentAnalysis.label_components(image_for_center, comp_connect)
-	components2 = Int.(components2 .> 0)
-	components2 = ImageComponentAnalysis.label_components(components2, comp_connect)
-	
-	b1 = analyze_components(components2, BasicMeasurement(area=true, perimeter=true))
-	b2 = analyze_components(components2, BoundingBox(box_area = true))
-	df2 = leftjoin(b1, b2, on = :l)
-	centroids2 = []
-	for row in eachrow(df2)
-		indices = row[:box_indices]
-		x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
-		y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
-		push!(centroids2, (y_point, x_point))
-	end
-	
-	output = length(unique(components2)), components2, df2, centroids2
-	return output
+    image_for_center = i1 + i2 + i3
+
+    components2 = ImageComponentAnalysis.label_components(image_for_center, comp_connect)
+    components2 = Int.(components2 .> 0)
+    components2 = ImageComponentAnalysis.label_components(components2, comp_connect)
+
+    b1 = analyze_components(components2, BasicMeasurement(; area=true, perimeter=true))
+    b2 = analyze_components(components2, BoundingBox(; box_area=true))
+    df2 = leftjoin(b1, b2; on=:l)
+    centroids2 = []
+    for row in eachrow(df2)
+        indices = row[:box_indices]
+        x_point = ((indices[1][end] - indices[1][1]) ÷ 2) + indices[1][1]
+        y_point = ((indices[2][end] - indices[2][1]) ÷ 2) + indices[2][1]
+        push!(centroids2, (y_point, x_point))
+    end
+
+    output = length(unique(components2)), components2, df2, centroids2
+    return output
 end
 
 # ╔═╡ 9fa7d638-d399-4887-81f9-609830969fe3
@@ -785,7 +831,7 @@ output
 heatmap(transpose(output[2]))
 
 # ╔═╡ baba875d-c791-4f12-a0d2-8160ba6a823e
-heatmap(transpose(masked_array[:, :, 5]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, 5]); colormap=:grays)
 
 # ╔═╡ d214593d-9453-4f42-bf39-f21a07812743
 md"""
@@ -794,21 +840,21 @@ md"""
 
 # ╔═╡ 4ba4005c-b28e-42cf-a919-0610733fa37d
 function find_triangle_points(p1::Vector, center::Vector; offset=0, offset2=0)
-	# Shift the points as if the center-point was located at (0, 0)
-	p1 = p1 .- center
+    # Shift the points as if the center-point was located at (0, 0)
+    p1 = p1 .- center
 
-	# Calculate points 2 and 3
-	R = norm(p1)
-	θ = atan(p1[2], p1[1])
-	p2 = [R*cos(θ + (2*π/3) + offset), R*sin(θ + (2*π/3) + offset)]
- 	p3 = [R*cos(θ - (2*π/3) + offset2), R*sin(θ - (2*π/3) + offset2)]
+    # Calculate points 2 and 3
+    R = norm(p1)
+    θ = atan(p1[2], p1[1])
+    p2 = [R * cos(θ + (2 * π / 3) + offset), R * sin(θ + (2 * π / 3) + offset)]
+    p3 = [R * cos(θ - (2 * π / 3) + offset2), R * sin(θ - (2 * π / 3) + offset2)]
 
-	# Fudge (NEEDS TO BE FIXED)
-	p2 = p2[1] + 2, p2[2] - 5
-	
-	# Shift the points back to the original center point
-	p2, p3 = Int.(round.(p2 .+ center)), Int.(round.(p3 .+ center))
-	return p2, p3
+    # Fudge (NEEDS TO BE FIXED)
+    p2 = p2[1] + 2, p2[2] - 5
+
+    # Shift the points back to the original center point
+    p2, p3 = Int.(round.(p2 .+ center)), Int.(round.(p3 .+ center))
+    return p2, p3
 end
 
 # ╔═╡ b3f82d69-6ccd-4760-af29-9122a0386c2a
@@ -818,57 +864,61 @@ md"""
 
 # ╔═╡ cfaace51-8302-44cf-b619-ecba23e0b3f8
 function center_points(dcm_array, output, header, tmp_center, CCI_slice)
-	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
     sizes = []
     for row in eachrow(output[3])
-		area = row[:area]
-		append!(sizes, area)
-	end
+        area = row[:area]
+        append!(sizes, area)
+    end
 
-	centroids = output[4]
+    centroids = output[4]
     largest = Dict()
     for index in 1:length(centroids)
-		x = centroids[index][1]
-		y = centroids[index][2]
-		dist_loc = sqrt((tmp_center[2] - x)^2 + (tmp_center[1] - y)^2)
+        x = centroids[index][1]
+        y = centroids[index][2]
+        dist_loc = sqrt((tmp_center[2] - x)^2 + (tmp_center[1] - y)^2)
         dist_loc *= PixelSpacing[1]
         if dist_loc > 31
             largest[index] = [round(y), round(x)]
         else
             nothing
-		end
-	end
+        end
+    end
 
     max_dict = Dict()
-	radius = round(2.5 / PixelSpacing[1], RoundUp)
+    radius = round(2.5 / PixelSpacing[1], RoundUp)
     for key in largest
         tmp_arr = create_circular_mask(rows, cols, (key[2][2], key[2][1]), radius)
-        tmp_arr = @. abs(tmp_arr * dcm_array[:,:,CCI_slice]) + abs(tmp_arr * dcm_array[:,:,CCI_slice - 1]) + abs(tmp_arr * dcm_array[:,:,CCI_slice + 1])
+        tmp_arr = @. abs(tmp_arr * dcm_array[:, :, CCI_slice]) +
+            abs(tmp_arr * dcm_array[:, :, CCI_slice - 1]) +
+            abs(tmp_arr * dcm_array[:, :, CCI_slice + 1])
         tmp_arr = @. ifelse(tmp_arr == 0, missing, tmp_arr)
         max_dict[key[1]] = median(skipmissing(tmp_arr))
-	end
+    end
     large1_index, large1_key = maximum(zip(values(max_dict), keys(max_dict)))
     pop!(max_dict, large1_key)
 
     center1 = largest[large1_key]
-	
-	center = vec(tmp_center')
-	p1 = vec(center1')
-	offset = -2π/180
-	offset2 = -5π/180
-	p2, p3 = find__triangle_points(p1, center; offset=offset, offset2=offset2)
-	cent1, cent2, cent3 = vec(p1'), vec(p2'), vec(p3')
-	
+
+    center = vec(tmp_center')
+    p1 = vec(center1')
+    offset = -2π / 180
+    offset2 = -5π / 180
+    p2, p3 = find__triangle_points(p1, center; offset=offset, offset2=offset2)
+    cent1, cent2, cent3 = vec(p1'), vec(p2'), vec(p3')
+
     center = find_circle(cent1, cent2, cent3)
-	return center, cent1, cent2, cent3
+    return center, cent1, cent2, cent3
 end
 
 # ╔═╡ fad7cd8d-0d3d-446c-a348-f61084d02cea
-heatmap(transpose(masked_array[:, :, 5]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, 5]); colormap=:grays)
 
 # ╔═╡ 683207b8-c3d9-45be-a32b-a96fe8995400
-center, center1, center2, center3 = center_points(dcm_array, output, header, center_insert, slice_CCI1)
+center, center1, center2, center3 = center_points(
+    dcm_array, output, header, center_insert, slice_CCI1
+)
 
 # ╔═╡ 1ed8ee2e-3c5b-4515-bb45-8fb7b9c12d82
 md"""
@@ -876,15 +926,17 @@ md"""
 """
 
 # ╔═╡ dc1a292c-ca0f-42b6-8f4c-30adbec04d76
-function calc_centers_simulation(dcm_array, output, header, tmp_center, CCI_slice; angle_factor=0)
+function calc_centers_simulation(
+    dcm_array, output, header, tmp_center, CCI_slice; angle_factor=0
+)
     PixelSpacing = PhantomSegmentation.get_pixel_size(header)
     center, center1, center2, center3 = center_points(
         dcm_array, output, header, tmp_center, CCI_slice
     )
     centers = Dict()
     for center_index in (center1, center2, center3)
-		side_x = abs(center[1] - center_index[1]) + angle_factor
-		side_y = abs(center[2] - center_index[2]) + angle_factor
+        side_x = abs(center[1] - center_index[1]) + angle_factor
+        side_y = abs(center[2] - center_index[2]) + angle_factor
         angle = angle_calc(side_x, side_y)
         if (center_index[1] < center[1] && center_index[2] < center[2])
             medium_calc = [
@@ -975,7 +1027,7 @@ dict = calc_centers_simulation(dcm_array, output, header, center_insert, slice_C
 dict[:Large_MD]
 
 # ╔═╡ dfd46611-7feb-40d2-9f85-0948ae61cddf
-heatmap(transpose(masked_array[:, :, 5]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, 5]); colormap=:grays)
 
 # ╔═╡ 14c1613a-02eb-4e5e-9c78-677a4c3e8f76
 md"""
@@ -991,7 +1043,7 @@ function mask_inserts_simulation(
     center_insert;
     calcium_threshold=130,
     comp_connect=trues(3, 3),
-	angle_factor=0
+    angle_factor=0,
 )
     output = calc_output(masked_array, header, CCI_slice, calcium_threshold, comp_connect)
     insert_centers = calc_centers_simulation(
@@ -1053,7 +1105,7 @@ end
 @bind a3 PlutoUI.Slider(1:size(masked_array, 3), default=5, show_value=true)
 
 # ╔═╡ 517d1578-d3c5-4748-a0ed-dc9fbf787dab
-heatmap(transpose(masked_array[:, :, a3]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, a3]); colormap=:grays)
 
 # ╔═╡ 1957ae7a-e63a-420b-82cd-f7148115252c
 md"""
@@ -1062,58 +1114,74 @@ md"""
 
 # ╔═╡ f3d3b979-3339-47a7-baa8-39d476bc2a28
 function collect_tuple(tuple_array)
-	row_num = size(tuple_array)
-	col_num = length(tuple_array[1])
-	container = zeros(Int64, row_num..., col_num)
-	for i in 1:length(tuple_array)
-		container[i,:] = collect(tuple_array[i])
-	end
-	return container
+    row_num = size(tuple_array)
+    col_num = length(tuple_array[1])
+    container = zeros(Int64, row_num..., col_num)
+    for i in 1:length(tuple_array)
+        container[i, :] = collect(tuple_array[i])
+    end
+    return container
 end
 
 # ╔═╡ dbe32d0d-8e81-4aa0-bda7-52a132dee0be
 function overlay_mask_bind(mask)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	return PlutoUI.Slider(1:length(zs), default=25, show_value=true)
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    return PlutoUI.Slider(1:length(zs); default=25, show_value=true)
 end
 
 # ╔═╡ 2fe5f75a-f335-4b1d-83aa-e3f68af95b80
 function overlay_mask_plot(array, mask, var, title::AbstractString)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	indices_lbl = findall(x -> x == zs[var], label_array[:,3])
-	
-	fig = Figure()
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = title
-	heatmap!((array[:, :, zs[var]]), colormap=:grays)
-	scatter!(label_array[:, 1][indices_lbl], label_array[:, 2][indices_lbl], markersize=1, color=:red)
-	fig
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    indices_lbl = findall(x -> x == zs[var], label_array[:, 3])
+
+    fig = Figure()
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = title
+    heatmap!((array[:, :, zs[var]]); colormap=:grays)
+    scatter!(
+        label_array[:, 1][indices_lbl],
+        label_array[:, 2][indices_lbl];
+        markersize=1,
+        color=:red,
+    )
+    return fig
 end
 
 # ╔═╡ bf069d5a-8d87-4028-b99d-873c4927288a
-angle_factor=0
+angle_factor = 0
 
 # ╔═╡ 22d60146-ca07-45cb-8eae-b8cc06b35504
-mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(dcm_array, masked_array, header, slice_CCI1, center_insert, angle_factor=angle_factor);
+mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
+    dcm_array, masked_array, header, slice_CCI1, center_insert; angle_factor=angle_factor
+);
 
 # ╔═╡ a98fae0f-c107-49a7-9d60-ce9e7c767ae7
-masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
+masks =
+    mask_L_HD +
+    mask_M_HD +
+    mask_S_HD +
+    mask_L_MD +
+    mask_M_MD +
+    mask_S_MD +
+    mask_L_LD +
+    mask_M_LD +
+    mask_S_LD;
 
 # ╔═╡ 700cfd05-93f6-4133-9e3c-457b078589c7
-heatmap(transpose(masks), colormap=:grays)
+heatmap(transpose(masks); colormap=:grays)
 
 # ╔═╡ b28baa54-34a0-4676-baef-c0ba4422762b
 begin
-	masks_3D = Array{Bool}(undef, size(dcm_array))
-	for z in 1:size(dcm_array, 3)
-		masks_3D[:, :, z] = masks
-	end
+    masks_3D = Array{Bool}(undef, size(dcm_array))
+    for z in 1:size(dcm_array, 3)
+        masks_3D[:, :, z] = masks
+    end
 end;
 
 # ╔═╡ fa23d5ae-7d81-45cd-a30b-a226c9166822

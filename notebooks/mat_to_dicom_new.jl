@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -17,22 +24,22 @@ end
 # ╔═╡ 4427b686-e049-11ec-3271-ab17a8f19bfc
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("CairoMakie")
-		Pkg.add("MAT")
-		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
-		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-	end
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("CairoMakie")
+        Pkg.add("MAT")
+        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
+    end
 
-	using PlutoUI
-	using CairoMakie
-	using MAT
-	using DICOM
-	using DICOMUtils
+    using PlutoUI
+    using CairoMakie
+    using MAT
+    using DICOM
+    using DICOMUtils
 end
 
 # ╔═╡ 20bf9bda-4a51-4f64-a299-86d6cb6ea22f
@@ -52,65 +59,87 @@ files = [1, 2, 3]
 
 # ╔═╡ 8d9777f7-22c6-4c61-b29d-85e3300b5c45
 for density in densities
-	for _size in sizes
-		for energy in energies
-			for file in files
-				file_inserts = file + 3
-				ENERGY = energy
-				ROD = string("QRM", ENERGY, "rod.mat")
-				VESSEL = string("QRM", ENERGY, "vessels.mat")
-				BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/new_exposure/", _size, "/", density, "/")
+    for _size in sizes
+        for energy in energies
+            for file in files
+                file_inserts = file + 3
+                ENERGY = energy
+                ROD = string("QRM", ENERGY, "rod.mat")
+                VESSEL = string("QRM", ENERGY, "vessels.mat")
+                BASE_PATH = string(
+                    "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/mat_files/new_exposure/",
+                    _size,
+                    "/",
+                    density,
+                    "/",
+                )
 
-				path = string(BASE_PATH, ROD)
-				vars1 = matread(path)
-				array1 = vars1[string("I")]
-				array1 = Int16.(round.(array1))
+                path = string(BASE_PATH, ROD)
+                vars1 = matread(path)
+                array1 = vars1[string("I")]
+                array1 = Int16.(round.(array1))
 
-				path2 = string(BASE_PATH, VESSEL)
-				vars2 = matread(path2)
-				array2 = vars2[string("I")]
-				array2 = Int16.(round.(array2))
+                path2 = string(BASE_PATH, VESSEL)
+                vars2 = matread(path2)
+                array2 = vars2[string("I")]
+                array2 = Int16.(round.(array2))
 
-				dcm_path = "/Users/daleblack/Google Drive/Datasets/Canon_Aquilion_One_Vision/Large_rep1/96E1EB4F"
-				
-				dcm = dcm_parse(dcm_path)
-				dcm[tag"Pixel Data"] = array1
-				dcm[tag"Instance Number"] = file
-				dcm[tag"Rows"] = size(array1, 1)
-				dcm[tag"Columns"] = size(array1, 2)
+                dcm_path = "/Users/daleblack/Google Drive/Datasets/Canon_Aquilion_One_Vision/Large_rep1/96E1EB4F"
 
-				output_root1 = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/")
-				if !isdir(output_root1)
-					mkdir(output_root1)
-				end
-				output_root2 = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", _size)
-				if !isdir(output_root2)
-					mkdir(output_root2)
-				end
-				output_root3 = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", _size, "/", density)
-				if !isdir(output_root3)
-					mkdir(output_root3)
-				end
-				output_root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", _size, "/", density, "/", ENERGY)
-				if !isdir(output_root)
-					mkdir(output_root)
-				end
-				
-				output_path_rod = string(output_root, "/", file, ".dcm")
-				dcm_write(output_path_rod, dcm)
+                dcm = dcm_parse(dcm_path)
+                dcm[tag"Pixel Data"] = array1
+                dcm[tag"Instance Number"] = file
+                dcm[tag"Rows"] = size(array1, 1)
+                dcm[tag"Columns"] = size(array1, 2)
 
-				dcm2 = dcm_parse(dcm_path)
-				dcm2[tag"Pixel Data"] = array2
-				dcm2[tag"Instance Number"] = file_inserts
-				dcm2[tag"Rows"] = size(array2, 1)
-				dcm2[tag"Columns"] = size(array2, 2)
+                output_root1 = string(
+                    "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/"
+                )
+                if !isdir(output_root1)
+                    mkdir(output_root1)
+                end
+                output_root2 = string(
+                    "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+                    _size,
+                )
+                if !isdir(output_root2)
+                    mkdir(output_root2)
+                end
+                output_root3 = string(
+                    "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+                    _size,
+                    "/",
+                    density,
+                )
+                if !isdir(output_root3)
+                    mkdir(output_root3)
+                end
+                output_root = string(
+                    "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+                    _size,
+                    "/",
+                    density,
+                    "/",
+                    ENERGY,
+                )
+                if !isdir(output_root)
+                    mkdir(output_root)
+                end
 
-				output_path_inserts = string(output_root, "/", file_inserts, ".dcm")
-				dcm_write(output_path_inserts, dcm2)
+                output_path_rod = string(output_root, "/", file, ".dcm")
+                dcm_write(output_path_rod, dcm)
 
-			end
-		end
-	end
+                dcm2 = dcm_parse(dcm_path)
+                dcm2[tag"Pixel Data"] = array2
+                dcm2[tag"Instance Number"] = file_inserts
+                dcm2[tag"Rows"] = size(array2, 1)
+                dcm2[tag"Columns"] = size(array2, 2)
+
+                output_path_inserts = string(output_root, "/", file_inserts, ".dcm")
+                dcm_write(output_path_inserts, dcm2)
+            end
+        end
+    end
 end
 
 # ╔═╡ 258103d8-16ff-46ec-9a93-0fb526f17d3f
@@ -131,7 +160,7 @@ vol_combined = load_dcm_array(dcmdir_combined);
 @bind c PlutoUI.Slider(1:size(vol_combined, 3); default=1, show_value=true)
 
 # ╔═╡ a07b20bc-3891-4d43-b63b-340c50d3183f
-heatmap(transpose(vol_combined[:, :, c]), colormap=:grays)
+heatmap(transpose(vol_combined[:, :, c]); colormap=:grays)
 
 # ╔═╡ Cell order:
 # ╠═4427b686-e049-11ec-3271-ab17a8f19bfc

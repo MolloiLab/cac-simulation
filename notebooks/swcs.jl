@@ -7,30 +7,30 @@ using InteractiveUtils
 # ╔═╡ 2a9b41e8-bab2-11ec-3294-ddf4409d19b6
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("Statistics")
-		Pkg.add("LinearAlgebra")
-		Pkg.add("Images")
-		Pkg.add("DSP")
-		Pkg.add("CairoMakie")
-		Pkg.add("Noise")
-		Pkg.add("Distributions")
-		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
-	end
-	
-	using PlutoUI
-	using Statistics
-	using LinearAlgebra
-	using Images
-	using DSP
-	using CairoMakie
-	using Noise
-	using Distributions
-	using CalciumScoring
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("Statistics")
+        Pkg.add("LinearAlgebra")
+        Pkg.add("Images")
+        Pkg.add("DSP")
+        Pkg.add("CairoMakie")
+        Pkg.add("Noise")
+        Pkg.add("Distributions")
+        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
+    end
+
+    using PlutoUI
+    using Statistics
+    using LinearAlgebra
+    using Images
+    using DSP
+    using CairoMakie
+    using Noise
+    using Distributions
+    using CalciumScoring
 end
 
 # ╔═╡ abc5db86-a240-46a4-8114-6aa7b7445317
@@ -38,88 +38,88 @@ TableOfContents()
 
 # ╔═╡ b0d93309-7d9d-4d83-9477-2f534a05ddfe
 begin
-	abstract type CalciumScore end
-	struct SpatiallyWeighted <: CalciumScore end
+    abstract type CalciumScore end
+    struct SpatiallyWeighted <: CalciumScore end
 end
 
 # ╔═╡ 9f4a38f7-9f7d-4bca-a7d3-5daefe798c14
 function score_test(vol::AbstractMatrix, calibration, alg::SpatiallyWeighted)
     μ, σ = mean(calibration), std(calibration)
-	d = Distributions.Normal(μ, σ)
+    d = Distributions.Normal(μ, σ)
 
-	scaled_array = zeros(size(vol))
-	for i in 1:size(vol, 1)
-		for j in 1:size(vol, 2)
-			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
-		end
-	end
+    scaled_array = zeros(size(vol))
+    for i in 1:size(vol, 1)
+        for j in 1:size(vol, 2)
+            scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
+        end
+    end
 
-	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-	weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
-    
-	return sum(weighted_arr)
+    kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+    weighted_arr = conv(scaled_array, kern)[2:(end - 1), 2:(end - 1)]
+
+    return sum(weighted_arr)
 end
 
 # ╔═╡ 41c4242b-b025-497b-b5b8-f0e029ecbd8e
 function score_test(vol::AbstractMatrix, μ, σ, alg::SpatiallyWeighted)
-	d = Distributions.Normal(μ, σ)
+    d = Distributions.Normal(μ, σ)
 
-	scaled_array = zeros(size(vol))
-	for i in 1:size(vol, 1)
-		for j in 1:size(vol, 2)
-			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
-		end
-	end
+    scaled_array = zeros(size(vol))
+    for i in 1:size(vol, 1)
+        for j in 1:size(vol, 2)
+            scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
+        end
+    end
 
-	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-	weighted_arr = conv(scaled_array, kern)[2:end-1, 2:end-1]
-    
-	return sum(weighted_arr)
+    kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+    weighted_arr = conv(scaled_array, kern)[2:(end - 1), 2:(end - 1)]
+
+    return sum(weighted_arr)
 end
 
 # ╔═╡ 3cfc6aca-b1f0-41cf-9b7f-f1c84363ae34
 function score_test(vol::AbstractArray, calibration, alg::SpatiallyWeighted)
     μ, σ = mean(calibration), std(calibration)
-	d = Distributions.Normal(μ, σ)
+    d = Distributions.Normal(μ, σ)
 
-	scaled_array = zeros(size(vol))
-	for i in 1:size(vol, 1)
-		for j in 1:size(vol, 2)
-			for z in 1:size(vol, 3)
-				scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
-			end
-		end
-	end
+    scaled_array = zeros(size(vol))
+    for i in 1:size(vol, 1)
+        for j in 1:size(vol, 2)
+            for z in 1:size(vol, 3)
+                scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
+            end
+        end
+    end
 
-	weighted_arr = zeros(size(vol))
-	for z in 1:size(scaled_array, 3)
-		kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-		weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:end-1, 2:end-1]
-	end
-    
-	return sum(weighted_arr)
+    weighted_arr = zeros(size(vol))
+    for z in 1:size(scaled_array, 3)
+        kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+        weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:(end - 1), 2:(end - 1)]
+    end
+
+    return sum(weighted_arr)
 end
 
 # ╔═╡ 0e4a1d69-a342-4b0a-91b0-3667db8267b4
 function score_test(vol::AbstractArray, μ, σ, alg::SpatiallyWeighted)
-	d = Distributions.Normal(μ, σ)
+    d = Distributions.Normal(μ, σ)
 
-	scaled_array = zeros(size(vol))
-	for i in 1:size(vol, 1)
-		for j in 1:size(vol, 2)
-			for z in 1:size(vol, 3)
-				scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
-			end
-		end
-	end
+    scaled_array = zeros(size(vol))
+    for i in 1:size(vol, 1)
+        for j in 1:size(vol, 2)
+            for z in 1:size(vol, 3)
+                scaled_array[i, j, z] = Distributions.cdf(d, vol[i, j, z])
+            end
+        end
+    end
 
-	weighted_arr = zeros(size(vol))
-	for z in 1:size(scaled_array, 3)
-		kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-		weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:end-1, 2:end-1]
-	end
-    
-	return sum(weighted_arr)
+    weighted_arr = zeros(size(vol))
+    for z in 1:size(scaled_array, 3)
+        kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+        weighted_arr[:, :, z] = conv(scaled_array[:, :, z], kern)[2:(end - 1), 2:(end - 1)]
+    end
+
+    return sum(weighted_arr)
 end
 
 # ╔═╡ 9929b3c2-6c07-4da0-9eb4-26d6c407d7e2
@@ -129,33 +129,33 @@ md"""
 
 # ╔═╡ 1b5d567f-4337-423b-8674-b4485c336ce8
 vol = [
-	0 46 58 123 133 104 65 7
-	19 25 20 125 163 83 -22 -134
-	127 99 65 104 139 57 -51 -102
-	123 88 112 140 104 57 46 34
-	122 31 71 121 93 83 101 72
-	97 24 59 99 68 27 22 52
-	0 22 29 72 80 54 28 72
-	0 17 -20 15 42 61 80 83
-	0 66 14 -3 11 54 110 148
-	0 121 127 102 103 93 118 167
+    0 46 58 123 133 104 65 7
+    19 25 20 125 163 83 -22 -134
+    127 99 65 104 139 57 -51 -102
+    123 88 112 140 104 57 46 34
+    122 31 71 121 93 83 101 72
+    97 24 59 99 68 27 22 52
+    0 22 29 72 80 54 28 72
+    0 17 -20 15 42 61 80 83
+    0 66 14 -3 11 54 110 148
+    0 121 127 102 103 93 118 167
 ]
 
 # ╔═╡ 1803d49e-287d-4779-ad34-157b6e977d0f
-vol3D = cat(vol, vol, dims=3);
+vol3D = cat(vol, vol; dims=3);
 
 # ╔═╡ df800b73-6567-43c5-b7bc-df18234041dd
 begin
-	calibration = zeros(5, 5, 100)
-	for i in 1:100
-		calibration[:, :, i] = mult_gauss(ones(5, 5) * 170)
-	end
+    calibration = zeros(5, 5, 100)
+    for i in 1:100
+        calibration[:, :, i] = mult_gauss(ones(5, 5) * 170)
+    end
 end
 
 # ╔═╡ 4baf3584-ddfe-4dd0-b63d-d9a43121b3cd
 begin
-	μ, σ = mean(calibration), std(calibration) + 30
-	d = Distributions.Normal(μ, σ)
+    μ, σ = mean(calibration), std(calibration) + 30
+    d = Distributions.Normal(μ, σ)
 end
 
 # ╔═╡ 6ddd523e-f43f-4410-bb50-d4b41989208c
@@ -163,15 +163,15 @@ scatter(d)
 
 # ╔═╡ a076ec71-5a46-439d-938f-d7dcf4679248
 begin
-	# low, high = quantile.(d, [0.00001, 0.99999])
-	xs = []
-	ys = []
-	for x in -100:300
-		push!(xs, x)
-		push!(ys, cdf(d, x))
-	end
-	xs = round.(xs, digits = 10)
-	ys = round.(ys, digits = 10)
+    # low, high = quantile.(d, [0.00001, 0.99999])
+    xs = []
+    ys = []
+    for x in -100:300
+        push!(xs, x)
+        push!(ys, cdf(d, x))
+    end
+    xs = round.(xs, digits=10)
+    ys = round.(ys, digits=10)
 end
 
 # ╔═╡ 3ef92c9c-59b7-42a4-abe9-38cbc8209358
@@ -179,13 +179,13 @@ scatter(xs, ys)
 
 # ╔═╡ 85adf61f-f7a4-4576-921f-50f37631f134
 begin
-	scaled_array = zeros(size(vol))
-	for i in 1:size(vol, 1)
-		for j in 1:size(vol, 2)
-			scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
-		end
-	end
-	round.(scaled_array, digits=2)
+    scaled_array = zeros(size(vol))
+    for i in 1:size(vol, 1)
+        for j in 1:size(vol, 2)
+            scaled_array[i, j] = Distributions.cdf(d, vol[i, j])
+        end
+    end
+    round.(scaled_array, digits=2)
 end
 
 # ╔═╡ 91940958-2d95-472a-a7ec-7cfe88fe12cb
@@ -195,9 +195,9 @@ md"""
 
 # ╔═╡ c8b0da1f-5394-42d1-80e0-87b17417cb18
 begin
-	kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
-	weighted_arr = DSP.conv(scaled_array, kern)[2:end-1, 2:end-1]
-	round.(weighted_arr, digits=2)
+    kern = [0 0.2 0; 0.2 0.2 0.2; 0 0.2 0]
+    weighted_arr = DSP.conv(scaled_array, kern)[2:(end - 1), 2:(end - 1)]
+    round.(weighted_arr, digits=2)
 end
 
 # ╔═╡ c12d83f6-cfe0-4210-bb00-0ec8de046310
@@ -268,7 +268,9 @@ function score_agat(vol, spacing, alg::Agatston; threshold=130, min_size_mm=1)
 end
 
 # ╔═╡ 9fff444c-d222-4fcc-8438-8c3217c336c4
-function score_agat(vol, spacing, mass_cal_factor, alg::Agatston; threshold=130, min_size_mm=1)
+function score_agat(
+    vol, spacing, mass_cal_factor, alg::Agatston; threshold=130, min_size_mm=1
+)
     area_mm = spacing[1] * spacing[2]
     slice_thickness = spacing[3]
     min_size_pixels = Int(round(min_size_mm / area_mm))

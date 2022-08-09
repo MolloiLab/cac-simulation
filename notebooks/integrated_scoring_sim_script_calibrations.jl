@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 70410feb-aa21-405d-8d26-9cb7c1ecdb9e
+# ╔═╡ 0bba17a2-406d-4318-a417-30c090605b0d
 # ╠═╡ show_logs = false
 begin
     let
@@ -41,10 +41,10 @@ begin
     using CalciumScoring
 end
 
-# ╔═╡ f2845431-56a1-4fa4-a31f-a515c686d85a
+# ╔═╡ 90e0891a-e9ed-4e7d-a410-4821bae07371
 TableOfContents()
 
-# ╔═╡ 71b9dc8f-8879-43c3-a94b-c3efbeb672a6
+# ╔═╡ 3cebe9fa-3844-4567-89f3-807e956f2bc9
 function create_mask(array, mask)
     @assert size(array) == size(mask)
     idxs = findall(x -> x == true, mask)
@@ -55,22 +55,22 @@ function create_mask(array, mask)
     return overlayed_mask
 end
 
-# ╔═╡ 26110c25-c288-4e5a-a3d1-260ca0c15a84
+# ╔═╡ fc679aac-09a1-48b6-aec8-29dc1642be9f
 TYPE = "integrated_scoring"
 
-# ╔═╡ 442943d0-9a1e-46ff-a924-91b5537a9b6a
+# ╔═╡ 9ad8b7be-e72e-4ad4-98e8-213ed9734879
 VENDERS = ["80", "100", "120", "135"]
 
-# ╔═╡ 57656cb2-146a-43ec-abbb-1b5a6a1f3afb
+# ╔═╡ 1952ad11-fdf7-44d4-9e79-de47021f7b77
 SIZES = ["small", "medium", "large"]
 
-# ╔═╡ 6e98101e-f052-4b19-9915-429166605ced
+# ╔═╡ a1af316d-8b6a-4092-9d67-1972494958f0
 DENSITIES = ["low", "normal"]
 
-# ╔═╡ 40f36934-b538-419b-910b-2f1b771a9786
-blurs = [0, 0.5, 1, 1.5, 2]
+# ╔═╡ feda751f-2c81-48ff-b414-643940dad296
+cals = ["1pt", "3pt", "6pt", "specific"]
 
-# ╔═╡ 40454c15-d8fa-4530-8b74-39a934afc257
+# ╔═╡ a0ad9779-9332-4a57-b325-cacf1af485d3
 begin
     dfs = []
     high_dens = []
@@ -79,13 +79,13 @@ begin
     high_dens100 = []
     med_dens50 = []
     low_dens25 = []
-    for blur in blurs
+    for cal in cals
         for VENDER in VENDERS
             for SIZE in SIZES
                 for DENSITY in DENSITIES
                     SCAN_NUMBER = 1
                     BASE_PATH = string(
-                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/",
+                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
                         SIZE,
                         "/",
                         DENSITY,
@@ -96,13 +96,6 @@ begin
                     pth = dcm_path_list[SCAN_NUMBER]
                     scan = basename(pth)
                     header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
-
-                    # Motion Blur
-                    if blur != 0
-                        for z in size(dcm_array, 3)
-                            dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blur)
-                        end
-                    end
 
                     # Segment Heart
                     masked_array, center_insert, mask = mask_heart(
@@ -116,34 +109,8 @@ begin
                     elseif DENSITY == "normal"
                         thresh = 130
                     end
-                    # if DENSITY == "low" && SIZE == "large"
-                    # 	thresh = 75
-                    # elseif DENSITY == "low" && SIZE == "medium"
-                    # 	thresh = 75
-                    # elseif DENSITY == "low"
-                    # 	thresh = 60
-                    # elseif DENSITY ==  "normal"
-                    # 	thresh = 130
-                    # end
 
-                    # local thresh
-                    # if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-                    # 	thresh = 80
-                    # elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-                    # 	thresh = 70
-                    # elseif DENSITY == "low" && SIZE == "large"
-                    # 	thresh = 75
-                    # elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-                    # 	thresh = 55
-                    # elseif DENSITY == "low" && SIZE == "medium"
-                    # 	thresh = 75
-                    # elseif DENSITY == "low"
-                    # 	thresh = 60
-                    # elseif DENSITY ==  "normal"
-                    # 	thresh = 130
-                    # end
-
-                    @info blur, DENSITY, SIZE, VENDER, thresh
+                    @info cal, DENSITY, SIZE, VENDER, thresh
 
                     calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
                         masked_array, header; calcium_threshold=thresh
@@ -185,17 +152,18 @@ begin
                         CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false)
                     )
 
-                    # Calibration Prep
-                    local density_array
-                    if DENSITY == "low"
-                        density_array = [0, 25, 50, 100]
-                    elseif DENSITY == "normal"
-                        density_array = [0, 200, 400, 800]
-                    end
+                    # # Calibration Prep
+                    # local density_array
+                    # if DENSITY == "low"
+                    # 	density_array = [0, 25, 50, 100]
+                    # elseif DENSITY == "normal"
+                    # 	density_array = [0, 200, 400, 800]
+                    # end
                     array_filtered = abs.(mapwindow(median, calcium_image[:, :, 2], (3, 3)))
                     bool_arr = array_filtered .> 0
                     bool_arr_erode = (((erode(erode(bool_arr)))))
                     c_img = calcium_image[:, :, 1:3]
+
                     mask_cal_3D = Array{Bool}(undef, size(c_img))
                     for z in 1:size(c_img, 3)
                         mask_cal_3D[:, :, z] = bool_arr_erode
@@ -229,93 +197,74 @@ begin
                     low_density_cal = mean(arr[eroded_mask_L_LD])
                     density_array_cal = [0, 200]
 
-                    # if DENSITY == "low"
-                    # 	density_arr = [
-                    # 		25
-                    # 		50
-                    # 		100
-                    # 	]
-                    # 	if VENDER == "80"
-                    # 		intensity_array = [
-                    # 			70.6327
-                    # 			124.204
-                    # 			202.143
-                    # 		]
-                    # 	elseif VENDER == "100"
-                    # 		intensity_array = [
-                    # 			62.2041
-                    # 			104.612
-                    # 			183.0
-                    # 		]
-                    # 	elseif VENDER == "120"
-                    # 		intensity_array = [
-                    # 			64.0408
-                    # 			93.8571
-                    # 			167.551
-                    # 		]
-                    # 	else
-                    # 		intensity_array = [
-                    # 			59.1429
-                    # 			91.898
-                    # 			153.429
-                    # 		]
-                    # 	end
-                    # else
-                    # 	density_arr = [
-                    # 		0
-                    # 		200
-                    # 		400
-                    # 		800
-                    # 	]
-                    # 	if VENDER == "80"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			395.918
-                    # 			727.735
-                    # 			1432.67
-                    # 		]
-                    # 	elseif VENDER == "100"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			321.612
-                    # 			620.837
-                    # 			1217.04
-                    # 		]
-                    # 	elseif VENDER == "120"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			301.204
-                    # 			571.204
-                    # 			1105.53
-                    # 		]
-                    # 	else
-                    # 		intensity_array = [
-                    # 			0
-                    # 			283.673
-                    # 			549.51
-                    # 			1053.27
-                    # 		]
-                    # 	end
-                    # end
-
-                    intensity_array = [
-                        0, low_density_cal, med_density_cal, high_density_cal
-                    ] # HU
-                    intensity_array_cal = [0, cal_insert_mean]
-
-                    local df_cal
-                    if DENSITY == "low"
-                        df_cal = DataFrame(
-                            :density => density_array[2:end],
-                            :intensity => intensity_array[2:end],
-                        )
-                    elseif DENSITY == "normal"
-                        df_cal = DataFrame(
-                            :density => density_array, :intensity => intensity_array
-                        )
+                    local density_array
+                    if cal == "1pt"
+                        if VENDER == "80"
+                            intensity_array = [0, 377.3]
+                            density_array = [0, 200]
+                        elseif VENDER == "100"
+                            intensity_array = [0, 326.0]
+                            density_array = [0, 200]
+                        elseif VENDER == "120"
+                            intensity_array = [0, 296.9]
+                            density_array = [0, 200]
+                        else
+                            intensity_array = [0, 282.7]
+                            density_array = [0, 200]
+                        end
+                    elseif cal == "3pt"
+                        if VENDER == "80"
+                            intensity_array = [0, 69.7, 377.3, 1375.3]
+                            density_array = [0, 25, 200, 800]
+                        elseif VENDER == "100"
+                            intensity_array = [0, 63.3, 326.0, 1179.4]
+                            density_array = [0, 25, 200, 800]
+                        elseif VENDER == "120"
+                            intensity_array = [0, 58.1, 296.9, 1072.1]
+                            density_array = [0, 25, 200, 800]
+                        else
+                            intensity_array = [0, 55.5, 282.7, 1019.7]
+                            density_array = [0, 25, 200, 800]
+                        end
+                    elseif cal == "6pt"
+                        if VENDER == "80"
+                            intensity_array = [0, 69.7, 114, 202, 377.3, 717, 1375.3]
+                            density_array = [0, 25, 50, 100, 200, 400, 800]
+                        elseif VENDER == "100"
+                            intensity_array = [0, 63.3, 100, 176, 326.0, 617, 1179.4]
+                            density_array = [0, 25, 50, 100, 200, 400, 800]
+                        elseif VENDER == "120"
+                            intensity_array = [0, 58.1, 92, 161, 296.9, 562, 1072.1]
+                            density_array = [0, 25, 50, 100, 200, 400, 800]
+                        else
+                            intensity_array = [0, 55.5, 88, 153, 282.7, 534, 1019.7]
+                            density_array = [0, 25, 50, 100, 200, 400, 800]
+                        end
+                    else
+                        if DENSITY == "low"
+                            intensity_array = [
+                                0, low_density_cal, med_density_cal, high_density_cal
+                            ]
+                            density_array = [0, 25, 50, 100]
+                        else
+                            intensity_array = [
+                                0, low_density_cal, med_density_cal, high_density_cal
+                            ]
+                            density_array = [0, 200, 400, 800]
+                        end
                     end
 
-                    # df_cal = DataFrame(:density => density_arr, :intensity => intensity_array)
+                    # local df_cal
+                    # if DENSITY == "low"
+                    # 	df_cal = DataFrame(:density => density_array[2:end], :intensity => intensity_array[2:end])
+                    # elseif DENSITY == "normal"
+                    # 	df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
+                    # end
+
+                    df_cal = DataFrame(
+                        :density => density_array, :intensity => intensity_array
+                    )
+
                     linearRegressor = lm(@formula(intensity ~ density), df_cal)
                     linearFit = predict(linearRegressor)
                     m = linearRegressor.model.pp.beta0[2]
@@ -473,30 +422,37 @@ begin
                     mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_ld, alg_S_LD)
 
                     # Results
+                    local density_array_calculations
+                    if DENSITY == "low"
+                        density_array_calculations = [0, 25, 50, 100]
+                    elseif DENSITY == "normal"
+                        density_array_calculations = [0, 200, 400, 800]
+                    end
+
                     inserts = ["Low Density", "Medium Density", "High Density"]
                     volume_gt = [7.065, 63.585, 176.625]
                     ground_truth_mass_large = [
-                        volume_gt[3] * density_array[2] * 1e-3,
-                        volume_gt[3] * density_array[3] * 1e-3,
-                        volume_gt[3] * density_array[4] * 1e-3,
+                        volume_gt[3] * density_array_calculations[2] * 1e-3,
+                        volume_gt[3] * density_array_calculations[3] * 1e-3,
+                        volume_gt[3] * density_array_calculations[4] * 1e-3,
                     ] # mg
 
                     calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
                     ground_truth_mass_medium = [
-                        volume_gt[2] * density_array[2] * 1e-3,
-                        volume_gt[2] * density_array[3] * 1e-3,
-                        volume_gt[2] * density_array[4] * 1e-3,
+                        volume_gt[2] * density_array_calculations[2] * 1e-3,
+                        volume_gt[2] * density_array_calculations[3] * 1e-3,
+                        volume_gt[2] * density_array_calculations[4] * 1e-3,
                     ]
                     calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
                     ground_truth_mass_small = [
-                        volume_gt[1] * density_array[2] * 1e-3,
-                        volume_gt[1] * density_array[3] * 1e-3,
-                        volume_gt[1] * density_array[4] * 1e-3,
+                        volume_gt[1] * density_array_calculations[2] * 1e-3,
+                        volume_gt[1] * density_array_calculations[3] * 1e-3,
+                        volume_gt[1] * density_array_calculations[4] * 1e-3,
                     ]
                     calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
 
                     df = DataFrame(;
-                        blur=blur,
+                        cal=cal,
                         VENDER=VENDER,
                         SIZE=SIZE,
                         DENSITY=DENSITY,
@@ -512,69 +468,75 @@ begin
                     )
                     push!(dfs, df)
 
-                    if DENSITY == "normal"
-                        # Calculate mean intensities for calibration
-                        erode_mask_L_HD = erode(erode(mask_L_HD))
-                        mean_HD = mean(single_arr[erode_mask_L_HD])
-                        push!(high_dens, mean_HD)
+                    # if DENSITY == "normal"
+                    # 	# Calculate mean intensities for calibration
+                    # 	erode_mask_L_HD = erode(erode(mask_L_HD))
+                    # 	mean_HD = mean(single_arr[erode_mask_L_HD])
+                    # 	push!(high_dens, mean_HD)
 
-                        erode_mask_L_MD = erode(erode(mask_L_MD))
-                        mean_MD = mean(single_arr[erode_mask_L_MD])
-                        push!(med_dens, mean_MD)
+                    # 	erode_mask_L_MD = erode(erode(mask_L_MD))
+                    # 	mean_MD = mean(single_arr[erode_mask_L_MD])
+                    # 	push!(med_dens, mean_MD)
 
-                        erode_mask_L_LD = erode(erode(mask_L_LD))
-                        mean_LD = mean(single_arr[erode_mask_L_LD])
-                        push!(low_dens, mean_LD)
-                    else
-                        erode_mask_L_HD = erode(erode(mask_L_HD))
-                        mean_HD = mean(single_arr[erode_mask_L_HD])
-                        push!(high_dens100, mean_HD)
+                    # 	erode_mask_L_LD = erode(erode(mask_L_LD))
+                    # 	mean_LD = mean(single_arr[erode_mask_L_LD])
+                    # 	push!(low_dens, mean_LD)
+                    # else
+                    # 	erode_mask_L_HD = erode(erode(mask_L_HD))
+                    # 	mean_HD = mean(single_arr[erode_mask_L_HD])
+                    # 	push!(high_dens100, mean_HD)
 
-                        erode_mask_L_MD = erode(erode(mask_L_MD))
-                        mean_MD = mean(single_arr[erode_mask_L_MD])
-                        push!(med_dens50, mean_MD)
+                    # 	erode_mask_L_MD = erode(erode(mask_L_MD))
+                    # 	mean_MD = mean(single_arr[erode_mask_L_MD])
+                    # 	push!(med_dens50, mean_MD)
 
-                        erode_mask_L_LD = erode(erode(mask_L_LD))
-                        mean_LD = mean(single_arr[erode_mask_L_LD])
-                        push!(low_dens25, mean_LD)
-                    end
+                    # 	erode_mask_L_LD = erode(erode(mask_L_LD))
+                    # 	mean_LD = mean(single_arr[erode_mask_L_LD])
+                    # 	push!(low_dens25, mean_LD)
+                    # end
                 end
             end
         end
     end
 end
 
-# ╔═╡ 1b95b391-cad0-4aad-8885-fd0c79cd94c1
+# ╔═╡ cba1f065-cc60-4d2f-b770-afbec22ae251
+# mean(high_dens), mean(med_dens), mean(low_dens), mean(high_dens100), mean(med_dens50), mean(low_dens25)
+
+# ╔═╡ f2f8c290-29d1-4c26-aa23-a0ae4d236a12
 md"""
 # Save Results
 """
 
-# ╔═╡ cc20b566-f645-4ae5-8fe2-19ba5697aa6c
+# ╔═╡ ec2383b0-596d-4d27-984b-78ab792cb27c
 dfs
 
-# ╔═╡ bb622f09-0da5-4c38-a7d3-de898af42490
-if ~isdir(string(cd(pwd, ".."), "/output_repeated/", TYPE))
-    mkdir(string(cd(pwd, ".."), "/output_repeated/", TYPE))
+# ╔═╡ 57f81937-2af0-4fe8-aeda-da294c6f9acd
+if ~isdir(string(cd(pwd, ".."), "/output_new/", TYPE))
+    mkdir(string(cd(pwd, ".."), "/output_new/", TYPE))
 end
 
-# ╔═╡ 30e1d9a6-868c-4d29-8752-48a3092d0759
+# ╔═╡ d0db09cc-3f85-4b69-934d-d9ddda916d6d
 begin
     new_df = vcat(dfs[1:length(dfs)]...)
-    output_path_new = string(cd(pwd, ".."), "/output_repeated/", TYPE, "/", "full2.csv")
+    output_path_new = string(
+        cd(pwd, ".."), "/output_new/", TYPE, "/", "full_calibrations.csv"
+    )
     CSV.write(output_path_new, new_df)
 end
 
 # ╔═╡ Cell order:
-# ╠═70410feb-aa21-405d-8d26-9cb7c1ecdb9e
-# ╠═f2845431-56a1-4fa4-a31f-a515c686d85a
-# ╟─71b9dc8f-8879-43c3-a94b-c3efbeb672a6
-# ╠═26110c25-c288-4e5a-a3d1-260ca0c15a84
-# ╠═442943d0-9a1e-46ff-a924-91b5537a9b6a
-# ╠═57656cb2-146a-43ec-abbb-1b5a6a1f3afb
-# ╠═6e98101e-f052-4b19-9915-429166605ced
-# ╠═40f36934-b538-419b-910b-2f1b771a9786
-# ╠═40454c15-d8fa-4530-8b74-39a934afc257
-# ╟─1b95b391-cad0-4aad-8885-fd0c79cd94c1
-# ╠═cc20b566-f645-4ae5-8fe2-19ba5697aa6c
-# ╠═bb622f09-0da5-4c38-a7d3-de898af42490
-# ╠═30e1d9a6-868c-4d29-8752-48a3092d0759
+# ╠═0bba17a2-406d-4318-a417-30c090605b0d
+# ╠═90e0891a-e9ed-4e7d-a410-4821bae07371
+# ╟─3cebe9fa-3844-4567-89f3-807e956f2bc9
+# ╠═fc679aac-09a1-48b6-aec8-29dc1642be9f
+# ╠═9ad8b7be-e72e-4ad4-98e8-213ed9734879
+# ╠═1952ad11-fdf7-44d4-9e79-de47021f7b77
+# ╠═a1af316d-8b6a-4092-9d67-1972494958f0
+# ╠═feda751f-2c81-48ff-b414-643940dad296
+# ╠═a0ad9779-9332-4a57-b325-cacf1af485d3
+# ╠═cba1f065-cc60-4d2f-b770-afbec22ae251
+# ╟─f2f8c290-29d1-4c26-aa23-a0ae4d236a12
+# ╠═ec2383b0-596d-4d27-984b-78ab792cb27c
+# ╠═57f81937-2af0-4fe8-aeda-da294c6f9acd
+# ╠═d0db09cc-3f85-4b69-934d-d9ddda916d6d

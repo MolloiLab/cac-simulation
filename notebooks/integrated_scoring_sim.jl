@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -17,44 +24,44 @@ end
 # ╔═╡ 45f704d4-66e5-49db-aef5-05132f3853ee
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("CairoMakie")
-		Pkg.add("Statistics")
-		Pkg.add("StatsBase")
-		Pkg.add("ImageMorphology")
-		Pkg.add("ImageFiltering")
-		Pkg.add("CSV")
-		Pkg.add("DataFrames")
-		Pkg.add("GLM")
-		Pkg.add("Noise")
-		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
-		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
-		Pkg.add("ImageComponentAnalysis")
-		Pkg.add("Tables")
-	end
-	
-	using PlutoUI
-	using CairoMakie
-	using Statistics
-	using StatsBase: quantile!
-	using ImageMorphology
-	using ImageFiltering
-	using CSV
-	using DataFrames
-	using GLM
-	using Noise
-	using DICOM
-	using DICOMUtils
-	using PhantomSegmentation
-	using CalciumScoring
-	using ImageComponentAnalysis
-	using Tables
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("CairoMakie")
+        Pkg.add("Statistics")
+        Pkg.add("StatsBase")
+        Pkg.add("ImageMorphology")
+        Pkg.add("ImageFiltering")
+        Pkg.add("CSV")
+        Pkg.add("DataFrames")
+        Pkg.add("GLM")
+        Pkg.add("Noise")
+        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
+        Pkg.add("ImageComponentAnalysis")
+        Pkg.add("Tables")
+    end
+
+    using PlutoUI
+    using CairoMakie
+    using Statistics
+    using StatsBase: quantile!
+    using ImageMorphology
+    using ImageFiltering
+    using CSV
+    using DataFrames
+    using GLM
+    using Noise
+    using DICOM
+    using DICOMUtils
+    using PhantomSegmentation
+    using CalciumScoring
+    using ImageComponentAnalysis
+    using Tables
 end
 
 # ╔═╡ e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -69,15 +76,21 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 
 # ╔═╡ bc9383c0-e477-4e1a-a2fa-7f5c1d29f103
 begin
-	SCAN_NUMBER = 1
-	VENDER = "120"
-	# SIZE = "small"
-	SIZE = "medium"
-	# SIZE = "large"
-	# DENSITY = "low"
-	DENSITY = "normal"
-	TYPE = "integrated_scoring"
-	BASE_PATH = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/", SIZE, "/", DENSITY, "/")
+    SCAN_NUMBER = 1
+    VENDER = "120"
+    # SIZE = "small"
+    SIZE = "medium"
+    # SIZE = "large"
+    # DENSITY = "low"
+    DENSITY = "normal"
+    TYPE = "integrated_scoring"
+    BASE_PATH = string(
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+        SIZE,
+        "/",
+        DENSITY,
+        "/",
+    )
 end
 
 # ╔═╡ 6aa51429-981a-4dea-a0f6-2935867d5b2a
@@ -102,10 +115,10 @@ blurs = [0, 0.5, 1, 1.5, 2]
 
 # ╔═╡ b7e0b678-0627-44fe-b0cb-3ef2bccae6a7
 begin
-	header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
-	for z in size(dcm_array, 3)
-		dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blurs[5])
-	end
+    header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
+    for z in size(dcm_array, 3)
+        dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blurs[5])
+    end
 end
 
 # ╔═╡ 66f5fc66-d5ba-45ba-8624-55adc58085e4
@@ -115,38 +128,43 @@ md"""
 
 # ╔═╡ 6e812172-6371-4461-9365-22f68ef16e53
 function collect_tuple(tuple_array)
-	row_num = size(tuple_array)
-	col_num = length(tuple_array[1])
-	container = zeros(Int64, row_num..., col_num)
-	for i in 1:length(tuple_array)
-		container[i,:] = collect(tuple_array[i])
-	end
-	return container
+    row_num = size(tuple_array)
+    col_num = length(tuple_array[1])
+    container = zeros(Int64, row_num..., col_num)
+    for i in 1:length(tuple_array)
+        container[i, :] = collect(tuple_array[i])
+    end
+    return container
 end
 
 # ╔═╡ 483a14dd-e798-41ed-9144-13678f8b8461
 function overlay_mask_bind(mask)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	return PlutoUI.Slider(1:length(zs), default=3, show_value=true)
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    return PlutoUI.Slider(1:length(zs); default=3, show_value=true)
 end
 
 # ╔═╡ 2cfdeb06-71a2-411b-accb-2b4a3f56b477
 function overlay_mask_plot(array, mask, var, title::AbstractString)
-	indices = findall(x -> x == 1, mask)
-	indices = Tuple.(indices)
-	label_array = collect_tuple(indices)
-	zs = unique(label_array[:,3])
-	indices_lbl = findall(x -> x == zs[var], label_array[:,3])
-	
-	fig = Figure()
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = title
-	heatmap!(array[:, :, zs[var]], colormap=:grays)
-	scatter!(label_array[:, 1][indices_lbl], label_array[:, 2][indices_lbl], markersize=1, color=:red)
-	fig
+    indices = findall(x -> x == 1, mask)
+    indices = Tuple.(indices)
+    label_array = collect_tuple(indices)
+    zs = unique(label_array[:, 3])
+    indices_lbl = findall(x -> x == zs[var], label_array[:, 3])
+
+    fig = Figure()
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = title
+    heatmap!(array[:, :, zs[var]]; colormap=:grays)
+    scatter!(
+        label_array[:, 1][indices_lbl],
+        label_array[:, 2][indices_lbl];
+        markersize=1,
+        color=:red,
+    )
+    return fig
 end
 
 # ╔═╡ b3bae2ad-16ed-4381-b6a4-448cb5f0c6c1
@@ -155,45 +173,60 @@ md"""
 """
 
 # ╔═╡ 4ff19af0-7f53-4f24-b315-08bd54a488e3
-masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2);
+masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3) ÷ 2);
 
 # ╔═╡ b74941c4-12d4-4be1-81f7-ef1f4d288984
 @bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 84e56c91-14a4-45b7-81a1-77e778bae695
-heatmap(transpose(masked_array[:, :, a]), colormap=:grays)
+heatmap(transpose(masked_array[:, :, a]); colormap=:grays)
 
 # ╔═╡ abfd965c-df00-4028-a0f3-8356a261b527
 begin
-	fig = Figure()
-	
-	ax = Makie.Axis(fig[1, 1])
-	ax.title = "Raw DICOM Array"
-	heatmap!(transpose(dcm_array[:, :, 5]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig
+    fig = Figure()
+
+    ax = Makie.Axis(fig[1, 1])
+    ax.title = "Raw DICOM Array"
+    heatmap!(transpose(dcm_array[:, :, 5]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig
 end
 
 # ╔═╡ 41541a09-609b-4f46-9a25-eb974422efc0
 begin
-	fig2 = Figure()
-	
-	ax2 = Makie.Axis(fig2[1, 1])
-	ax2.title = "Mask Array"
-	heatmap!(transpose(mask), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig2
+    fig2 = Figure()
+
+    ax2 = Makie.Axis(fig2[1, 1])
+    ax2.title = "Mask Array"
+    heatmap!(transpose(mask); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig2
 end
 
 # ╔═╡ e6753c9a-d172-47fe-b066-78cb43df2c89
 begin
-	fig3 = Figure()
-	
-	ax3 = Makie.Axis(fig3[1, 1])
-	ax3.title = "Masked DICOM Array"
-	heatmap!(transpose(masked_array[:, :, 1]), colormap=:grays)
-	scatter!(center_insert[2]:center_insert[2], center_insert[1]:center_insert[1], markersize=10, color=:red)
-	fig3
+    fig3 = Figure()
+
+    ax3 = Makie.Axis(fig3[1, 1])
+    ax3.title = "Masked DICOM Array"
+    heatmap!(transpose(masked_array[:, :, 1]); colormap=:grays)
+    scatter!(
+        center_insert[2]:center_insert[2],
+        center_insert[1]:center_insert[1];
+        markersize=10,
+        color=:red,
+    )
+    fig3
 end
 
 # ╔═╡ f8a4eacd-2f69-4755-b017-5a0b0dda1004
@@ -203,45 +236,47 @@ md"""
 
 # ╔═╡ ac9d2652-6d69-4cf3-acbf-2e141fb633f0
 begin
-	# Segment Calcium Rod 
-	global thresh
-	if DENSITY == "low" && SIZE == "large"
-		thresh = 75
-	elseif DENSITY == "low" && SIZE == "medium"
-		thresh = 75
-	elseif DENSITY == "low"
-		thresh = 60
-	elseif DENSITY ==  "normal"
-		thresh = 130
-	end
-	
-	# Segment Calcium Rod (rep)
-	# global thresh
-	# if DENSITY == "low" && SIZE == "large" && VENDER == "80"
-	# 	thresh = 80
-	# elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
-	# 	thresh = 70
-	# elseif DENSITY == "low" && SIZE == "large"
-	# 	thresh = 75
-	# elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
-	# 	thresh = 55
-	# elseif DENSITY == "low" && SIZE == "medium"
-	# 	thresh = 75
-	# elseif DENSITY == "low"
-	# 	thresh = 60
-	# elseif DENSITY ==  "normal"
-	# 	thresh = 130
-	# end
+    # Segment Calcium Rod 
+    global thresh
+    if DENSITY == "low" && SIZE == "large"
+        thresh = 75
+    elseif DENSITY == "low" && SIZE == "medium"
+        thresh = 75
+    elseif DENSITY == "low"
+        thresh = 60
+    elseif DENSITY == "normal"
+        thresh = 130
+    end
+
+    # Segment Calcium Rod (rep)
+    # global thresh
+    # if DENSITY == "low" && SIZE == "large" && VENDER == "80"
+    # 	thresh = 80
+    # elseif DENSITY == "low" && SIZE == "large" && VENDER == "100"
+    # 	thresh = 70
+    # elseif DENSITY == "low" && SIZE == "large"
+    # 	thresh = 75
+    # elseif DENSITY == "low" && SIZE == "medium" && VENDER == "135"
+    # 	thresh = 55
+    # elseif DENSITY == "low" && SIZE == "medium"
+    # 	thresh = 75
+    # elseif DENSITY == "low"
+    # 	thresh = 60
+    # elseif DENSITY ==  "normal"
+    # 	thresh = 130
+    # end
 end
 
 # ╔═╡ dd399c0e-f8e4-464c-8964-bdc0dd657202
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header; calcium_threshold=55);
+calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
+    masked_array, header; calcium_threshold=55
+);
 
 # ╔═╡ 417d150e-0df9-4963-b59e-ebd9acf6d4a0
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=5, show_value=true)
 
 # ╔═╡ 5f10075b-4d95-4d53-a22f-016749fb7583
-heatmap(transpose(calcium_image[:, :, c]), colormap=:grays)
+heatmap(transpose(calcium_image[:, :, c]); colormap=:grays)
 
 # ╔═╡ b921dcf8-54ea-420b-9285-23e38d5ce433
 md"""
@@ -268,25 +303,37 @@ md"""
 # end
 
 # ╔═╡ 05ed60db-b4d8-4cdc-9a54-b108ade22557
-begin 
-	root_new = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
-	mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
-	mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
-	mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
-	mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame;
-	header=false))
-	mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
-	mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
-	mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
-	mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
-	mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
+begin
+    root_new = string(
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+        SIZE,
+        "/",
+    )
+    mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
+    mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
+    mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
+    mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame; header=false))
+    mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
+    mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
+    mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
+    mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
+    mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
 end;
 
 # ╔═╡ 8bb2d451-b575-40bf-b31e-51e80392ef51
-masks = mask_L_HD + mask_M_HD + mask_S_HD + mask_L_MD + mask_M_MD + mask_S_MD + mask_L_LD + mask_M_LD + mask_S_LD;
+masks =
+    mask_L_HD +
+    mask_M_HD +
+    mask_S_HD +
+    mask_L_MD +
+    mask_M_MD +
+    mask_S_MD +
+    mask_L_LD +
+    mask_M_LD +
+    mask_S_LD;
 
 # ╔═╡ 4862496e-464d-40c3-baef-e5c507028d66
-heatmap(transpose(masks), colormap=:grays)
+heatmap(transpose(masks); colormap=:grays)
 
 # ╔═╡ 997952cd-dc01-4528-a30a-fdc11a46dad8
 md"""
@@ -303,20 +350,20 @@ bool_arr = array_filtered .> 0;
 bool_arr_erode = ((erode(erode(erode(bool_arr)))));
 
 # ╔═╡ da3c96b9-efdb-40f4-a959-747c097e16b2
-heatmap(bool_arr, colormap=:grays)
+heatmap(bool_arr; colormap=:grays)
 
 # ╔═╡ 5fec186d-82bb-4b37-b0c6-c3781f2a166d
-heatmap(bool_arr_erode, colormap=:grays)
+heatmap(bool_arr_erode; colormap=:grays)
 
 # ╔═╡ f221d7ac-7b27-4dc1-8081-af55d9e9b925
 c_img = calcium_image[:, :, 1:3];
 
 # ╔═╡ 0ce913ad-4844-4df0-92f2-79af4d85113e
 begin
-	mask_cal_3D = Array{Bool}(undef, size(c_img))
-	for z in 1:size(c_img, 3)
-		mask_cal_3D[:, :, z] = bool_arr_erode
-	end
+    mask_cal_3D = Array{Bool}(undef, size(c_img))
+    for z in 1:size(c_img, 3)
+        mask_cal_3D[:, :, z] = bool_arr_erode
+    end
 end;
 
 # ╔═╡ c1d1b644-db3b-45b6-9050-342eca241a05
@@ -332,12 +379,12 @@ md"""
 
 # ╔═╡ 6c3f0dc5-9db2-4db8-abb0-64e4cda6d6fe
 begin
-	global density_array
-	if DENSITY == "low"
-		density_array = [0, 25, 50, 100]
-	elseif DENSITY == "normal"
-		density_array = [0, 200, 400, 800]
-	end
+    global density_array
+    if DENSITY == "low"
+        density_array = [0, 25, 50, 100]
+    elseif DENSITY == "normal"
+        density_array = [0, 200, 400, 800]
+    end
 end
 
 # ╔═╡ 6ceb2a0a-8fcf-4f8c-8167-5b2ab770df48
@@ -388,10 +435,14 @@ md"""
 
 # ╔═╡ dec0f541-4f89-45e3-b084-ecdbc837b794
 begin
-	background_mask = zeros(size(arr)...)
-	background_mask[center_insert[1]-5:center_insert[1]+5, center_insert[2]-5:center_insert[2]+5, 2] .= 1
-	background_mask = Bool.(background_mask)
-	background_mask_dil = dilate(dilate(background_mask))
+    background_mask = zeros(size(arr)...)
+    background_mask[
+        (center_insert[1] - 5):(center_insert[1] + 5),
+        (center_insert[2] - 5):(center_insert[2] + 5),
+        2,
+    ] .= 1
+    background_mask = Bool.(background_mask)
+    background_mask_dil = dilate(dilate(background_mask))
 end;
 
 # ╔═╡ 94c66847-765d-4d58-8510-043285d6cdcd
@@ -401,9 +452,9 @@ md"""
 
 # ╔═╡ 703c7556-3904-41d7-972b-48ea31890a7d
 begin
-	ring_background = background_mask_dil - background_mask
-	single_ring_bkg = Bool.(ring_background[:, :, 2])
-	s_bkg = mean(single_arr[single_ring_bkg])
+    ring_background = background_mask_dil - background_mask
+    single_ring_bkg = Bool.(ring_background[:, :, 2])
+    s_bkg = mean(single_arr[single_ring_bkg])
 end
 
 # ╔═╡ 983fa5b0-45fe-4ba9-8eea-ad5c030ed32f
@@ -418,16 +469,16 @@ md"""
 
 # ╔═╡ db4992af-e78b-4f84-b0b3-c13b6cd6cde5
 begin
-	mask_L_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_HD_3D[:, :, z] = mask_L_HD
-	end
+    mask_L_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_HD_3D[:, :, z] = mask_L_HD
+    end
 end;
 
 # ╔═╡ 03427ccf-69b9-4a1c-b988-30ad9f0a214c
 begin
-	eroded_mask_L_HD = erode(erode(mask_L_HD_3D))
-	high_density_cal = mean(arr[eroded_mask_L_HD])
+    eroded_mask_L_HD = erode(erode(mask_L_HD_3D))
+    high_density_cal = mean(arr[eroded_mask_L_HD])
 end
 
 # ╔═╡ 58172907-2026-4caa-a6ad-ab484b86b329
@@ -450,7 +501,8 @@ md"""
 """
 
 # ╔═╡ ccf2c3d2-7243-412f-bbe1-84b4ac3f6272
-ring_mask_L_HD = dilate(dilate(dilate(dilate(mask_L_HD_3D)))) - dilate(dilate(dilate(mask_L_HD_3D)));
+ring_mask_L_HD =
+    dilate(dilate(dilate(dilate(mask_L_HD_3D)))) - dilate(dilate(dilate(mask_L_HD_3D)));
 
 # ╔═╡ b990d904-e359-45fe-990b-87ab625ba1b0
 @bind g4 overlay_mask_bind(ring_mask_L_HD)
@@ -460,8 +512,8 @@ overlay_mask_plot(arr, ring_mask_L_HD, g4, "ring mask")
 
 # ╔═╡ dc94ad4a-0692-4e0e-84e5-f706ab1ca316
 begin
-	single_ring_mask_L_HD = Bool.(ring_mask_L_HD[:, :, 3])
-	s_bkg_L_HD = mean(single_arr[single_ring_mask_L_HD])
+    single_ring_mask_L_HD = Bool.(ring_mask_L_HD[:, :, 3])
+    s_bkg_L_HD = mean(single_arr[single_ring_mask_L_HD])
 end
 
 # ╔═╡ 28c869df-75eb-42dc-9033-867ca4782f41
@@ -474,16 +526,16 @@ md"""
 
 # ╔═╡ 1b97a53d-6ed8-4414-befa-146225f0f95a
 begin
-	mask_L_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_MD_3D[:, :, z] = mask_L_MD
-	end
+    mask_L_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_MD_3D[:, :, z] = mask_L_MD
+    end
 end;
 
 # ╔═╡ fa126b46-4dbb-4b8e-a3a7-7cf28a9ed88d
 begin
-	eroded_mask_L_MD = erode(erode(mask_L_MD_3D))
-	med_density_cal = mean(arr[eroded_mask_L_MD])
+    eroded_mask_L_MD = erode(erode(mask_L_MD_3D))
+    med_density_cal = mean(arr[eroded_mask_L_MD])
 end
 
 # ╔═╡ 336cf5d0-ada0-4f9a-9788-bfd0ab72087a
@@ -506,7 +558,8 @@ md"""
 """
 
 # ╔═╡ 078b6320-34d9-4318-863e-a2a6dcdeb500
-ring_mask_L_MD = dilate(dilate(dilate(dilate(mask_L_MD_3D)))) - dilate(dilate(dilate(mask_L_MD_3D)));
+ring_mask_L_MD =
+    dilate(dilate(dilate(dilate(mask_L_MD_3D)))) - dilate(dilate(dilate(mask_L_MD_3D)));
 
 # ╔═╡ 8e310e91-c557-48e5-a5d1-042c1ac8f7b3
 @bind h4 overlay_mask_bind(ring_mask_L_MD)
@@ -516,8 +569,8 @@ overlay_mask_plot(arr, ring_mask_L_MD, h4, "ring mask")
 
 # ╔═╡ 40c7c265-f558-4f74-8d96-40cd83c2d5bb
 begin
-	single_ring_mask_L_MD = Bool.(ring_mask_L_MD[:, :, 3])
-	s_bkg_L_MD = mean(single_arr[single_ring_mask_L_MD])
+    single_ring_mask_L_MD = Bool.(ring_mask_L_MD[:, :, 3])
+    s_bkg_L_MD = mean(single_arr[single_ring_mask_L_MD])
 end
 
 # ╔═╡ 73105b5a-05b7-429f-9a7f-b8c12684df91
@@ -527,16 +580,16 @@ md"""
 
 # ╔═╡ 31e9a969-6514-404c-89f6-0f038cc115f2
 begin
-	mask_L_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_L_LD_3D[:, :, z] = mask_L_LD
-	end
+    mask_L_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_L_LD_3D[:, :, z] = mask_L_LD
+    end
 end;
 
 # ╔═╡ d279e6b4-fba0-4fcb-a1ef-6c2c33ba8f63
 begin
-	eroded_mask_L_LD = erode(erode(mask_L_LD_3D))
-	low_density_cal = mean(arr[eroded_mask_L_LD])
+    eroded_mask_L_LD = erode(erode(mask_L_LD_3D))
+    low_density_cal = mean(arr[eroded_mask_L_LD])
 end
 
 # ╔═╡ 2f06a3e2-5c65-4f7d-af65-829a8e657a92
@@ -561,20 +614,20 @@ b = linearRegressor.model.rr.mu[1]
 density(intensity) = (intensity - b) / m
 
 # ╔═╡ 04c77c9d-c498-4e09-abff-9c361e887c56
-intensity(ρ) = m*ρ + b
+intensity(ρ) = m * ρ + b
 
 # ╔═╡ 3895fafc-a999-4b06-974d-caef190f7830
 begin
-	single_bkg_center = Bool.(background_mask[:, :, 2])
-	# S_Obj_bkg = mean(single_arr[single_bkg_center])
-	S_Obj_bkg = intensity(200)
+    single_bkg_center = Bool.(background_mask[:, :, 2])
+    # S_Obj_bkg = mean(single_arr[single_bkg_center])
+    S_Obj_bkg = intensity(200)
 end
 
 # ╔═╡ a7de43e0-795d-4267-b7dd-3be85a201485
 begin
-	alg_bkg = Integrated(arr[background_mask])
-	ρ_bkg = 0.2 # mg/mm^3
-	mass_bkg = score(s_bkg, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg)
+    alg_bkg = Integrated(arr[background_mask])
+    ρ_bkg = 0.2 # mg/mm^3
+    mass_bkg = score(s_bkg, S_Obj_bkg, pixel_size, ρ_bkg, alg_bkg)
 end
 
 # ╔═╡ fd089ad4-4e08-4e1c-b049-3378de42b2df
@@ -582,9 +635,9 @@ S_Obj_HD = intensity(800)
 
 # ╔═╡ 7d61e536-fac5-43e1-9ce9-5952d7d20e8d
 begin
-	alg_L_HD = Integrated(arr[mask_L_HD_3D])
-	ρ_hd = 0.8 # mg/mm^3
-	mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
+    alg_L_HD = Integrated(arr[mask_L_HD_3D])
+    ρ_hd = 0.8 # mg/mm^3
+    mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
 end
 
 # ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
@@ -592,23 +645,23 @@ S_Obj_MD = intensity(400)
 
 # ╔═╡ 367750d8-a287-4313-b6df-d6533849623f
 begin
-	alg_L_MD = Integrated(arr[mask_L_MD_3D])
-	ρ_md = 0.4
-	mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
+    alg_L_MD = Integrated(arr[mask_L_MD_3D])
+    ρ_md = 0.4
+    mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
 end
 
 # ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
 begin
-	f = Figure()
-	ax1 = Axis(f[1, 1])
-	
-	scatter!(density_array, intensity_array)
-	lines!(density_array, linearFit, color = :red)
-	ax1.title = "Calibration Line (Intensity vs Density)"
-	ax1.ylabel = "Intensity (HU)"
-	ax1.xlabel = "Density (mg/cm^3)"
-	
-	f
+    f = Figure()
+    ax1 = Axis(f[1, 1])
+
+    scatter!(density_array, intensity_array)
+    lines!(density_array, linearFit; color=:red)
+    ax1.title = "Calibration Line (Intensity vs Density)"
+    ax1.ylabel = "Intensity (HU)"
+    ax1.xlabel = "Density (mg/cm^3)"
+
+    f
 end
 
 # ╔═╡ d8d7a93f-85e7-43e7-a23d-11e7c6ce27be
@@ -631,7 +684,8 @@ md"""
 """
 
 # ╔═╡ 52b9efbd-80b3-4205-b4a7-b18809d6ba24
-ring_mask_L_LD = dilate(dilate(dilate(dilate(mask_L_LD_3D)))) - dilate(dilate(dilate(mask_L_LD_3D)));
+ring_mask_L_LD =
+    dilate(dilate(dilate(dilate(mask_L_LD_3D)))) - dilate(dilate(dilate(mask_L_LD_3D)));
 
 # ╔═╡ 7a618b0c-9429-472a-b076-774b9d229cab
 @bind i4 overlay_mask_bind(ring_mask_L_LD)
@@ -640,9 +694,9 @@ ring_mask_L_LD = dilate(dilate(dilate(dilate(mask_L_LD_3D)))) - dilate(dilate(di
 overlay_mask_plot(arr, ring_mask_L_LD, i4, "ring mask")
 
 # ╔═╡ 9da779a0-86bd-450d-9401-7d3507aaec7d
-begin	
-	single_ring_mask_L_LD = Bool.(ring_mask_L_LD[:, :, 3])
-	s_bkg_L_LD = mean(single_arr[single_ring_mask_L_LD])
+begin
+    single_ring_mask_L_LD = Bool.(ring_mask_L_LD[:, :, 3])
+    s_bkg_L_LD = mean(single_arr[single_ring_mask_L_LD])
 end
 
 # ╔═╡ 187c110a-21a9-4b31-82b6-d9c239dbd899
@@ -650,9 +704,9 @@ S_Obj_LD = intensity(200)
 
 # ╔═╡ 7560dc46-fa36-4706-925c-0675397c5922
 begin
-	alg_L_LD = Integrated(arr[mask_L_LD_3D])
-	ρ_LD = 0.2
-	mass_l_ld = score(s_bkg_L_LD, cal_insert_mean, pixel_size, ρ_LD, alg_L_LD)
+    alg_L_LD = Integrated(arr[mask_L_LD_3D])
+    ρ_LD = 0.2
+    mass_l_ld = score(s_bkg_L_LD, cal_insert_mean, pixel_size, ρ_LD, alg_L_LD)
 end
 
 # ╔═╡ ee7092e6-52fb-4a6a-ad21-90cd2b46c7fa
@@ -667,10 +721,10 @@ md"""
 
 # ╔═╡ 6fba5f51-7940-45fe-8a0b-30ea12962a0c
 begin
-	mask_M_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_HD_3D[:, :, z] = mask_M_HD
-	end
+    mask_M_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_HD_3D[:, :, z] = mask_M_HD
+    end
 end;
 
 # ╔═╡ 10765555-8507-413f-a582-1f47619f0181
@@ -693,7 +747,9 @@ md"""
 """
 
 # ╔═╡ 6598b28c-5850-44bc-8bd0-995ff3d59f09
-ring_mask_M_HD = dilate(dilate(dilate(dilate(dilate(mask_M_HD_3D))))) - dilate(dilate(dilate(dilate(mask_M_HD_3D))));
+ring_mask_M_HD =
+    dilate(dilate(dilate(dilate(dilate(mask_M_HD_3D))))) -
+    dilate(dilate(dilate(dilate(mask_M_HD_3D))));
 
 # ╔═╡ 47615958-a8fc-4fc2-852f-e11f69041a86
 @bind j4 overlay_mask_bind(ring_mask_M_HD)
@@ -703,14 +759,14 @@ overlay_mask_plot(arr, ring_mask_M_HD, j4, "ring mask")
 
 # ╔═╡ 0f02e277-06b7-46f7-b6e8-0d5b6516dbe2
 begin
-	single_ring_mask_M_HD = Bool.(ring_mask_M_HD[:, :, 3])
-	s_bkg_M_HD = mean(single_arr[single_ring_mask_M_HD])
+    single_ring_mask_M_HD = Bool.(ring_mask_M_HD[:, :, 3])
+    s_bkg_M_HD = mean(single_arr[single_ring_mask_M_HD])
 end
 
 # ╔═╡ bd4cec3c-446f-48e4-b06b-fbde4848daaf
 begin
-	alg_M_HD = Integrated(arr[mask_M_HD_3D])
-	mass_m_hd = score(s_bkg_M_HD, S_Obj_HD, pixel_size, ρ_hd, alg_M_HD)
+    alg_M_HD = Integrated(arr[mask_M_HD_3D])
+    mass_m_hd = score(s_bkg_M_HD, S_Obj_HD, pixel_size, ρ_hd, alg_M_HD)
 end
 
 # ╔═╡ 0f71036e-b118-430d-bce7-420b2591f1a2
@@ -720,10 +776,10 @@ md"""
 
 # ╔═╡ 539d9e60-1f76-47c5-ab4f-cb520c520965
 begin
-	mask_M_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_MD_3D[:, :, z] = mask_M_MD
-	end
+    mask_M_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_MD_3D[:, :, z] = mask_M_MD
+    end
 end;
 
 # ╔═╡ c99672f4-9ee7-4d42-8a15-eee68be2a8da
@@ -746,7 +802,9 @@ md"""
 """
 
 # ╔═╡ 48eb8f20-1d00-4434-8dcd-4960b2392d28
-ring_mask_M_MD = dilate(dilate(dilate(dilate(dilate(dilate(mask_M_MD_3D)))))) - dilate(dilate(dilate(dilate(dilate(mask_M_MD_3D)))));
+ring_mask_M_MD =
+    dilate(dilate(dilate(dilate(dilate(dilate(mask_M_MD_3D)))))) -
+    dilate(dilate(dilate(dilate(dilate(mask_M_MD_3D)))));
 
 # ╔═╡ 6c3c8eb5-c651-45e3-a912-8fd0dc330b51
 @bind k4 overlay_mask_bind(ring_mask_M_MD)
@@ -756,14 +814,14 @@ overlay_mask_plot(arr, ring_mask_M_MD, k4, "ring mask")
 
 # ╔═╡ 906c678f-2006-4f66-a135-97e25182a3d6
 begin
-	single_ring_mask_M_MD = Bool.(ring_mask_M_MD[:, :, 3])
-	s_bkg_M_MD = mean(single_arr[single_ring_mask_M_MD])
+    single_ring_mask_M_MD = Bool.(ring_mask_M_MD[:, :, 3])
+    s_bkg_M_MD = mean(single_arr[single_ring_mask_M_MD])
 end
 
 # ╔═╡ 43afbb30-b1b5-452b-8c82-25d173f24699
 begin
-	alg_M_MD = Integrated(arr[mask_M_MD_3D])
-	mass_m_md = score(s_bkg_M_MD, S_Obj_MD, pixel_size, ρ_md, alg_M_MD)
+    alg_M_MD = Integrated(arr[mask_M_MD_3D])
+    mass_m_md = score(s_bkg_M_MD, S_Obj_MD, pixel_size, ρ_md, alg_M_MD)
 end
 
 # ╔═╡ 386ea37d-70ba-4530-be9e-549d5e0ab1ce
@@ -773,10 +831,10 @@ md"""
 
 # ╔═╡ 25434519-be6d-4616-9353-a0d342129ea4
 begin
-	mask_M_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_M_LD_3D[:, :, z] = mask_M_LD
-	end
+    mask_M_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_M_LD_3D[:, :, z] = mask_M_LD
+    end
 end;
 
 # ╔═╡ b37af6a8-8f51-4263-ac85-bea25fd2aae2
@@ -799,7 +857,9 @@ md"""
 """
 
 # ╔═╡ c44aa6b4-bada-4ab0-a748-71d0e215c1c7
-ring_mask_M_LD = dilate(dilate(dilate(dilate(dilate(dilate(mask_M_LD_3D)))))) - dilate(dilate(dilate(dilate(dilate(mask_M_LD_3D)))));
+ring_mask_M_LD =
+    dilate(dilate(dilate(dilate(dilate(dilate(mask_M_LD_3D)))))) -
+    dilate(dilate(dilate(dilate(dilate(mask_M_LD_3D)))));
 
 # ╔═╡ 48a0f2c4-0bea-4c7d-bf8a-dc3632a490fa
 @bind l4 overlay_mask_bind(ring_mask_M_LD)
@@ -809,14 +869,14 @@ overlay_mask_plot(arr, ring_mask_M_LD, l4, "ring mask")
 
 # ╔═╡ 5133060e-c1fb-492f-93d7-f161e8da73be
 begin
-	single_ring_mask_M_LD = Bool.(ring_mask_M_LD[:, :, 3])
-	s_bkg_M_LD = mean(single_arr[single_ring_mask_M_LD])
+    single_ring_mask_M_LD = Bool.(ring_mask_M_LD[:, :, 3])
+    s_bkg_M_LD = mean(single_arr[single_ring_mask_M_LD])
 end
 
 # ╔═╡ 907b3f24-47b8-4519-b70a-de44ca764bb2
 begin
-	alg_M_LD = Integrated(arr[mask_M_LD_3D])
-	mass_m_ld = score(s_bkg_M_LD, S_Obj_LD, pixel_size, ρ_LD, alg_M_LD)
+    alg_M_LD = Integrated(arr[mask_M_LD_3D])
+    mass_m_ld = score(s_bkg_M_LD, S_Obj_LD, pixel_size, ρ_LD, alg_M_LD)
 end
 
 # ╔═╡ c52478ca-2012-4690-bc39-6d32997427f7
@@ -831,10 +891,10 @@ md"""
 
 # ╔═╡ 6323a01d-100a-4d09-b3ad-5821e88bed0a
 begin
-	mask_S_HD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_HD_3D[:, :, z] = mask_S_HD
-	end
+    mask_S_HD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_HD_3D[:, :, z] = mask_S_HD
+    end
 end;
 
 # ╔═╡ d0ea5ea6-5c98-44b8-94d4-4104eb1f6080
@@ -867,18 +927,18 @@ overlay_mask_plot(arr, ring_mask_S_HD, m4, "ring mask")
 
 # ╔═╡ 76b6bf9f-58fb-4a88-a21f-0695d2c76073
 begin
-	single_ring_mask_S_HD = Bool.(ring_mask_S_HD[:, :, 3])
-	s_bkg_S_HD = mean(single_arr[single_ring_mask_S_HD])
+    single_ring_mask_S_HD = Bool.(ring_mask_S_HD[:, :, 3])
+    s_bkg_S_HD = mean(single_arr[single_ring_mask_S_HD])
 end
 
 # ╔═╡ 1590d3c5-d9f1-4c00-9730-639677635056
 begin
-	alg_S_HD = Integrated(arr[mask_S_HD_3D])
-	mass_s_hd = score(s_bkg_S_HD, S_Obj_HD, pixel_size, ρ_hd, alg_S_HD)
-	if mass_s_hd < 0
-		mass_s_hd = 0
-	end
-	mass_s_hd
+    alg_S_HD = Integrated(arr[mask_S_HD_3D])
+    mass_s_hd = score(s_bkg_S_HD, S_Obj_HD, pixel_size, ρ_hd, alg_S_HD)
+    if mass_s_hd < 0
+        mass_s_hd = 0
+    end
+    mass_s_hd
 end
 
 # ╔═╡ aa3f6b52-2c1a-462a-a89c-bcde6f0f59ba
@@ -888,10 +948,10 @@ md"""
 
 # ╔═╡ e17a81a4-35a6-4d15-bf14-275114a49608
 begin
-	mask_S_MD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_MD_3D[:, :, z] = mask_S_MD
-	end
+    mask_S_MD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_MD_3D[:, :, z] = mask_S_MD
+    end
 end;
 
 # ╔═╡ 01dce72f-6793-4360-80fc-bc2e97d579de
@@ -924,14 +984,14 @@ overlay_mask_plot(arr, ring_mask_S_MD, n4, "ring mask")
 
 # ╔═╡ cdfab961-1588-4830-9014-f1540dabe5ee
 begin
-	single_ring_mask_S_MD = Bool.(ring_mask_S_MD[:, :, 3])
-	s_bkg_S_MD = mean(single_arr[single_ring_mask_S_MD])
+    single_ring_mask_S_MD = Bool.(ring_mask_S_MD[:, :, 3])
+    s_bkg_S_MD = mean(single_arr[single_ring_mask_S_MD])
 end
 
 # ╔═╡ dcd5144e-408f-4b13-995e-f3e716f27c3b
 begin
-	alg_S_MD = Integrated(arr[mask_S_MD_3D])
-	mass_s_md = score(s_bkg_S_MD, S_Obj_MD, pixel_size, ρ_md, alg_S_MD)
+    alg_S_MD = Integrated(arr[mask_S_MD_3D])
+    mass_s_md = score(s_bkg_S_MD, S_Obj_MD, pixel_size, ρ_md, alg_S_MD)
 end
 
 # ╔═╡ 5d625a7e-f027-443b-aa97-726350616c11
@@ -941,10 +1001,10 @@ md"""
 
 # ╔═╡ 7e5ec60e-33de-4963-a343-3f063091005c
 begin
-	mask_S_LD_3D = Array{Bool}(undef, size(arr))
-	for z in 1:size(arr, 3)
-		mask_S_LD_3D[:, :, z] = mask_S_LD
-	end
+    mask_S_LD_3D = Array{Bool}(undef, size(arr))
+    for z in 1:size(arr, 3)
+        mask_S_LD_3D[:, :, z] = mask_S_LD
+    end
 end;
 
 # ╔═╡ 776fa172-d964-4c86-8220-725c11f6768c
@@ -977,14 +1037,14 @@ overlay_mask_plot(arr, ring_mask_S_LD, o4, "ring mask")
 
 # ╔═╡ 1a66befd-3f95-443a-b2a5-ce4d40b97a75
 begin
-	single_ring_mask_S_LD = Bool.(ring_mask_S_LD[:, :, 3])
-	s_bkg_S_LD = mean(single_arr[single_ring_mask_S_LD])
+    single_ring_mask_S_LD = Bool.(ring_mask_S_LD[:, :, 3])
+    s_bkg_S_LD = mean(single_arr[single_ring_mask_S_LD])
 end
 
 # ╔═╡ b7f78d93-dd53-45b5-b82d-4ffe3f8ffc03
 begin
-	alg_S_LD = Integrated(arr[mask_S_LD_3D])
-	mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_LD, alg_S_LD)
+    alg_S_LD = Integrated(arr[mask_S_LD_3D])
+    mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_LD, alg_S_LD)
 end
 
 # ╔═╡ 7ba16b69-a495-4c18-bb10-d61ac48cde4b
@@ -996,169 +1056,173 @@ md"""
 PhantomSegmentation.get_pixel_size(header)
 
 # ╔═╡ b4dc3d85-068c-40ca-b121-b3591becb667
-inserts = [
-	"Low Density",
-	"Medium Density",
-	"High Density"
-]
+inserts = ["Low Density", "Medium Density", "High Density"]
 
 # ╔═╡ bb84ab31-0cb4-4f72-b6d6-8147de327030
-volume_gt = [
-	7.065,
-	63.585,
-	176.625
-]
+volume_gt = [7.065, 63.585, 176.625]
 
 # ╔═╡ 85b0a6b1-c80e-439b-8913-79cfb87e80da
 ground_truth_mass_large = [
-	volume_gt[3] * density_array[2] * 1e-3,
-	volume_gt[3] * density_array[3] * 1e-3,
-	volume_gt[3] * density_array[4] * 1e-3
+    volume_gt[3] * density_array[2] * 1e-3,
+    volume_gt[3] * density_array[3] * 1e-3,
+    volume_gt[3] * density_array[4] * 1e-3,
 ] # mg
 
 # ╔═╡ d64d8e9d-0d9b-4ffb-853d-aa1f4c173b7c
-calculated_mass_large = [
-	mass_l_ld,
-	mass_l_md,
-	mass_l_hd
-]
+calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
 
 # ╔═╡ 529f7ae4-804e-4156-898a-1eb26978eaf2
 ground_truth_mass_medium = [
-	volume_gt[2] * density_array[2] * 1e-3,
-	volume_gt[2] * density_array[3] * 1e-3,
-	volume_gt[2] * density_array[4] * 1e-3
+    volume_gt[2] * density_array[2] * 1e-3,
+    volume_gt[2] * density_array[3] * 1e-3,
+    volume_gt[2] * density_array[4] * 1e-3,
 ]
 
 # ╔═╡ 96f0f0bd-aca4-4471-b6fd-d2dd3b1f7a99
-calculated_mass_medium = [
-	mass_m_ld,
-	mass_m_md,
-	mass_m_hd
-]
+calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
 
 # ╔═╡ f3593c6b-03df-4e06-949f-172de68590e8
 ground_truth_mass_small = [
-	volume_gt[1] * density_array[2] * 1e-3,
-	volume_gt[1] * density_array[3] * 1e-3,
-	volume_gt[1] * density_array[4] * 1e-3
+    volume_gt[1] * density_array[2] * 1e-3,
+    volume_gt[1] * density_array[3] * 1e-3,
+    volume_gt[1] * density_array[4] * 1e-3,
 ]
 
 # ╔═╡ a959ffa3-1d93-413c-9f87-4a426b3665e5
-calculated_mass_small = [
-	mass_s_ld,
-	mass_s_md,
-	mass_s_hd
-]
+calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
 
 # ╔═╡ 82540ec2-d054-40db-a561-8d7ecb254756
-df = DataFrame(
-	DENSITY = DENSITY,
-	scan = scan,
-	inserts = inserts,
-	ground_truth_mass_large = ground_truth_mass_large,
-	calculated_mass_large = calculated_mass_large,
-	ground_truth_mass_medium = ground_truth_mass_medium,
-	calculated_mass_medium = calculated_mass_medium,
-	ground_truth_mass_small = ground_truth_mass_small,
-	calculated_mass_small = calculated_mass_small,
-	background = mass_bkg
+df = DataFrame(;
+    DENSITY=DENSITY,
+    scan=scan,
+    inserts=inserts,
+    ground_truth_mass_large=ground_truth_mass_large,
+    calculated_mass_large=calculated_mass_large,
+    ground_truth_mass_medium=ground_truth_mass_medium,
+    calculated_mass_medium=calculated_mass_medium,
+    ground_truth_mass_small=ground_truth_mass_small,
+    calculated_mass_small=calculated_mass_small,
+    background=mass_bkg,
 )
 
 # ╔═╡ 053072ba-1eb5-46de-be89-8bdd78658fcb
 begin
-	fmass2 = Figure()
-	axmass2 = Axis(fmass2[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_large], label="ground_truth_mass_large")
-	scatter!(density_array[2:end], df[!, :calculated_mass_large], label="calculated_mass_large")
-	
-	axmass2.title = "Mass Measurements (Large)"
-	axmass2.ylabel = "Mass (mg)"
-	axmass2.xlabel = "Density (mg/cm^3)"
-	local xlim
-	local ylim
-	if DENSITY == "low"
-		xlim = 130
-		ylim = 30
-	elseif DENSITY == "normal"
-		xlim = 850
-		ylim = 200
-	end
-	xlims!(axmass2, 0, xlim)
-	ylims!(axmass2, 0, ylim)
-	
-	fmass2[1, 2] = Legend(fmass2, axmass2, framevisible = false)
-	
-	fmass2
+    fmass2 = Figure()
+    axmass2 = Axis(fmass2[1, 1])
+
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_large];
+        label="ground_truth_mass_large",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_large]; label="calculated_mass_large"
+    )
+
+    axmass2.title = "Mass Measurements (Large)"
+    axmass2.ylabel = "Mass (mg)"
+    axmass2.xlabel = "Density (mg/cm^3)"
+    local xlim
+    local ylim
+    if DENSITY == "low"
+        xlim = 130
+        ylim = 30
+    elseif DENSITY == "normal"
+        xlim = 850
+        ylim = 200
+    end
+    xlims!(axmass2, 0, xlim)
+    ylims!(axmass2, 0, ylim)
+
+    fmass2[1, 2] = Legend(fmass2, axmass2; framevisible=false)
+
+    fmass2
 end
 
 # ╔═╡ b2d10283-d9ed-4001-8d72-dbded8e8d845
 begin
-	fmass3 = Figure()
-	axmass3 = Axis(fmass3[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_medium], label="ground_truth_mass_medium")
-	scatter!(density_array[2:end], df[!, :calculated_mass_medium], label="calculated_mass_medium")
-	
-	axmass3.title = "Mass Measurements (Medium)"
-	axmass3.ylabel = "Mass (mg)"
-	axmass3.xlabel = "Density (mg/cm^3)"
+    fmass3 = Figure()
+    axmass3 = Axis(fmass3[1, 1])
 
-	local xlim
-	local ylim
-	if DENSITY == "low"
-		xlim = 130
-		ylim = 10
-	elseif DENSITY == "normal"
-		xlim = 850
-		ylim = 70
-	end
-	xlims!(axmass3, 0, xlim)
-	ylims!(axmass3, 0, ylim)
-	
-	fmass3[1, 2] = Legend(fmass3, axmass3, framevisible = false)
-	
-	fmass3
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_medium];
+        label="ground_truth_mass_medium",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_medium]; label="calculated_mass_medium"
+    )
+
+    axmass3.title = "Mass Measurements (Medium)"
+    axmass3.ylabel = "Mass (mg)"
+    axmass3.xlabel = "Density (mg/cm^3)"
+
+    local xlim
+    local ylim
+    if DENSITY == "low"
+        xlim = 130
+        ylim = 10
+    elseif DENSITY == "normal"
+        xlim = 850
+        ylim = 70
+    end
+    xlims!(axmass3, 0, xlim)
+    ylims!(axmass3, 0, ylim)
+
+    fmass3[1, 2] = Legend(fmass3, axmass3; framevisible=false)
+
+    fmass3
 end
 
 # ╔═╡ c68ee643-ab29-4afc-be97-820e7019a3be
 begin
-	fmass4 = Figure()
-	axmass4 = Axis(fmass4[1, 1])
-	
-	scatter!(density_array[2:end], df[!, :ground_truth_mass_small], label="ground_truth_mass_small")
-	scatter!(density_array[2:end], df[!, :calculated_mass_small], label="calculated_mass_small")
-	
-	axmass4.title = "Mass Measurements (Small)"
-	axmass4.ylabel = "Mass (mg)"
-	axmass4.xlabel = "Density (mg/cm^3)"
-	
-	local xlim
-	local ylim
-	if DENSITY == "low"
-		xlim = 130
-		ylim = 1.5
-	elseif DENSITY == "normal"
-		xlim = 850
-		ylim = 10
-	end
-	xlims!(axmass4, 0, xlim)
-	ylims!(axmass4, 0, ylim)
-	
-	fmass4[1, 2] = Legend(fmass4, axmass4, framevisible = false)
-	
-	fmass4
+    fmass4 = Figure()
+    axmass4 = Axis(fmass4[1, 1])
+
+    scatter!(
+        density_array[2:end],
+        df[!, :ground_truth_mass_small];
+        label="ground_truth_mass_small",
+    )
+    scatter!(
+        density_array[2:end], df[!, :calculated_mass_small]; label="calculated_mass_small"
+    )
+
+    axmass4.title = "Mass Measurements (Small)"
+    axmass4.ylabel = "Mass (mg)"
+    axmass4.xlabel = "Density (mg/cm^3)"
+
+    local xlim
+    local ylim
+    if DENSITY == "low"
+        xlim = 130
+        ylim = 1.5
+    elseif DENSITY == "normal"
+        xlim = 850
+        ylim = 10
+    end
+    xlims!(axmass4, 0, xlim)
+    ylims!(axmass4, 0, ylim)
+
+    fmass4[1, 2] = Legend(fmass4, axmass4; framevisible=false)
+
+    fmass4
 end
 
 # ╔═╡ 7fd00263-a6d3-477c-b258-11b63b7a4e6f
-percent_error_large = (abs.(ground_truth_mass_large - calculated_mass_large) ./ ground_truth_mass_large) .* 100
+percent_error_large =
+    (abs.(ground_truth_mass_large - calculated_mass_large) ./ ground_truth_mass_large) .*
+    100
 
 # ╔═╡ dfb7c91a-e360-4ae9-afbd-f9a96a891990
-percent_error_medium = (abs.(ground_truth_mass_medium - calculated_mass_medium) ./ ground_truth_mass_medium) .* 100
+percent_error_medium =
+    (abs.(ground_truth_mass_medium - calculated_mass_medium) ./ ground_truth_mass_medium) .*
+    100
 
 # ╔═╡ 67b575e5-d3ab-4ae6-842c-6e3d96725dd1
-percent_error_small= (abs.(ground_truth_mass_small - calculated_mass_small) ./ ground_truth_mass_small) .* 100
+percent_error_small =
+    (abs.(ground_truth_mass_small - calculated_mass_small) ./ ground_truth_mass_small) .*
+    100
 
 # ╔═╡ b12639a9-cbf1-422c-8d30-cf68426ea9c2
 md"""
@@ -1195,7 +1259,6 @@ push!(dfs, df)
 # end
 
 # ╔═╡ f53ba93d-e1c0-4614-9efc-25de15d17cf7
-
 
 # ╔═╡ Cell order:
 # ╠═45f704d4-66e5-49db-aef5-05132f3853ee

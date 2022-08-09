@@ -7,38 +7,38 @@ using InteractiveUtils
 # ╔═╡ 64565c8d-da53-40a9-a480-b47082ebe66c
 # ╠═╡ show_logs = false
 begin
-	let
-		using Pkg
-		Pkg.activate(mktempdir())
-		Pkg.Registry.update()
-		Pkg.add("PlutoUI")
-		Pkg.add("CairoMakie")
-		Pkg.add("Statistics")
-		Pkg.add("Images")
-		Pkg.add("ImageMorphology")
-		Pkg.add("ImageFiltering")
-		Pkg.add("CSV")
-		Pkg.add("DataFrames")
-		Pkg.add("Noise")
-		Pkg.add(url="https://github.com/JuliaHealth/DICOM.jl")
-		Pkg.add(url="https://github.com/Dale-Black/DICOMUtils.jl")
-		Pkg.add(url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-		Pkg.add(url="https://github.com/Dale-Black/CalciumScoring.jl")
-	end
-	
-	using PlutoUI
-	using CairoMakie
-	using Statistics
-	using Images
-	using ImageMorphology
-	using ImageFiltering
-	using CSV
-	using DataFrames
-	using Noise
-	using DICOM
-	using DICOMUtils
-	using PhantomSegmentation
-	using CalciumScoring
+    let
+        using Pkg
+        Pkg.activate(mktempdir())
+        Pkg.Registry.update()
+        Pkg.add("PlutoUI")
+        Pkg.add("CairoMakie")
+        Pkg.add("Statistics")
+        Pkg.add("Images")
+        Pkg.add("ImageMorphology")
+        Pkg.add("ImageFiltering")
+        Pkg.add("CSV")
+        Pkg.add("DataFrames")
+        Pkg.add("Noise")
+        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
+        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
+    end
+
+    using PlutoUI
+    using CairoMakie
+    using Statistics
+    using Images
+    using ImageMorphology
+    using ImageFiltering
+    using CSV
+    using DataFrames
+    using Noise
+    using DICOM
+    using DICOMUtils
+    using PhantomSegmentation
+    using CalciumScoring
 end
 
 # ╔═╡ 104f4083-33d6-4f79-8a3c-93a28cbc8fbb
@@ -46,19 +46,19 @@ TableOfContents()
 
 # ╔═╡ 967a66af-9664-43d4-a06f-ccff9aee51c3
 function create_mask(array, mask)
-	@assert size(array) == size(mask)
-	idxs = findall(x -> x == true, mask)
-	overlayed_mask = zeros(size(array))
-	for idx in idxs
-		overlayed_mask[idx] = array[idx]
-	end
-	return overlayed_mask
+    @assert size(array) == size(mask)
+    idxs = findall(x -> x == true, mask)
+    overlayed_mask = zeros(size(array))
+    for idx in idxs
+        overlayed_mask[idx] = array[idx]
+    end
+    return overlayed_mask
 end
 
 # ╔═╡ 1bb68c5a-d6ee-472b-9d4d-05b7ad7215ea
 begin
-	TYPE = "all"
-	BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/"
+    TYPE = "all"
+    BASE_PATH = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/"
 end
 
 # ╔═╡ cb9a71f5-4474-4b3a-ad2c-e40cfc3b2fb1
@@ -87,28 +87,28 @@ densities = ["low", "normal"]
 # 				for z in size(dcm_array, 3)
 # 					dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], kern)
 # 				end
-	
+
 # 				# Segment Heart
 # 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
-			
+
 # 				# Segment Calcium Rod
 # 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header)
-		
+
 # 				# Segment Calcium Inserts
 # 				mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
 # 						dcm_array, masked_array, header, slice_CCI, center_insert
 # 				)
-			
+
 # 				# Mask Calibration Factor
 # 				output = calc_output(masked_array, header, slice_CCI, 130, trues(3, 3))
 # 				insert_centers = calc_centers(dcm_array, output, header, center_insert, slice_CCI)
 # 				rows, cols = Int(header[tag"Rows"]), Int(header[tag"Columns"])
 # 				pixel_size = DICOMUtils.get_pixel_size(header)
 # 				mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, 2, cols, rows, pixel_size)
-				
+
 # 				# Score Large Inserts
 # 				arr = masked_array[:, :, 4:6]
-				
+
 # 				## High Density
 # 				mask_L_HD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -118,7 +118,7 @@ densities = ["low", "normal"]
 # 				alg = Agatston()
 # 				overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
 # 				agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Medium Density
 # 				mask_L_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -127,7 +127,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_L_MD = dilate(dilate(mask_L_MD_3D))
 # 				overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
 # 				agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Low Density
 # 				mask_L_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -136,8 +136,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_L_LD = dilate(dilate(mask_L_LD_3D))
 # 				overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
 # 				agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
-			
-			
+
 # 				# Score Medium Inserts
 # 				## High Density
 # 				mask_M_HD_3D = Array{Bool}(undef, size(arr))
@@ -147,7 +146,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_M_HD = dilate(dilate(dilate(dilate(mask_M_HD_3D))))
 # 				overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
 # 				agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Medium Density
 # 				mask_M_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -156,7 +155,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_M_MD = dilate(dilate(dilate(dilate(mask_M_MD_3D))))
 # 				overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
 # 				agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Low Density
 # 				mask_M_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -165,7 +164,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_M_LD = dilate(dilate(dilate(dilate(mask_M_LD_3D))))
 # 				overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
 # 				agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
-				
+
 # 				# Score Small Inserts
 # 				## High Density
 # 				mask_S_HD_3D = Array{Bool}(undef, size(arr))
@@ -175,7 +174,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_S_HD = dilate((dilate(dilate(dilate((mask_S_HD_3D))))))
 # 				overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
 # 				agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Medium Density
 # 				mask_S_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -184,7 +183,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_S_MD = dilate((dilate(dilate(dilate(mask_S_MD_3D)))))
 # 				overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
 # 				agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
-				
+
 # 				## Low Density
 # 				mask_S_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -193,7 +192,7 @@ densities = ["low", "normal"]
 # 				dilated_mask_S_LD = dilate((dilate(dilate(dilate(mask_S_LD_3D)))))
 # 				overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
 # 				agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
-				
+
 # 				# Results
 # 				density_array = [0, 200, 400, 800]
 # 				inserts = [
@@ -201,7 +200,7 @@ densities = ["low", "normal"]
 # 					"Medium Density",
 # 					"High Density"
 # 				]
-				
+
 # 				## Agatston
 # 				calculated_agat_large = [
 # 					agat_l_ld,
@@ -218,7 +217,7 @@ densities = ["low", "normal"]
 # 					agat_s_md,
 # 					agat_s_hd
 # 				]
-				
+
 # 				## Mass
 # 				volume_gt = [
 # 					7.065,
@@ -255,7 +254,7 @@ densities = ["low", "normal"]
 # 					mass_s_md,
 # 					mass_s_hd
 # 				]
-			
+
 # 				df = DataFrame(
 # 					kern = kern,
 # 					size = size_,
@@ -283,13 +282,13 @@ densities = ["low", "normal"]
 # 				for z in size(dcm_array, 3)
 # 					dcm_array[:, :, z] = Noise.mult_gauss(dcm_array[:, :, z], kern)
 # 				end
-			
+
 # 				# Segment Heart
 # 				masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3)÷2)
-			
+
 # 				# Segment Calcium Rod
 # 				calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(masked_array, header)
-			
+
 # 				# Calibration Prep
 # 				array_filtered = abs.(mapwindow(median, calcium_image[:, :, 2], (3, 3)))
 # 				bool_arr = array_filtered .> 0
@@ -317,14 +316,14 @@ densities = ["low", "normal"]
 # 				b = linearRegressor.model.rr.mu[1]
 # 				density(intensity) = (intensity - b) / m
 # 				intensity(ρ) = m*ρ + b
-	
+
 # 				mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
 # 					dcm_array, masked_array, header, slice_CCI, center_insert)
-			
+
 # 				arr = masked_array[:, :, 4:6]
 # 				single_arr = masked_array[:, :, slice_CCI]
 # 				pixel_size = DICOMUtils.get_pixel_size(header)
-				
+
 # 				# Score Large InsertS
 # 				## High Density
 # 				mask_L_HD_3D = Array{Bool}(undef, size(arr))
@@ -339,7 +338,7 @@ densities = ["low", "normal"]
 # 				ρ_hd = 0.8 # mg/mm^3
 # 				alg_L_HD = Integrated(arr[mask_L_HD_3D])
 # 				mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
-			
+
 # 				## Medium Density
 # 				mask_L_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -353,7 +352,7 @@ densities = ["low", "normal"]
 # 				ρ_md = 0.4 # mg/mm^3
 # 				alg_L_MD = Integrated(arr[mask_L_MD_3D])
 # 				mass_l_md = score(s_bkg_L_MD, S_Obj_MD, pixel_size, ρ_md, alg_L_MD)
-			
+
 # 				## Low Density
 # 				mask_L_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -367,7 +366,7 @@ densities = ["low", "normal"]
 # 				ρ_ld = 0.2 # mg/mm^3
 # 				alg_L_LD = Integrated(arr[mask_L_LD_3D])
 # 				mass_l_ld = score(s_bkg_L_LD, S_Obj_LD, pixel_size, ρ_ld, alg_L_LD)
-				
+
 # 				# Score Medium Inserts
 # 				## High Density
 # 				mask_M_HD_3D = Array{Bool}(undef, size(arr))
@@ -380,7 +379,7 @@ densities = ["low", "normal"]
 # 				s_bkg_M_HD = mean(single_arr[single_ring_mask_M_HD])
 # 				alg_M_HD = Integrated(arr[mask_M_HD_3D])
 # 				mass_m_hd = score(s_bkg_M_HD, S_Obj_HD, pixel_size, ρ_hd, alg_M_HD)
-				
+
 # 				## Medium Density
 # 				mask_M_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -392,7 +391,7 @@ densities = ["low", "normal"]
 # 				s_bkg_M_MD = mean(single_arr[single_ring_mask_M_MD])
 # 				alg_M_MD = Integrated(arr[mask_M_MD_3D])
 # 				mass_m_md = score(s_bkg_M_MD, S_Obj_MD, pixel_size, ρ_md, alg_M_MD)
-			
+
 # 				## Low Density
 # 				mask_M_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -404,8 +403,7 @@ densities = ["low", "normal"]
 # 				s_bkg_M_LD = mean(single_arr[single_ring_mask_M_LD])
 # 				alg_M_LD = Integrated(arr[mask_M_LD_3D])
 # 				mass_m_ld = score(s_bkg_M_LD, S_Obj_LD, pixel_size, ρ_ld, alg_M_LD)
-				
-			
+
 # 				# Score Small Inserts
 # 				## High Density
 # 				mask_S_HD_3D = Array{Bool}(undef, size(arr))
@@ -418,7 +416,7 @@ densities = ["low", "normal"]
 # 				s_bkg_S_HD = mean(single_arr[single_ring_mask_S_HD])
 # 				alg_S_HD = Integrated(arr[mask_S_HD_3D])
 # 				mass_s_hd = score(s_bkg_S_HD, S_Obj_HD, pixel_size, ρ_hd, alg_S_HD)
-			
+
 # 				## Medium Density
 # 				mask_S_MD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -430,7 +428,7 @@ densities = ["low", "normal"]
 # 				s_bkg_S_MD = mean(single_arr[single_ring_mask_S_MD])
 # 				alg_S_MD = Integrated(arr[mask_S_MD_3D])
 # 				mass_s_md = score(s_bkg_S_MD, S_Obj_MD, pixel_size, ρ_md, alg_S_MD)
-				
+
 # 				## Low Density
 # 				mask_S_LD_3D = Array{Bool}(undef, size(arr))
 # 				for z in 1:size(arr, 3)
@@ -442,7 +440,7 @@ densities = ["low", "normal"]
 # 				s_bkg_S_LD = mean(single_arr[single_ring_mask_S_LD])
 # 				alg_S_LD = Integrated(arr[mask_S_LD_3D])
 # 				mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_ld, alg_S_LD)
-				
+
 # 				# Results
 # 				density_array = [0, 200, 400, 800]
 # 				inserts = [
@@ -460,7 +458,7 @@ densities = ["low", "normal"]
 # 					volume_gt[3] * density_array[3] * 1e-3,
 # 					volume_gt[3] * density_array[4] * 1e-3
 # 				] # mg
-				
+
 # 				calculated_mass_large = [
 # 					mass_l_ld,
 # 					mass_l_md,
@@ -486,7 +484,7 @@ densities = ["low", "normal"]
 # 					mass_s_md,
 # 					mass_s_hd
 # 				]
-				
+
 # 				df = DataFrame(
 # 					kern = kern,
 # 					size = size_,
