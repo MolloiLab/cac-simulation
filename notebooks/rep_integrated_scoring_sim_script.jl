@@ -228,94 +228,27 @@ begin
                     eroded_mask_L_LD = erode(erode(mask_L_LD_3D))
                     low_density_cal = mean(arr[eroded_mask_L_LD])
                     density_array_cal = [0, 200]
+					
+					local intensity_array
+					local density_array
+					if VENDER == "80"
+						intensity_array = [0, 69.7, 377.3, 1375.3]
+						density_array = [0, 25, 200, 800]
+					elseif VENDER == "100"
+						intensity_array = [0, 63.3, 326.0, 1179.4]
+						density_array = [0, 25, 200, 800]
+					elseif VENDER == "120"
+						intensity_array = [0, 58.1, 296.9, 1072.1]
+						density_array = [0, 25, 200, 800]
+					else
+						intensity_array = [0, 55.5, 282.7, 1019.7]
+						density_array = [0, 25, 200, 800]
+					end
 
-                    # if DENSITY == "low"
-                    # 	density_arr = [
-                    # 		25
-                    # 		50
-                    # 		100
-                    # 	]
-                    # 	if VENDER == "80"
-                    # 		intensity_array = [
-                    # 			70.6327
-                    # 			124.204
-                    # 			202.143
-                    # 		]
-                    # 	elseif VENDER == "100"
-                    # 		intensity_array = [
-                    # 			62.2041
-                    # 			104.612
-                    # 			183.0
-                    # 		]
-                    # 	elseif VENDER == "120"
-                    # 		intensity_array = [
-                    # 			64.0408
-                    # 			93.8571
-                    # 			167.551
-                    # 		]
-                    # 	else
-                    # 		intensity_array = [
-                    # 			59.1429
-                    # 			91.898
-                    # 			153.429
-                    # 		]
-                    # 	end
-                    # else
-                    # 	density_arr = [
-                    # 		0
-                    # 		200
-                    # 		400
-                    # 		800
-                    # 	]
-                    # 	if VENDER == "80"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			395.918
-                    # 			727.735
-                    # 			1432.67
-                    # 		]
-                    # 	elseif VENDER == "100"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			321.612
-                    # 			620.837
-                    # 			1217.04
-                    # 		]
-                    # 	elseif VENDER == "120"
-                    # 		intensity_array = [
-                    # 			0
-                    # 			301.204
-                    # 			571.204
-                    # 			1105.53
-                    # 		]
-                    # 	else
-                    # 		intensity_array = [
-                    # 			0
-                    # 			283.673
-                    # 			549.51
-                    # 			1053.27
-                    # 		]
-                    # 	end
-                    # end
-
-                    intensity_array = [
-                        0, low_density_cal, med_density_cal, high_density_cal
-                    ] # HU
-                    intensity_array_cal = [0, cal_insert_mean]
-
-                    local df_cal
-                    if DENSITY == "low"
-                        df_cal = DataFrame(
-                            :density => density_array[2:end],
-                            :intensity => intensity_array[2:end],
-                        )
-                    elseif DENSITY == "normal"
-                        df_cal = DataFrame(
-                            :density => density_array, :intensity => intensity_array
-                        )
-                    end
-
-                    # df_cal = DataFrame(:density => density_arr, :intensity => intensity_array)
+					df_cal = DataFrame(
+                        :density => density_array, :intensity => intensity_array
+                    )
+					
                     linearRegressor = lm(@formula(intensity ~ density), df_cal)
                     linearFit = predict(linearRegressor)
                     m = linearRegressor.model.pp.beta0[2]
@@ -473,25 +406,32 @@ begin
                     mass_s_ld = score(s_bkg_S_LD, S_Obj_LD, pixel_size, ρ_ld, alg_S_LD)
 
                     # Results
+                    local density_array_calculations
+                    if DENSITY == "low"
+                        density_array_calculations = [0, 25, 50, 100]
+                    elseif DENSITY == "normal"
+                        density_array_calculations = [0, 200, 400, 800]
+                    end
+
                     inserts = ["Low Density", "Medium Density", "High Density"]
                     volume_gt = [7.065, 63.585, 176.625]
                     ground_truth_mass_large = [
-                        volume_gt[3] * density_array[2] * 1e-3,
-                        volume_gt[3] * density_array[3] * 1e-3,
-                        volume_gt[3] * density_array[4] * 1e-3,
+                        volume_gt[3] * density_array_calculations[2] * 1e-3,
+                        volume_gt[3] * density_array_calculations[3] * 1e-3,
+                        volume_gt[3] * density_array_calculations[4] * 1e-3,
                     ] # mg
 
                     calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
                     ground_truth_mass_medium = [
-                        volume_gt[2] * density_array[2] * 1e-3,
-                        volume_gt[2] * density_array[3] * 1e-3,
-                        volume_gt[2] * density_array[4] * 1e-3,
+                        volume_gt[2] * density_array_calculations[2] * 1e-3,
+                        volume_gt[2] * density_array_calculations[3] * 1e-3,
+                        volume_gt[2] * density_array_calculations[4] * 1e-3,
                     ]
                     calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
                     ground_truth_mass_small = [
-                        volume_gt[1] * density_array[2] * 1e-3,
-                        volume_gt[1] * density_array[3] * 1e-3,
-                        volume_gt[1] * density_array[4] * 1e-3,
+                        volume_gt[1] * density_array_calculations[2] * 1e-3,
+                        volume_gt[1] * density_array_calculations[3] * 1e-3,
+                        volume_gt[1] * density_array_calculations[4] * 1e-3,
                     ]
                     calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
 

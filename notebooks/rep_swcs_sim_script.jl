@@ -79,7 +79,7 @@ begin
                 for DENSITY in DENSITIES
                     SCAN_NUMBER = 1
                     BASE_PATH = string(
-                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_reproducibility1/",
                         SIZE,
                         "/",
                         DENSITY,

@@ -201,6 +201,9 @@ begin
     total_cac = length(array_s_80) * 4
 end;
 
+# ╔═╡ da2b55dc-2fe9-468f-a53e-baf232ca79cd
+total_cac
+
 # ╔═╡ 01d903d8-fca2-4317-a2d7-93429f06d47c
 md"""
 #### Agatston
@@ -282,9 +285,6 @@ end
 
 # ╔═╡ f4b51729-d53a-40e2-919b-5d4562cffbc0
 total_zero_i, total_zero_s, num_zero_a
-
-# ╔═╡ da2b55dc-2fe9-468f-a53e-baf232ca79cd
-total_cac
 
 # ╔═╡ 7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
 md"""
@@ -566,7 +566,7 @@ let
     r2_4 = GLM.r2(model_a_low)
     global rms_values4
     rms_values4 = [
-        rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model_a_low))
+        rms(data[!, :X], data[!, :Y]), rms(GLM.predict(model_a_low), data[!, :Y])
     ]
 end
 
@@ -672,9 +672,9 @@ function lin_reg_low()
     )
 
     xlims!(ax2; low=0, high=25)
-    ylims!(ax2; low=0, high=25)
+    ylims!(ax2; low=-10, high=30)
     ax2.xticks = [0, 5, 10, 15, 20, 25]
-    ax2.yticks = [0, 5, 10, 15, 20, 25]
+    ax2.yticks = [-10, 0, 10, 20, 30]
     ax2.xlabel = "Known Mass (mg)"
     ax2.ylabel = "Calculated Mass (mg)"
     ax2.title = "Agatston (Low-Density)"
@@ -1520,6 +1520,198 @@ end
 # ╔═╡ bd115bb7-065c-41af-b332-4b701bd6120d
 # df_aa0, df_aa05, df_aa1, df_aa15, df_aa2 = groupby(df_aa, :blur);
 
+# ╔═╡ a6f0d36e-823d-4198-b4ea-d95ce16ac65c
+md"""
+# Tables
+"""
+
+# ╔═╡ b7064bb1-f21a-4bb6-a395-9f1c73102058
+md"""
+## Simulation Parameters
+"""
+
+# ╔═╡ 21b03bf8-47ba-4915-936a-92c488671bb1
+parameters = [
+	"Manufacturer",
+	"CT System",
+	"Reconstruction",
+	"Tube Voltage (kVp)",
+	"Exposure Small (mR)",
+	"Exposure Medium (mR)",
+	"Exposure Large (mR)",
+	"Slice Thickness (mm)",
+	"Matrix Size Small",
+	"Mtrix Size Medium",
+	"Matrix Size Large",
+	"Detector Element Width (mm)",
+	"Detector Thickness (mm)",
+]
+
+# ╔═╡ e0a66c8a-e1b6-4c70-9996-ec3fe62786f3
+simulations = [
+	"Canon"
+	"Aquilion One Vision"
+	"FBP"
+	"120"
+	"0.9"
+	"2"
+	"5.4"
+	"0.5"
+	"640x440"
+	"740x540"
+	"840x640"
+	"0.5"
+	"0.5"
+]
+
+# ╔═╡ bf3b0e00-5f2b-435b-9717-96052f7e9071
+simulation_parameters = DataFrame(
+	"Parameter" => parameters,
+	"Simulation" => simulations
+)
+
+# ╔═╡ 09e62a9b-4f42-4285-88de-3b90a8a4003a
+md"""
+## Spatially Weighted Calcium Scoring Means & Stds
+"""
+
+# ╔═╡ d74aa830-5a48-4535-8579-39ce2dc8142d
+kvp = [
+	80
+	100
+	120
+	135
+]
+
+# ╔═╡ 6eed3e33-f8f1-41f8-96b1-6e38fa129733
+means = [
+	201.4898
+	174.3658
+	158.2645
+	152.8815
+]
+
+# ╔═╡ 36962426-647f-4194-92cc-aed51c628484
+stds = [
+	34.3038
+	28.1708
+	22.9656
+	21.0778
+]
+
+# ╔═╡ 512f3683-3231-4140-96d8-dd2378f5094d
+means_stds = DataFrame(
+	"kVp" => kvp,
+	"Mean" => means,
+	"Std" => stds
+)
+
+# ╔═╡ 5d7dfbc7-7a69-4acb-93e4-a8ebf0f8b787
+
+
+# ╔═╡ 235bc94e-166d-4df1-9ed6-f331e6e1cf0c
+md"""
+## Summaries
+"""
+
+# ╔═╡ e9dc2696-d2a8-4c4f-8665-da526e242570
+r_vals_rep = [
+	r2_1r
+	r2_2r
+	r2_3r
+]
+
+# ╔═╡ 574b38a3-964a-4d7a-adf4-e36198c003a3
+rmse_vals_rep = [
+	rms_values1r[1]
+	rms_values2r[1]
+	rms_values3r[1]
+]
+
+# ╔═╡ bc0ede74-4122-4d56-8d99-0043013752df
+rmsd_vals_rep = [
+	rms_values1r[2]
+	rms_values2r[2]
+	rms_values3r[2]
+]
+
+# ╔═╡ 165f2e6f-afd4-4f65-aae7-0023a531dbd0
+summ_reprod = DataFrame(
+	"R Correlation Coefficient" => r_vals_rep,
+	"RMSE" => rmse_vals_rep,
+	"RMSD" => rmsd_vals_rep
+)
+
+# ╔═╡ 7c314dcf-aa06-491d-bb45-89c5c8006688
+r_vals_norm = [
+	r2_1,
+	r2_3,
+]
+
+# ╔═╡ 5daffb8c-9387-4bdf-9fd1-46dd8bd1b873
+rmse_vals_norm = [
+	rms_values1[1],
+	rms_values3[1]
+]
+
+# ╔═╡ 9f1b2d37-1d54-4339-869a-a927c66618c4
+rmsd_vals_norm = [
+	rms_values1[2],
+	rms_values3[2]
+]
+
+# ╔═╡ a6c8ebe4-e598-4cb7-a2c2-568f9ddd1b3a
+summ_regression_norm = DataFrame(
+	"R Correlation Coefficient" => r_vals_norm,
+	"RMSE" => rmse_vals_norm,
+	"RMSD" => rmsd_vals_norm
+)
+
+# ╔═╡ 1fc7c060-f348-4be7-8b61-7ccf0412a38b
+r_vals_low = [
+	r2_2,
+	r2_4,
+]
+
+# ╔═╡ 4ba8c595-cdcc-4892-ba2a-591f6baf5c2e
+rmse_vals_low = [
+	rms_values2[1],
+	rms_values4[1]
+]
+
+# ╔═╡ 1752eeef-ce73-471e-b5b5-f02f498239e1
+rmsd_vals_low = [
+	rms_values2[2],
+	rms_values4[2]
+]
+
+# ╔═╡ 1069b0be-5a04-4ef2-bdb0-1016edbca301
+summ_regression_low = DataFrame(
+	"R Correlation Coefficient" => r_vals_low,
+	"RMSE" => rmse_vals_low,
+	"RMSD" => rmsd_vals_low
+)
+
+# ╔═╡ 8ef3a331-fd8f-4b61-b355-b133f0480432
+zero_cac_num = [
+	string(total_zero_i, "/", total_cac)
+	string(total_zero_s, "/", total_cac)
+	string(num_zero_a, "/", total_cac)
+]
+
+# ╔═╡ 6cf69eaf-aaf2-4bc1-aa10-e22efae2b175
+zero_cac_perc = [
+	round(total_zero_i / total_cac * 100, digits=2)
+	round(total_zero_s / total_cac * 100, digits=2)
+	round(num_zero_a / total_cac * 100, digits=2)
+]
+
+# ╔═╡ 38f87d7b-6d22-41de-97da-927a478d8e8b
+summ_zero_cac = DataFrame(
+	"False Negatives (CAC=0)" => zero_cac_num,
+	"Percentage False Negatives (%)" => zero_cac_perc
+)
+
 # ╔═╡ Cell order:
 # ╠═c82bb3e6-e052-11ec-3392-eba4a4b464ba
 # ╠═2df207ed-cf9c-4d7d-8354-4da14f93276c
@@ -1547,6 +1739,8 @@ end
 # ╟─3c40ca1d-4111-4bf1-941e-30b59cd1a264
 # ╟─01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
 # ╟─cc88bab2-8b5e-474a-889d-f0fbfec790a2
+# ╠═f4b51729-d53a-40e2-919b-5d4562cffbc0
+# ╠═da2b55dc-2fe9-468f-a53e-baf232ca79cd
 # ╟─932e1a11-ec52-48bc-af27-bb3e09e6b27f
 # ╠═dc8805a5-2b4c-47fe-88c8-0f4434ddd5cf
 # ╠═2c78dcc4-03c7-49b5-ac45-30c198671761
@@ -1560,11 +1754,9 @@ end
 # ╠═dd644657-51e9-4b27-a186-6efba0bb83f8
 # ╠═d79d6478-0837-40f0-a7a5-270bf44d6166
 # ╠═2b5a8dca-faae-4163-ab14-ae4f98b2a7cc
-# ╠═f4b51729-d53a-40e2-919b-5d4562cffbc0
-# ╠═da2b55dc-2fe9-468f-a53e-baf232ca79cd
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
-# ╟─c93ba92a-ccc7-4ae0-9207-300715821fc5
-# ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
+# ╠═c93ba92a-ccc7-4ae0-9207-300715821fc5
+# ╠═2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 # ╟─a4bc0a8a-4904-4217-97a9-44158f99ae70
 # ╟─98c3eaef-502e-4a20-b5b6-46a3d6b394d3
 # ╟─33e21324-b4f8-4b5a-b759-dc38057a612d
@@ -1669,3 +1861,30 @@ end
 # ╠═41946bb8-fe10-4086-831d-3a68878fe944
 # ╠═ca8f3808-2173-4a6e-b248-bafc0473bbdb
 # ╠═bd115bb7-065c-41af-b332-4b701bd6120d
+# ╟─a6f0d36e-823d-4198-b4ea-d95ce16ac65c
+# ╟─b7064bb1-f21a-4bb6-a395-9f1c73102058
+# ╟─21b03bf8-47ba-4915-936a-92c488671bb1
+# ╟─e0a66c8a-e1b6-4c70-9996-ec3fe62786f3
+# ╟─bf3b0e00-5f2b-435b-9717-96052f7e9071
+# ╟─09e62a9b-4f42-4285-88de-3b90a8a4003a
+# ╟─d74aa830-5a48-4535-8579-39ce2dc8142d
+# ╟─6eed3e33-f8f1-41f8-96b1-6e38fa129733
+# ╟─36962426-647f-4194-92cc-aed51c628484
+# ╟─512f3683-3231-4140-96d8-dd2378f5094d
+# ╠═5d7dfbc7-7a69-4acb-93e4-a8ebf0f8b787
+# ╟─235bc94e-166d-4df1-9ed6-f331e6e1cf0c
+# ╟─e9dc2696-d2a8-4c4f-8665-da526e242570
+# ╟─574b38a3-964a-4d7a-adf4-e36198c003a3
+# ╟─bc0ede74-4122-4d56-8d99-0043013752df
+# ╟─165f2e6f-afd4-4f65-aae7-0023a531dbd0
+# ╟─7c314dcf-aa06-491d-bb45-89c5c8006688
+# ╟─5daffb8c-9387-4bdf-9fd1-46dd8bd1b873
+# ╟─9f1b2d37-1d54-4339-869a-a927c66618c4
+# ╠═a6c8ebe4-e598-4cb7-a2c2-568f9ddd1b3a
+# ╟─1fc7c060-f348-4be7-8b61-7ccf0412a38b
+# ╟─4ba8c595-cdcc-4892-ba2a-591f6baf5c2e
+# ╟─1752eeef-ce73-471e-b5b5-f02f498239e1
+# ╠═1069b0be-5a04-4ef2-bdb0-1016edbca301
+# ╟─8ef3a331-fd8f-4b61-b355-b133f0480432
+# ╟─6cf69eaf-aaf2-4bc1-aa10-e22efae2b175
+# ╠═38f87d7b-6d22-41de-97da-927a478d8e8b
