@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.4
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -7,14 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try
-            Base.loaded_modules[Base.PkgId(
-                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
-                "AbstractPlutoDingetjes",
-            )].Bonds.initial_value
-        catch
-            b -> missing
-        end
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -24,40 +17,11 @@ end
 # ╔═╡ 98114689-d1cc-4aa9-b88f-c048059e95d3
 # ╠═╡ show_logs = false
 begin
-    let
-        using Pkg
-        Pkg.activate(mktempdir())
-        Pkg.Registry.update()
-        Pkg.add("PlutoUI")
-        Pkg.add("CairoMakie")
-        Pkg.add("Statistics")
-        Pkg.add("Images")
-        Pkg.add("ImageMorphology")
-        Pkg.add("ImageFiltering")
-        Pkg.add("CSV")
-        Pkg.add("DataFrames")
-        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
-        Pkg.add("Distributions")
-        Pkg.add("DSP")
-    end
+	using Pkg
+	Pkg.activate(".")
 
-    using PlutoUI
-    using CairoMakie
-    using Statistics
-    using Images
-    using ImageMorphology
-    using ImageFiltering
-    using CSV
-    using DataFrames
-    using DICOM
-    using DICOMUtils
-    using PhantomSegmentation
-    using CalciumScoring
-    using Distributions
-    using DSP
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring, ImageMorphology, ImageFiltering, Noise, Distributions, DSP
+    using StatsBase: quantile!, rmsd
 end
 
 # ╔═╡ 33bd4068-abd8-45d4-babd-7b397310a645
@@ -75,11 +39,11 @@ begin
     # SIZE = "small"
     # SIZE = "medium"
     SIZE = "large"
-    DENSITY = "low"
-    # DENSITY = "normal"
+    # DENSITY = "low"
+    DENSITY = "normal"
     TYPE = "agatston"
     BASE_PATH = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
         SIZE,
         "/",
         DENSITY,
@@ -330,7 +294,7 @@ md"""
 # ╔═╡ 7208bc08-acad-44f7-854c-cea5d0190b24
 begin
     root_new = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
         SIZE,
         "/",
     )
@@ -1042,18 +1006,20 @@ dfs = []
 push!(dfs, df)
 
 # ╔═╡ 92be24c9-e0a5-4539-9501-93a8d6c52f10
-if length(dfs) == 12
-    global new_df = vcat(dfs[1:12]...)
-    output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
-    CSV.write(output_path_new, new_df)
-end
+# if length(dfs) == 12
+#     global new_df = vcat(dfs[1:12]...)
+#     output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
+#     CSV.write(output_path_new, new_df)
+# end
 
 # ╔═╡ 1723c48d-341f-4898-9b57-4202664a9415
 # output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
 
 # ╔═╡ 4d1825ea-b5cd-4445-99d5-a218845e629c
 
+
 # ╔═╡ 3912fb58-7431-40f7-9823-9a4c91487bf6
+
 
 # ╔═╡ Cell order:
 # ╠═98114689-d1cc-4aa9-b88f-c048059e95d3

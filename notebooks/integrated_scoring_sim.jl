@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.8
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -7,14 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try
-            Base.loaded_modules[Base.PkgId(
-                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
-                "AbstractPlutoDingetjes",
-            )].Bonds.initial_value
-        catch
-            b -> missing
-        end
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -24,44 +17,11 @@ end
 # ╔═╡ 45f704d4-66e5-49db-aef5-05132f3853ee
 # ╠═╡ show_logs = false
 begin
-    let
-        using Pkg
-        Pkg.activate(mktempdir())
-        Pkg.Registry.update()
-        Pkg.add("PlutoUI")
-        Pkg.add("CairoMakie")
-        Pkg.add("Statistics")
-        Pkg.add("StatsBase")
-        Pkg.add("ImageMorphology")
-        Pkg.add("ImageFiltering")
-        Pkg.add("CSV")
-        Pkg.add("DataFrames")
-        Pkg.add("GLM")
-        Pkg.add("Noise")
-        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
-        Pkg.add("ImageComponentAnalysis")
-        Pkg.add("Tables")
-    end
+	using Pkg
+	Pkg.activate(".")
 
-    using PlutoUI
-    using CairoMakie
-    using Statistics
-    using StatsBase: quantile!
-    using ImageMorphology
-    using ImageFiltering
-    using CSV
-    using DataFrames
-    using GLM
-    using Noise
-    using DICOM
-    using DICOMUtils
-    using PhantomSegmentation
-    using CalciumScoring
-    using ImageComponentAnalysis
-    using Tables
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring, ImageMorphology, ImageFiltering, Noise
+    using StatsBase: quantile!, rmsd
 end
 
 # ╔═╡ e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -78,14 +38,14 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 begin
     SCAN_NUMBER = 1
     VENDER = "120"
-    # SIZE = "small"
-    SIZE = "medium"
+    SIZE = "small"
+    # SIZE = "medium"
     # SIZE = "large"
     # DENSITY = "low"
     DENSITY = "normal"
     TYPE = "integrated_scoring"
     BASE_PATH = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
         SIZE,
         "/",
         DENSITY,
@@ -117,7 +77,7 @@ blurs = [0, 0.5, 1, 1.5, 2]
 begin
     header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
     for z in size(dcm_array, 3)
-        dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blurs[5])
+        dcm_array[:, :, z] = mult_gauss(dcm_array[:, :, z], blurs[1])
     end
 end
 
@@ -181,8 +141,19 @@ masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array
 # ╔═╡ 84e56c91-14a4-45b7-81a1-77e778bae695
 heatmap(transpose(masked_array[:, :, a]); colormap=:grays)
 
+# ╔═╡ 4a4cf730-1307-451e-be5c-f9c1183cdd5f
+let
+    fig = Figure()
+
+    ax = Makie.Axis(fig[1, 1])
+    heatmap!(transpose(dcm_array[:, :, 5]); colormap=:grays)
+
+	save("/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/simulated_phantom.png", fig)
+    fig
+end
+
 # ╔═╡ abfd965c-df00-4028-a0f3-8356a261b527
-begin
+let
     fig = Figure()
 
     ax = Makie.Axis(fig[1, 1])
@@ -283,29 +254,10 @@ md"""
 ## Load (segment) Calcium Inserts
 """
 
-# ╔═╡ ece7d76b-93c8-430c-8679-07cf92585949
-# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
-#             dcm_array, masked_array, header, slice_CCI, center_insert; calcium_threshold=thresh
-# );
-
-# ╔═╡ ca408955-54ff-40ff-9a0f-77ee2666d7a2
-# begin
-# 	root = string("/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/", SIZE, "/") 
-# 	CSV.write(string(root, "mask_L_HD.csv"),  Tables.table(mask_L_HD), writeheader=false)
-# 	CSV.write(string(root, "mask_M_HD.csv"),  Tables.table(mask_M_HD), writeheader=false)
-# 	CSV.write(string(root, "mask_S_HD.csv"),  Tables.table(mask_S_HD), writeheader=false)
-# 	CSV.write(string(root, "mask_L_MD.csv"),  Tables.table(mask_L_MD), writeheader=false)
-# 	CSV.write(string(root, "mask_M_MD.csv"),  Tables.table(mask_M_MD), writeheader=false)
-# 	CSV.write(string(root, "mask_S_MD.csv"),  Tables.table(mask_S_MD), writeheader=false)
-# 	CSV.write(string(root, "mask_L_LD.csv"),  Tables.table(mask_L_LD), writeheader=false)
-# 	CSV.write(string(root, "mask_M_LD.csv"),  Tables.table(mask_M_LD), writeheader=false)
-# 	CSV.write(string(root, "mask_S_LD.csv"),  Tables.table(mask_S_LD), writeheader=false)
-# end
-
 # ╔═╡ 05ed60db-b4d8-4cdc-9a54-b108ade22557
 begin
     root_new = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
         SIZE,
         "/",
     )
@@ -602,7 +554,7 @@ df_cal = DataFrame(:density => density_array, :intensity => intensity_array)
 linearRegressor = lm(@formula(intensity ~ density), df_cal);
 
 # ╔═╡ f42a62d8-11e9-48b8-b6bc-ae25b6797707
-linearFit = predict(linearRegressor)
+linearFit = GLM.predict(linearRegressor)
 
 # ╔═╡ b407d628-0db0-4d13-9a6c-8e4ff5a84cbd
 m = linearRegressor.model.pp.beta0[2]
@@ -639,6 +591,9 @@ begin
     ρ_hd = 0.8 # mg/mm^3
     mass_l_hd = score(s_bkg_L_HD, S_Obj_HD, pixel_size, ρ_hd, alg_L_HD)
 end
+
+# ╔═╡ e33cb165-768b-4ccc-b26d-205416f4a28d
+score(s_bkg_L_HD, intensity(200), pixel_size, alg_L_HD)
 
 # ╔═╡ 0bf239a7-233c-42f2-b7eb-29336b472ff9
 S_Obj_MD = intensity(400)
@@ -1260,6 +1215,7 @@ push!(dfs, df)
 
 # ╔═╡ f53ba93d-e1c0-4614-9efc-25de15d17cf7
 
+
 # ╔═╡ Cell order:
 # ╠═45f704d4-66e5-49db-aef5-05132f3853ee
 # ╠═e7c4aaab-83ef-4256-b392-f8ef7a899a05
@@ -1280,7 +1236,8 @@ push!(dfs, df)
 # ╠═4ff19af0-7f53-4f24-b315-08bd54a488e3
 # ╠═b74941c4-12d4-4be1-81f7-ef1f4d288984
 # ╠═84e56c91-14a4-45b7-81a1-77e778bae695
-# ╠═abfd965c-df00-4028-a0f3-8356a261b527
+# ╠═4a4cf730-1307-451e-be5c-f9c1183cdd5f
+# ╟─abfd965c-df00-4028-a0f3-8356a261b527
 # ╟─41541a09-609b-4f46-9a25-eb974422efc0
 # ╟─e6753c9a-d172-47fe-b066-78cb43df2c89
 # ╟─f8a4eacd-2f69-4755-b017-5a0b0dda1004
@@ -1289,8 +1246,6 @@ push!(dfs, df)
 # ╟─417d150e-0df9-4963-b59e-ebd9acf6d4a0
 # ╠═5f10075b-4d95-4d53-a22f-016749fb7583
 # ╟─b921dcf8-54ea-420b-9285-23e38d5ce433
-# ╠═ece7d76b-93c8-430c-8679-07cf92585949
-# ╠═ca408955-54ff-40ff-9a0f-77ee2666d7a2
 # ╠═05ed60db-b4d8-4cdc-9a54-b108ade22557
 # ╠═8bb2d451-b575-40bf-b31e-51e80392ef51
 # ╠═4862496e-464d-40c3-baef-e5c507028d66
@@ -1321,7 +1276,7 @@ push!(dfs, df)
 # ╟─e50baf62-0a02-47ee-8440-551f68baee0d
 # ╠═3fa80bee-20f6-4e9c-a14d-75a77482a2c3
 # ╠═04c77c9d-c498-4e09-abff-9c361e887c56
-# ╟─b03c711f-9e0e-4089-add1-5abbde81cce1
+# ╠═b03c711f-9e0e-4089-add1-5abbde81cce1
 # ╟─3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 # ╠═d27df860-7ca8-4e93-90e4-a58605aa1aaa
 # ╠═5dfb50b9-7545-4948-8026-2074ce5d86cf
@@ -1346,6 +1301,7 @@ push!(dfs, df)
 # ╠═dc94ad4a-0692-4e0e-84e5-f706ab1ca316
 # ╠═fd089ad4-4e08-4e1c-b049-3378de42b2df
 # ╠═28c869df-75eb-42dc-9033-867ca4782f41
+# ╠═e33cb165-768b-4ccc-b26d-205416f4a28d
 # ╠═7d61e536-fac5-43e1-9ce9-5952d7d20e8d
 # ╟─e93b26b5-ba84-4410-87b7-eefad3d8ab3e
 # ╠═1b97a53d-6ed8-4414-befa-146225f0f95a

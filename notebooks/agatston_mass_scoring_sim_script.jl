@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.8
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -7,24 +7,8 @@ using InteractiveUtils
 # ╔═╡ fac1755c-3668-4892-a970-27d4341dae01
 # ╠═╡ show_logs = false
 begin
-    let
-        using Pkg
-        Pkg.activate(mktempdir())
-        Pkg.Registry.update()
-        Pkg.add("PlutoUI")
-        Pkg.add("CairoMakie")
-        Pkg.add("Statistics")
-        Pkg.add("Images")
-        Pkg.add("ImageMorphology")
-        Pkg.add("ImageFiltering")
-        Pkg.add("CSV")
-        Pkg.add("DataFrames")
-        Pkg.add("Noise")
-        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
-    end
+	using Pkg
+	Pkg.activate(".")
 
     using PlutoUI
     using CairoMakie
@@ -70,6 +54,69 @@ DENSITIES = ["low", "normal"]
 # ╔═╡ 0e0c5770-852d-4944-b387-5c0c7faa0062
 blurs = [0, 0.5, 1, 1.5, 2]
 
+# ╔═╡ d388d4c6-d082-4543-9041-4897fde65b56
+function score(vol, spacing, mass_cal_factor, alg::Agatston; kV=120, min_size_mm=1)
+	local threshold
+	if kV == 80
+		threshold = 177
+	elseif kV == 100
+		threshold = 145
+	elseif kV == 120
+		threshold = 130
+	elseif kV == 135
+		threshold = 110
+	else
+		threshold = 130
+	end
+    area_mm = spacing[1] * spacing[2]
+    slice_thickness = spacing[3]
+    min_size_pixels = Int(round(min_size_mm / area_mm))
+    mass_score = 0
+    score = 0
+    for z in 1:size(vol, 3)
+        slice = vol[:, :, z]
+        thresholded_slice = slice .> threshold
+        max_intensity = maximum(slice)
+        if max_intensity < threshold
+            continue
+        end
+		comp_connect = Int(round(2 * floor(min_size_pixels/2) + 1))
+		if comp_connect > 3
+			comp_connect = 3
+		end
+        lesion_map = label_components(thresholded_slice, trues(comp_connect, comp_connect))
+        num_non_zero = 0
+        number_islands = 0
+        mass_slice_score = 0
+        slice_score = 0
+        num_labels = length(unique(lesion_map))
+        for label_idx in 1:(num_labels - 1)
+            idxs = findall(x -> x == label_idx, lesion_map)
+            num_label_idxs = length(idxs)
+            if num_label_idxs < min_size_pixels
+                continue
+            end
+
+            intensities = slice[idxs]
+            max_intensity = maximum(intensities)
+            weight = floor(max_intensity / 100)
+            if weight > 4
+                weight = 4.0
+            end
+            num_non_zero_in_island = num_label_idxs
+            slice_score += num_non_zero_in_island * area_mm * weight
+            num_non_zero += num_non_zero_in_island
+            number_islands += 1
+            mass_slice_score += mean(intensities)
+        end
+        plaque_vol = length(findall(x -> x != 0, lesion_map))
+        plaque_vol = plaque_vol * area_mm * slice_thickness
+        mass_score += mass_slice_score * plaque_vol * mass_cal_factor
+        score += slice_score
+    end
+    return score, mass_score
+end
+
 # ╔═╡ 0f880597-e049-48b3-ad48-7dc17bd6e40e
 begin
     dfs = []
@@ -79,7 +126,7 @@ begin
                 for DENSITY in DENSITIES
                     SCAN_NUMBER = 1
                     BASE_PATH = string(
-                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images_new/",
+                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
                         SIZE,
                         "/",
                         DENSITY,
@@ -90,6 +137,7 @@ begin
                     pth = dcm_path_list[SCAN_NUMBER]
                     scan = basename(pth)
                     header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
+					kV = header[tag"KVP"]
 
                     # Motion Blur
                     if blur != 0
@@ -151,7 +199,7 @@ begin
                     # 		dcm_array, masked_array, header, slice_CCI, center_insert
                     # )
                     root_new = string(
-                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+                        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
                         SIZE,
                         "/",
                     )
@@ -230,7 +278,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Medium Density
@@ -245,7 +293,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Low Density
@@ -260,7 +308,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     # Score Medium Inserts
@@ -276,7 +324,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Medium Density
@@ -291,7 +339,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Low Density
@@ -306,7 +354,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     # Score Small Inserts
@@ -322,7 +370,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Medium Density
@@ -337,7 +385,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     ## Low Density
@@ -352,7 +400,7 @@ begin
                         pixel_size,
                         mass_cal_factor,
                         alg;
-                        threshold=agat_thresh,
+                        kV=kV,
                     )
 
                     # Results
@@ -440,6 +488,7 @@ end
 # ╠═a044c5a1-3a40-4b00-9235-6e58351afb4b
 # ╠═ea981c62-fcec-4bfc-8068-af4397b7c499
 # ╠═0e0c5770-852d-4944-b387-5c0c7faa0062
+# ╠═d388d4c6-d082-4543-9041-4897fde65b56
 # ╠═0f880597-e049-48b3-ad48-7dc17bd6e40e
 # ╟─8a06a521-635c-4a08-935f-b07a4ea6e0d9
 # ╠═9f8b8e1a-67ac-422b-88b6-a0db53198f88

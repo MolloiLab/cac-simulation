@@ -539,10 +539,10 @@ function lin_reg()
 	    textsize=12,
 	)
 	
-	xlims!(ax3; low=0, high=25)
-	ylims!(ax3; low=0, high=25)
-	ax3.xticks = [0, 5, 10, 15, 20, 25]
-	ax3.yticks = [0, 5, 10, 15, 20, 25]
+	xlims!(ax3; low=0, high=200)
+    ylims!(ax3; low=0, high=200)
+    ax3.xticks = [0, 50, 100, 150, 200]
+    ax3.yticks = [0, 50, 100, 150, 200]
 	ax3.xlabel = "Known Mass (mg)"
 	ax3.ylabel = "Calculated Mass (mg)"
 	ax3.title = "6 Points"
@@ -588,10 +588,10 @@ function lin_reg()
 	    textsize=12,
 	)
 	
-	xlims!(ax4; low=0, high=25)
-	ylims!(ax4; low=0, high=25)
-	ax4.xticks = [0, 5, 10, 15, 20, 25]
-	ax4.yticks = [0, 5, 10, 15, 20, 25]
+	xlims!(ax4; low=0, high=200)
+    ylims!(ax4; low=0, high=200)
+    ax4.xticks = [0, 50, 100, 150, 200]
+    ax4.yticks = [0, 50, 100, 150, 200]
 	ax4.xlabel = "Known Mass (mg)"
 	ax4.ylabel = "Calculated Mass (mg)"
 	ax4.title = "Scan Specific"
@@ -766,7 +766,7 @@ end
 # ╠═ce61c241-be65-4884-938b-64c176a4d67e
 # ╠═29737c66-02db-4190-92e9-27b143460fac
 # ╟─569443ef-eaf9-412a-b6e1-df242bdca4db
-# ╟─1ad0639b-7481-4221-89a1-4c77070cb81e
+# ╠═1ad0639b-7481-4221-89a1-4c77070cb81e
 # ╟─d1b68d52-cd19-4b18-bc84-f9e672c38797
 # ╟─eb186bb7-79f7-4a61-9cec-d0c94a9f3488
 # ╟─b1093c89-449a-47c9-b793-b0e3c0dd08b7

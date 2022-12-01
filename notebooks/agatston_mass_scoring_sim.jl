@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.2
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -7,14 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try
-            Base.loaded_modules[Base.PkgId(
-                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
-                "AbstractPlutoDingetjes",
-            )].Bonds.initial_value
-        catch
-            b -> missing
-        end
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -24,40 +17,11 @@ end
 # ╔═╡ f5acf58b-8436-4b0b-a170-746ba5475c10
 # ╠═╡ show_logs = false
 begin
-    let
-        using Pkg
-        Pkg.activate(mktempdir())
-        Pkg.Registry.update()
-        Pkg.add("PlutoUI")
-        Pkg.add("CairoMakie")
-        Pkg.add("Statistics")
-        Pkg.add("Images")
-        Pkg.add("ImageMorphology")
-        Pkg.add("ImageFiltering")
-        Pkg.add("CSV")
-        Pkg.add("DataFrames")
-        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
+	using Pkg
+	Pkg.activate(".")
 
-        Pkg.add("ImageComponentAnalysis")
-    end
-
-    using PlutoUI
-    using CairoMakie
-    using Statistics
-    using Images
-    using ImageMorphology
-    using ImageFiltering
-    using CSV
-    using DataFrames
-    using DICOM
-    using DICOMUtils
-    using PhantomSegmentation
-    using CalciumScoring
-
-    using ImageComponentAnalysis
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, DICOM, DICOMUtils, PhantomSegmentation, CalciumScoring, ImageMorphology, ImageFiltering, Noise
+    using StatsBase: quantile!, rmsd
 end
 
 # ╔═╡ 8219f406-7175-4573-ae37-642ef9c45b1b
@@ -75,11 +39,11 @@ begin
     SIZE = "small"
     # SIZE = "medium"
     # SIZE = "large"
-    DENSITY = "low"
-    # DENSITY = "normal"
+    # DENSITY = "low"
+    DENSITY = "normal"
     TYPE = "agatston"
     BASE_PATH = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/images/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
         SIZE,
         "/",
         DENSITY,
@@ -292,7 +256,7 @@ md"""
 # ╔═╡ 32562372-4ece-4586-8088-97ad26f1281c
 begin
     root_new = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/julia_arrays/",
+        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
         SIZE,
         "/",
     )
@@ -393,6 +357,15 @@ overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD);
 
 # ╔═╡ 73121968-a17a-4dcd-bbe5-96c0a04b5cb9
 alg = Agatston()
+
+# ╔═╡ f0768b27-5aa6-4e36-9d52-36ce864ff2e8
+mass_cal_factor
+
+# ╔═╡ 1ea7ea36-1bf1-4da3-9c3d-90150006d0f4
+pixel_size
+
+# ╔═╡ da96f018-30f2-4d7c-af32-9c77704bd376
+heatmap(overlayed_mask_l_hd[:, :, 1])
 
 # ╔═╡ d9f7f897-7525-4667-a414-3111296bc27f
 agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
@@ -863,11 +836,11 @@ dfs = []
 push!(dfs, df)
 
 # ╔═╡ 4f2902ba-9df0-4142-a21d-bddd2621e49f
-if length(dfs) == 12
-    global new_df = vcat(dfs[1:12]...)
-    output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
-    CSV.write(output_path_new, new_df)
-end
+# if length(dfs) == 12
+#     global new_df = vcat(dfs[1:12]...)
+#     output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
+#     CSV.write(output_path_new, new_df)
+# end
 
 # ╔═╡ f9f81285-fc12-486b-9fb9-ab9d4d8014b0
 # output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
@@ -926,6 +899,9 @@ end
 # ╠═a945ece4-2bd8-40db-bbe7-9747efa087e6
 # ╠═2d2d2600-dd70-4325-9032-4467882aff73
 # ╠═73121968-a17a-4dcd-bbe5-96c0a04b5cb9
+# ╠═f0768b27-5aa6-4e36-9d52-36ce864ff2e8
+# ╠═1ea7ea36-1bf1-4da3-9c3d-90150006d0f4
+# ╠═da96f018-30f2-4d7c-af32-9c77704bd376
 # ╠═d9f7f897-7525-4667-a414-3111296bc27f
 # ╟─d390e652-23a9-455d-87a0-3f8c54e2bb09
 # ╠═fcc751cd-120c-4c6f-828d-cf070b3466fa

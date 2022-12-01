@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.11
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -7,57 +7,15 @@ using InteractiveUtils
 # ╔═╡ c82bb3e6-e052-11ec-3392-eba4a4b464ba
 # ╠═╡ show_logs = false
 begin
-    let
-        using Pkg
-        Pkg.activate(mktempdir())
-        Pkg.Registry.update()
-        Pkg.add("PlutoUI")
-        Pkg.add("Statistics")
-        Pkg.add("StatsBase")
-        Pkg.add("ImageMorphology")
-        Pkg.add("ImageFiltering")
-        Pkg.add("CSV")
-        Pkg.add("DataFrames")
-        Pkg.add("GLM")
-        Pkg.add(; url="https://github.com/JuliaHealth/DICOM.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/DICOMUtils.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/PhantomSegmentation.jl")
-        Pkg.add(; url="https://github.com/Dale-Black/CalciumScoring.jl")
-        Pkg.add("CairoMakie")
-        Pkg.add("HypothesisTests")
-        Pkg.add("Colors")
-        Pkg.add("MLJBase")
-        Pkg.add("AlgebraOfGraphics")
-    end
+	using Pkg
+	Pkg.activate(".")
 
-    using PlutoUI
-    using Statistics
-    using StatsBase: quantile!, rmsd
-    using ImageMorphology
-    using ImageFiltering
-    using CSV
-    using DataFrames
-    using GLM
-    using DICOM
-    using DICOMUtils
-    using PhantomSegmentation
-    using CalciumScoring
-    using CairoMakie
-    using HypothesisTests
-    using Colors
-    using MLJBase
-    using AlgebraOfGraphics
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase
+	using StatsBase: quantile!, rmsd
 end
 
 # ╔═╡ 2df207ed-cf9c-4d7d-8354-4da14f93276c
 TableOfContents()
-
-# ╔═╡ 672bf97d-e5f8-4b06-bff4-9ae468501c78
-md"""
-## TODO
-- Assess calibrations (1pt, 3pt, 6pt) for simulated data
-- Add motion reproducibility (SWCS, ICS, AS) to simulated data
-"""
 
 # ╔═╡ 4cf61487-3913-4e11-970e-4ca31a5ffc8d
 md"""
@@ -65,7 +23,7 @@ md"""
 """
 
 # ╔═╡ 57d46998-368a-4916-8380-ee49d5473a49
-path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_new/integrated_scoring";
+path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated_scoring";
 
 # ╔═╡ 2c960bd8-ae64-453f-b29f-275bf5263774
 begin
@@ -89,7 +47,7 @@ md"""
 """
 
 # ╔═╡ 4fd5b649-cea1-4d1f-95ac-35aa12f8fbff
-path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_new/agatston";
+path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/agatston";
 
 # ╔═╡ 3fa3748a-22d6-49d8-9888-a749dca99ce2
 begin
@@ -113,7 +71,7 @@ md"""
 """
 
 # ╔═╡ 32623778-9a19-4318-81c6-1fc7aa0157fe
-path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_new/swcs";
+path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/swcs";
 
 # ╔═╡ 317f8c26-7b39-45c3-b9d3-02925d4b0514
 begin
@@ -272,7 +230,7 @@ function zero_cac_plot()
     axtop.yticks = [0, 25, 50, 75, 100]
 
     save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/zero_cac.png",
+        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/zero_cac.png",
         f,
     )
     return f
@@ -285,6 +243,11 @@ end
 
 # ╔═╡ f4b51729-d53a-40e2-919b-5d4562cffbc0
 total_zero_i, total_zero_s, num_zero_a
+
+# ╔═╡ 658f80ab-912d-4af1-9b18-ad7ddc3dc1ca
+md"""
+## Lin Reg
+"""
 
 # ╔═╡ 7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
 md"""
@@ -579,6 +542,234 @@ end
 # ╔═╡ d43c412e-22b5-4406-a883-3410641b5b16
 co4 = coef(model_a_low)
 
+# ╔═╡ fc3b072e-07f0-4aeb-8373-32ff2d46a9d5
+function lin_reg()
+    f = Figure()
+
+    ##-- A --##
+    ax1 = Axis(f[1, 1])
+
+    df = df_i_normal
+    scatter!(ax1, df[!, :ground_truth_mass_large], df[!, :calculated_mass_large])
+    errorbars!(
+        ax1,
+        df[!, :ground_truth_mass_large],
+        df[!, :calculated_mass_large],
+        rms(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large]),
+    )
+    scatter!(ax1, df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium])
+    errorbars!(
+        ax1,
+        df[!, :ground_truth_mass_medium],
+        df[!, :calculated_mass_medium],
+        rms(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium]),
+    )
+    scatter!(
+        ax1, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        ax1,
+        df[!, :ground_truth_mass_small],
+        df[!, :calculated_mass_small],
+        rms(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]),
+    )
+    lines!(ax1, [-1000, 1000], [-1000, 1000])
+    lines!(ax1, collect(1:1000), pred_i_norm; linestyle=:dashdot)
+    Textbox(
+        f[1, 1];
+        placeholder="y = $(trunc(co1[2]; digits=3))x + $(trunc(co1[1]; digits=3)) \nr = $(trunc(r2_1; digits=3)) \nRMSE: $(trunc(rms_values1[1]; digits=3)) \nRMSD: $(trunc(rms_values1[2]; digits=3))",
+        tellheight=false,
+        tellwidth=false,
+        boxcolor=:white,
+        halign=:left,
+        valign=:top,
+        textsize=12,
+    )
+
+    xlims!(ax1; low=0, high=200)
+    ylims!(ax1; low=0, high=200)
+    ax1.xticks = [0, 50, 100, 150, 200]
+    ax1.yticks = [0, 50, 100, 150, 200]
+    ax1.xlabel = "Known Mass (mg)"
+    ax1.ylabel = "Calculated Mass (mg)"
+    ax1.title = "Normal-Density"
+
+    ##-- B --##
+    ax2 = Axis(f[2, 1])
+
+    df3 = df_a_normal
+    sc1 = scatter!(ax2, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large])
+    errorbars!(
+        ax2,
+        df3[!, :ground_truth_mass_large],
+        df3[!, :calculated_mass_large],
+        rms(df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]),
+    )
+    sc2 = scatter!(ax2, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium])
+    errorbars!(
+        ax2,
+        df3[!, :ground_truth_mass_medium],
+        df3[!, :calculated_mass_medium],
+        rms(df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]),
+    )
+    sc3 = scatter!(
+        ax2, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        ax2,
+        df3[!, :ground_truth_mass_small],
+        df3[!, :calculated_mass_small],
+        rms(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]),
+    )
+    ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
+    ln2 = lines!(ax2, collect(1:1000), pred_a_norm; linestyle=:dashdot)
+    Textbox(
+        f[2, 1];
+        placeholder="y = $(trunc(co3[2]; digits=3))x + $(trunc(co3[1]; digits=3)) \nr = $(trunc(r2_3; digits=3)) \nRMSE: $(trunc(rms_values3[1]; digits=3)) \nRMSD: $(trunc(rms_values3[2]; digits=3))",
+        tellheight=false,
+        tellwidth=false,
+        boxcolor=:white,
+        halign=:left,
+        valign=:top,
+        textsize=12,
+    )
+
+    xlims!(ax2; low=0, high=200)
+    ylims!(ax2; low=0, high=200)
+    ax2.xticks = [0, 50, 100, 150, 200]
+    ax2.yticks = [0, 50, 100, 150, 200]
+    ax2.xlabel = "Known Mass (mg)"
+    ax2.ylabel = "Calculated Mass (mg)"
+    ax2.title = "Normal-Density"
+
+	##-- C --##
+	ax3 = Axis(f[1, 2])
+	
+	df2 = df_i_low
+	sc1 = scatter!(ax3, df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large])
+	errorbars!(
+	    ax3,
+	    df2[!, :ground_truth_mass_large],
+	    df2[!, :calculated_mass_large],
+	    rms(df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large]),
+	)
+	sc2 = scatter!(ax3, df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium])
+	errorbars!(
+	    ax3,
+	    df2[!, :ground_truth_mass_medium],
+	    df2[!, :calculated_mass_medium],
+	    rms(df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium]),
+	)
+	sc3 = scatter!(
+	    ax3, df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]; color=:red
+	)
+	errorbars!(
+	    ax3,
+	    df2[!, :ground_truth_mass_small],
+	    df2[!, :calculated_mass_small],
+	    rms(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]),
+	)
+	ln1 = lines!(ax3, [-1000, 1000], [-1000, 1000])
+	ln2 = lines!(ax3, collect(1:1000), pred_i_low; linestyle=:dashdot)
+	Textbox(
+	    f[1, 2];
+	    placeholder="y = $(trunc(co2[2]; digits=3))x + $(trunc(co2[1]; digits=3)) \nr = $(trunc(r2_2; digits=3)) \nRMSE: $(trunc(rms_values2[1]; digits=3)) \nRMSD: $(trunc(rms_values2[2]; digits=3))",
+	    tellheight=false,
+	    tellwidth=false,
+	    boxcolor=:white,
+	    halign=:left,
+	    valign=:top,
+	    textsize=12,
+	)
+	
+	xlims!(ax3; low=0, high=25)
+	ylims!(ax3; low=-10, high=40)
+	ax3.xticks = [0, 5, 10, 15, 20, 25]
+	ax3.yticks = [-10, 0, 10, 20, 30, 40]
+	ax3.xlabel = "Known Mass (mg)"
+	ax3.ylabel = "Calculated Mass (mg)"
+	ax3.title = "Low-Density"
+	# hidedecorations!(ax3, ticklabels=false, ticks=false, label=false)
+
+	##-- D --##
+    ax4 = Axis(f[2, 2])
+
+    df4 = df_a_low
+    sc1 = scatter!(ax4, df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large])
+    errorbars!(
+        ax4,
+        df4[!, :ground_truth_mass_large],
+        df4[!, :calculated_mass_large],
+        rms(df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]),
+    )
+    sc2 = scatter!(ax4, df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium])
+    errorbars!(
+        ax4,
+        df4[!, :ground_truth_mass_medium],
+        df4[!, :calculated_mass_medium],
+        rms(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]),
+    )
+    sc3 = scatter!(
+        ax4, df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        ax4,
+        df4[!, :ground_truth_mass_small],
+        df4[!, :calculated_mass_small],
+        rms(df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]),
+    )
+    ln1 = lines!(ax4, [-1000, 1000], [-1000, 1000])
+    ln2 = lines!(ax4, collect(1:1000), pred_a_low; linestyle=:dashdot)
+    Textbox(
+        f[2, 2];
+        placeholder="y = $(trunc(co4[2]; digits=3))x + $(trunc(co4[1]; digits=3)) \nr = $(trunc(r2_4; digits=3)) \nRMSE: $(trunc(rms_values4[1]; digits=3)) \nRMSD: $(trunc(rms_values4[2]; digits=3))",
+        tellheight=false,
+        tellwidth=false,
+        boxcolor=:white,
+        halign=:left,
+        valign=:top,
+        textsize=12,
+    )
+
+    xlims!(ax4; low=0, high=25)
+    ylims!(ax4; low=-10, high=40)
+    ax4.xticks = [0, 5, 10, 15, 20, 25]
+    ax4.yticks = [-10, 0, 10, 20, 30, 40]
+    ax4.xlabel = "Known Mass (mg)"
+    ax4.ylabel = "Calculated Mass (mg)"
+    ax4.title = "Low-Density"
+    # hidedecorations!(ax4, ticklabels=false, ticks=false, label=false)
+
+    ##-- LABELS --##
+    f[1:2, 3] = Legend(
+        f,
+        [sc1, sc2, sc3, ln1, ln2],
+        ["Large Inserts", "Medium Inserts", "Small Inserts", "Unity", "Fitted Line"];
+        framevisible=false,
+    )
+
+    for (label, layout) in zip(["A", "B", "C", "D"], [f[1, 1], f[2, 1], f[1, 2], f[2, 2]])
+        Label(
+            layout[1, 1, TopLeft()],
+            label;
+            textsize=25,
+            padding=(0, 60, 25, 0),
+            halign=:right,
+        )
+    end
+
+    save(
+        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/linear_reg_tot.png",
+        f,
+    )
+    return f
+end
+
+# ╔═╡ d6e833fc-2b6c-43d7-8ede-8ba9bd8db804
+with_theme(medphys_theme) do
+    lin_reg()
+end
+
 # ╔═╡ 2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 function lin_reg_low()
     f = Figure()
@@ -854,7 +1045,7 @@ md"""
 """
 
 # ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
-path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/integrated_scoring";
+path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated_scoring";
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
 begin
@@ -963,7 +1154,7 @@ md"""
 """
 
 # ╔═╡ fcd83805-06e2-4cda-aa56-0c13c69424d8
-path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/agatston";
+path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/agatston";
 
 # ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
 begin
@@ -1051,6 +1242,12 @@ let
     rms_values2r = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model_ar))]
 end
 
+# ╔═╡ 81497806-88ba-4137-a760-6688eb8cdb01
+rms_values2r[1]
+
+# ╔═╡ 48bf6b92-a897-4bd3-a3be-8e94298242cd
+rms_values2r[2]
+
 # ╔═╡ 664e7901-31bc-4c49-8d6a-e770e0553c31
 begin
     newX2r = DataFrame(; X=collect(1:1000))
@@ -1066,7 +1263,7 @@ md"""
 """
 
 # ╔═╡ 594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
-path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac_simulation/output_repeated/swcs";
+path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/swcs";
 
 # ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
 begin
@@ -1340,7 +1537,7 @@ function reprod()
     end
 
     save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/reprod.png",
+        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/reprod.png",
         f,
     )
     return f
@@ -1715,7 +1912,6 @@ summ_zero_cac = DataFrame(
 # ╔═╡ Cell order:
 # ╠═c82bb3e6-e052-11ec-3392-eba4a4b464ba
 # ╠═2df207ed-cf9c-4d7d-8354-4da14f93276c
-# ╟─672bf97d-e5f8-4b06-bff4-9ae468501c78
 # ╟─4cf61487-3913-4e11-970e-4ca31a5ffc8d
 # ╠═57d46998-368a-4916-8380-ee49d5473a49
 # ╠═2c960bd8-ae64-453f-b29f-275bf5263774
@@ -1754,9 +1950,12 @@ summ_zero_cac = DataFrame(
 # ╠═dd644657-51e9-4b27-a186-6efba0bb83f8
 # ╠═d79d6478-0837-40f0-a7a5-270bf44d6166
 # ╠═2b5a8dca-faae-4163-ab14-ae4f98b2a7cc
+# ╟─658f80ab-912d-4af1-9b18-ad7ddc3dc1ca
+# ╠═fc3b072e-07f0-4aeb-8373-32ff2d46a9d5
+# ╟─d6e833fc-2b6c-43d7-8ede-8ba9bd8db804
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
-# ╠═c93ba92a-ccc7-4ae0-9207-300715821fc5
-# ╠═2e04217d-8dfb-48c9-85dc-9fb42cfd3039
+# ╟─c93ba92a-ccc7-4ae0-9207-300715821fc5
+# ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 # ╟─a4bc0a8a-4904-4217-97a9-44158f99ae70
 # ╟─98c3eaef-502e-4a20-b5b6-46a3d6b394d3
 # ╟─33e21324-b4f8-4b5a-b759-dc38057a612d
@@ -1829,6 +2028,8 @@ summ_zero_cac = DataFrame(
 # ╠═aea5b2cb-dc21-41a5-804d-54136c79b7c2
 # ╠═be382251-024f-49fb-a6bb-901a441fb5a2
 # ╠═a3996a98-d95f-4a51-8776-d6286f5c8ed5
+# ╠═81497806-88ba-4137-a760-6688eb8cdb01
+# ╠═48bf6b92-a897-4bd3-a3be-8e94298242cd
 # ╠═664e7901-31bc-4c49-8d6a-e770e0553c31
 # ╠═f278a992-1527-466c-909b-8ff83fed0a61
 # ╟─5bc912d4-be86-4cca-9e8b-8af31d269edf
