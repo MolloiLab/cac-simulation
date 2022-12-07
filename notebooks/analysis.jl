@@ -114,6 +114,9 @@ function remove_false_negatives(df, array, df_reprod, array_reprod)
 	return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
 end
 
+# ╔═╡ 043dec5f-07a8-472d-8082-c7a771f93270
+FIGURE_PATH = "stationary"
+
 # ╔═╡ e79c34d0-bf06-4a7a-93b7-e49f09ce3f4e
 md"""
 # Load CSVs
@@ -461,10 +464,7 @@ function lin_reg_norm()
         )
     end
 
-    # save(
-    #     "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/linear_reg_norm.png",
-    #     f,
-    # )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_normal.png"), f)
     return f
 end
 
@@ -686,10 +686,7 @@ function lin_reg_low()
         )
     end
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/linear_reg_low.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_low.png"), f)
     return f
 end
 
@@ -1303,10 +1300,7 @@ function reprod()
         )
     end
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/reprod.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "reproducibility.png"), f)
     return f
 end
 
@@ -1340,10 +1334,7 @@ function false_negative()
     ylims!(axtop; low=0, high=100)
     axtop.yticks = [0, 25, 50, 75, 100]
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/zero_cac.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
     return f
 end
 
@@ -1589,6 +1580,7 @@ summ_zero_cac = DataFrame(
 # ╟─4a255a58-b9a0-4175-a750-b2562361631d
 # ╟─7fc65de7-7514-4532-803e-1120150fd2fb
 # ╟─1ecb8fd3-a36b-4b06-8daf-e598e297ecf8
+# ╠═043dec5f-07a8-472d-8082-c7a771f93270
 # ╟─e79c34d0-bf06-4a7a-93b7-e49f09ce3f4e
 # ╟─4cf61487-3913-4e11-970e-4ca31a5ffc8d
 # ╠═57d46998-368a-4916-8380-ee49d5473a49

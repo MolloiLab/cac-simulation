@@ -114,6 +114,9 @@ function remove_false_negatives(df, array, df_reprod, array_reprod)
 	return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
 end
 
+# ╔═╡ 403b2c21-bbac-4a3c-84fa-5d83263b77d8
+FIGURE_PATH = "motion"
+
 # ╔═╡ 62e3c411-70e5-4453-9226-2d11cb3c91fd
 md"""
 # Load CSVs
@@ -445,10 +448,7 @@ function lin_reg_norm()
         )
     end
 
-    # save(
-    #     "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/linear_reg_norm.png",
-    #     f,
-    # )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_normal.png"), f)
     return f
 end
 
@@ -670,10 +670,7 @@ function lin_reg_low()
         )
     end
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures/linear_reg_low.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_low.png"), f)
     return f
 end
 
@@ -887,9 +884,6 @@ end;
 
 # ╔═╡ 03c62590-3615-4c06-b9f0-77267308c1a5
 df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small = remove_false_negatives(df_s, array_s, df_s_r, array_s_r, true);
-
-# ╔═╡ 99426eaa-b5a0-48aa-9731-843679fc74ab
-df_s_r_large
 
 # ╔═╡ 26904b95-eec0-4c10-b846-f18b66322a24
 r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
@@ -1280,10 +1274,7 @@ function reprod()
         )
     end
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/reprod.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "reproducibility.png"), f)
     return f
 end
 
@@ -1317,10 +1308,7 @@ function false_negative()
     ylims!(axtop; low=0, high=100)
     axtop.yticks = [0, 25, 50, 75, 100]
 
-    save(
-        "/Users/daleblack/Google Drive/Research/Papers/My Papers/cac-simulation/figures-review/zero_cac.png",
-        f,
-    )
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
     return f
 end
 
@@ -1566,6 +1554,7 @@ summ_zero_cac = DataFrame(
 # ╟─7f10366d-cc73-4ca7-9ebe-14c360cb8d34
 # ╟─cd1d88db-fc7b-4790-b57e-d5c6d34a9657
 # ╟─e201ebfc-17f2-4be8-83a6-06578ae0ee77
+# ╠═403b2c21-bbac-4a3c-84fa-5d83263b77d8
 # ╟─62e3c411-70e5-4453-9226-2d11cb3c91fd
 # ╟─f4927d17-9916-432d-9880-47ac4f83e859
 # ╠═fcd9c21d-2f6c-4421-bad1-bb5c239329fb
@@ -1595,7 +1584,7 @@ summ_zero_cac = DataFrame(
 # ╠═f7bb8133-456f-49ad-9690-a9b42e39144f
 # ╟─7e55db13-2b25-4283-bc42-411af0af0a00
 # ╟─e5366f83-eefc-41e1-9cda-ec9303808c20
-# ╟─7af4578d-f999-4ee1-9d83-994539399b92
+# ╠═7af4578d-f999-4ee1-9d83-994539399b92
 # ╟─0f086c11-fb86-48c3-a6bd-844207054dc9
 # ╟─0220f0a6-426a-4021-82c0-218793708ede
 # ╟─f2777887-fe96-4795-b0d8-8430749846fe
@@ -1608,8 +1597,7 @@ summ_zero_cac = DataFrame(
 # ╠═55a71f6d-e3af-4fce-bb49-f9a68831d8f0
 # ╟─0bd48352-a9a6-4b9c-a85d-31d2f99e96c6
 # ╟─047a921c-2c65-4a1a-8f9c-a7d1ade380ce
-# ╠═99426eaa-b5a0-48aa-9731-843679fc74ab
-# ╠═bc23bb1f-cb6d-4a80-82bd-9c587d29d39c
+# ╟─bc23bb1f-cb6d-4a80-82bd-9c587d29d39c
 # ╟─9d631928-295f-449d-91f5-7b52e2b059e2
 # ╠═5f5017c0-26f6-408a-98a6-f17fd436bd4e
 # ╠═bb042948-668f-45b1-a954-4b694e64ceaf
