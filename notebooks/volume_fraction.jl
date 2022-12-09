@@ -27,6 +27,9 @@ end
 # ╔═╡ 70fea9a9-8d77-40c4-84ea-b084d72b1b4c
 TableOfContents()
 
+# ╔═╡ e3a4316d-481c-4e2c-a592-03727ae494e8
+pwd()
+
 # ╔═╡ fea757e2-e0c6-48eb-b997-cbabd91399bf
 md"""
 ## Load DICOMS
@@ -38,12 +41,12 @@ All you need to do is set `base_path` once and leave it. After that, the only th
 begin
     SCAN_NUMBER = 1
 	venders = ["80", "100", "120", "135"]
-    VENDER = venders[2]
+    VENDER = venders[1]
     SIZE = "small"
     # SIZE = "medium"
     # SIZE = "large"
-    DENSITY = "low"
-    # DENSITY = "normal"
+    # DENSITY = "low"
+    DENSITY = "normal"
     TYPE = "volume_fraction"
     BASE_PATH = string(
         "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
@@ -123,10 +126,16 @@ md"""
 masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3) ÷ 2);
 
 # ╔═╡ 05ae002a-7a61-473e-aa06-9ebfcc51f623
-# @bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
+@bind a PlutoUI.Slider(1:size(masked_array, 3), default=10, show_value=true)
 
 # ╔═╡ 8018fb0b-5d1a-4f50-904f-b2686c75993f
-# heatmap(transpose(masked_array[:, :, a]); colormap=:grays)
+heatmap(transpose(masked_array[:, :, a]); colormap=:grays)
+
+# ╔═╡ f20119be-1939-48a7-aa8d-507003b4ebb3
+xs, yx = 185:235, 350:400
+
+# ╔═╡ 28f2e565-fde8-40d7-a5fd-9b944e77efb2
+heatmap(transpose(masked_array[xs, yx, a]); colormap=:grays)
 
 # ╔═╡ fcf12109-023a-4c6c-82a2-64471bf8ac1b
 # let
@@ -982,6 +991,7 @@ push!(dfs, df)
 # ╔═╡ Cell order:
 # ╠═3f9e21d6-a663-49ce-85a3-e5943b0be245
 # ╠═70fea9a9-8d77-40c4-84ea-b084d72b1b4c
+# ╠═e3a4316d-481c-4e2c-a592-03727ae494e8
 # ╟─fea757e2-e0c6-48eb-b997-cbabd91399bf
 # ╠═3e211eda-2d67-45f9-a7ee-1825bd746cbb
 # ╟─c62f5af3-a3d6-458b-bc72-3ac0f3372323
@@ -995,8 +1005,10 @@ push!(dfs, df)
 # ╟─899a8652-c961-4e65-93ec-d75f0a082e87
 # ╟─5cbb0bbb-96b9-4a2f-80d8-f582d4f822e0
 # ╠═5b663e10-4498-4f11-aaf9-7c49b25b9fe1
-# ╠═05ae002a-7a61-473e-aa06-9ebfcc51f623
+# ╟─05ae002a-7a61-473e-aa06-9ebfcc51f623
 # ╠═8018fb0b-5d1a-4f50-904f-b2686c75993f
+# ╠═f20119be-1939-48a7-aa8d-507003b4ebb3
+# ╠═28f2e565-fde8-40d7-a5fd-9b944e77efb2
 # ╠═fcf12109-023a-4c6c-82a2-64471bf8ac1b
 # ╠═5c3e4fe5-1ad8-4cff-8382-9fda0a05d168
 # ╠═b925bdde-25e5-4560-bfef-0d822011f781
