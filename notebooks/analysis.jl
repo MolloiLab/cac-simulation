@@ -693,11 +693,7 @@ md"""
 path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated";
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
-begin
-    df_i_r = CSV.read(string(path_integrated_r, "/full2.csv"), DataFrame)
-    df_i_r, df_i_r_rest = groupby(df_i_r, :blur)
-    df_i_r = df_i_r[!, 2:end]
-end;
+df_i_r = CSV.read(string(path_integrated_r, "/full2.csv"), DataFrame);
 
 # ╔═╡ 4f5328e7-66dd-433c-a7f6-5dc461c83a4c
 df_i_low_r, df_i_normal_r = groupby(df_i_r, :DENSITY);
@@ -726,11 +722,7 @@ md"""
 path_volume_fraction_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/volume_fraction";
 
 # ╔═╡ d2e4fa84-1f12-4924-823a-6ea7ab0d3d8e
-begin
-    df_vf_r = CSV.read(string(path_volume_fraction_r, "/full2.csv"), DataFrame)
-    df_vf_r, df_vf_r_rest = groupby(df_vf_r, :blur)
-    df_vf_r = df_vf_r[!, 2:end]
-end;
+df_vf_r = CSV.read(string(path_volume_fraction_r, "/full2.csv"), DataFrame);
 
 # ╔═╡ 101b02a5-9e67-460d-9db0-140684bd1e11
 df_vf_low_r, df_vf_normal_r = groupby(df_vf_r, :DENSITY);
@@ -759,11 +751,7 @@ md"""
 path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/agatston";
 
 # ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
-begin
-    df_a_r = CSV.read(string(path_agat_r, "/full2.csv"), DataFrame)
-    df_a_r, df_a_r_rest = groupby(df_a_r, :blur)
-    df_a_r = df_a_r[!, 2:end]
-end;
+df_a_r = CSV.read(string(path_agat_r, "/full2.csv"), DataFrame);
 
 # ╔═╡ 869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
 df_a_low_r, df_a_normal_r = groupby(df_a_r, :DENSITY);
@@ -792,11 +780,7 @@ md"""
 path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/swcs";
 
 # ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
-begin
-    df_s_r = CSV.read(string(path_swcs_r, "/full2.csv"), DataFrame)
-    df_s_r, df_s_r_rest = groupby(df_s_r, :blur)
-    df_s_r = df_s_r[!, 2:end]
-end;
+df_s_r = CSV.read(string(path_swcs_r, "/full2.csv"), DataFrame);
 
 # ╔═╡ a9f68d7e-7818-47d5-ba1f-965634225b30
 df_s_low_r, df_s_normal_r = groupby(df_s_r, :DENSITY);

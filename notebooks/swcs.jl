@@ -37,8 +37,8 @@ begin
     SCAN_NUMBER = 1
     VENDER = "100"
     # SIZE = "small"
-    SIZE = "medium"
-    # SIZE = "large"
+    # SIZE = "medium"
+    SIZE = "large"
     # DENSITY = "low"
     DENSITY = "normal"
     TYPE = "swcs"
@@ -154,7 +154,7 @@ md"""
 # ╔═╡ d8b8d96e-16ac-4412-b049-6287a933730c
 masked_array, center_insert, mask = mask_heart(header, dcm_array, size(dcm_array, 3) ÷ 2);
 
-# ╔═╡ 043cffd4-1cc1-4a73-9fef-0a4519b45ee4
+# ╔═╡ 7cde12ee-db55-4030-8d1d-8031cd679674
 center_insert
 
 # ╔═╡ 0e91e32b-aa3a-4b3b-a4b9-7b8fbaab132b
@@ -366,101 +366,11 @@ function center_points_simulation(dcm_array, output, header, tmp_center, CCI_sli
 	return center, cent1, cent2, cent3
 end
 
-# ╔═╡ bcd99037-53d4-4116-a899-c7a75cf065d7
-function calc_centers_simulation(dcm_array, output, header, tmp_center, CCI_slice)
-    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-    center, center1, center2, center3 = center_points_simulation(
-        dcm_array, output, header, tmp_center, CCI_slice
-    )
-    centers = Dict()
-    for center_index in (center1, center2, center3)
-        side_x = abs(center[1] - center_index[1])
-        side_y = abs(center[2] - center_index[2])
-        angle = angle_calc(side_x, side_y)
-        if (center_index[1] < center[1] && center_index[2] < center[2])
-            medium_calc = [
-                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
-            ]
-
-        elseif (center_index[1] < center[1] && center_index[2] > center[2])
-            medium_calc = [
-                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
-            ]
-
-        elseif (center_index[1] > center[1] && center_index[2] < center[2])
-            medium_calc = [
-                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
-            ]
-
-        elseif (center_index[1] > center[1] && center_index[2] > center[2])
-            medium_calc = [
-                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
-            ]
-            low_calc = [
-                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
-                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
-            ]
-
-        elseif (side_x == 0 && center_index[2] < center[2])
-            medium_calc = [center_index[1], center_index[2] + (10.5 / PixelSpacing[2])]
-            low_calc = [center_index[1], center_index[2] + (17 / PixelSpacing[2])]
-
-        elseif (side_x == 0 && center_index[2] > center[2])
-            medium_calc = [center_index[1], center_index[2] - (10.5 / PixelSpacing[2])]
-            low_calc = [center_index[1], center_index[2] - (17 / PixelSpacing[2])]
-
-        elseif (center_index[1] > center[1] && side_y == 0)
-            medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]), center_index[2]]
-            low_calc = [center_index[1] - (17 / PixelSpacing[1]), center_index[2]]
-
-        elseif (center_index[1] > center[1] && side_y == 0)
-            medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]), center_index[2]]
-            low_calc = [(center_index[1] + (17 / PixelSpacing[1])), center_index[1]]
-
-        else
-            error("unknown angle")
-        end
-
-        if center_index == center1
-            centers[:Large_HD] = Int.(round.(center_index))
-            centers[:Medium_HD] = Int.(round.(medium_calc))
-            centers[:Small_HD] = Int.(round.(low_calc))
-
-        elseif center_index == center2
-            centers[:Large_MD] = Int.(round.(center_index))
-            centers[:Medium_MD] = Int.(round.(medium_calc))
-            centers[:Small_MD] = Int.(round.(low_calc))
-
-        elseif center_index == center3
-            centers[:Large_LD] = Int.(round.(center_index))
-            centers[:Medium_LD] = Int.(round.(medium_calc))
-            centers[:Small_LD] = Int.(round.(low_calc))
-
-        else
-            nothing
-        end
-    end
-    return centers
-end
-
 # ╔═╡ bd6a4dee-1055-4c14-bafd-74b64daa0715
-insert_centers = calc_centers_simulation(dcm_array, output, header, center_insert, slice_CCI)
+insert_centers = calc_centers_simulation(dcm_array, output, header, center_insert, 5)
+
+# ╔═╡ 78099a0f-93d8-4b72-8101-9ec86ac67762
+slice_CCI
 
 # ╔═╡ d0194709-f4f5-4f7a-acba-76b600dcff92
 center_large_LD = insert_centers[:Large_LD]
@@ -1178,8 +1088,8 @@ push!(dfs, df)
 # ╟─9466ff87-9cef-4f4e-905c-d19070dd6890
 # ╟─1c2fa6f8-201d-40ae-8c03-7e5c5893fc1e
 # ╟─a4ae678d-a7f1-4bfa-8d22-554583683089
+# ╠═7cde12ee-db55-4030-8d1d-8031cd679674
 # ╠═d8b8d96e-16ac-4412-b049-6287a933730c
-# ╠═043cffd4-1cc1-4a73-9fef-0a4519b45ee4
 # ╟─0e91e32b-aa3a-4b3b-a4b9-7b8fbaab132b
 # ╠═1ec97def-1513-4309-a6e8-19d7ecfddc25
 # ╟─fdad818f-1aff-44f7-8fd8-d625b7b873dc
@@ -1208,8 +1118,8 @@ push!(dfs, df)
 # ╠═84df1941-72a6-4cf5-9e6e-7f79d2534dd6
 # ╠═8b601177-be58-4f32-a32f-2bc675c6364a
 # ╠═7ac82afc-58a8-46f3-8027-5504d8157e71
-# ╠═bcd99037-53d4-4116-a899-c7a75cf065d7
 # ╠═bd6a4dee-1055-4c14-bafd-74b64daa0715
+# ╠═78099a0f-93d8-4b72-8101-9ec86ac67762
 # ╠═d0194709-f4f5-4f7a-acba-76b600dcff92
 # ╠═72dcf6e7-8fb8-47f7-bfaa-f5529210e8d0
 # ╟─65c9df3c-ea01-48fa-b192-52b3f3b76f9b

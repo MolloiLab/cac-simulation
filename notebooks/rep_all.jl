@@ -67,9 +67,6 @@ function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
 end
 
-# ╔═╡ 4c0ea41d-8c95-4bef-b375-aaba2042cc03
-TYPE1 = "volume_fraction"
-
 # ╔═╡ 50a74032-8b52-4803-b130-303a20e0c49c
 VENDERS = ["80", "100", "120", "135"]
 
@@ -1135,17 +1132,16 @@ end
 # ╠═aeb1fa4d-affe-49c8-a555-770092794242
 # ╠═a263b900-72a7-4914-9f71-b068b8ae910c
 # ╠═361b88e6-869c-4c79-985b-6cb40eb66cef
-# ╠═f314e335-df3a-4115-96f2-e7a8c63aeee6
-# ╠═7a5de9b2-25e3-4c70-981f-768b13113093
-# ╠═c77f25d2-6596-4b51-a586-6c75b8534d8a
-# ╠═223a3fa6-6244-4f4e-9366-37a0fad1474e
-# ╠═7c0c6116-1675-4d43-befb-dd6a18e3454b
-# ╠═e1f68840-1eae-4939-9985-68cd2c8b680a
-# ╠═72677ba6-2004-4c56-8c66-563155256da3
-# ╠═4c0ea41d-8c95-4bef-b375-aaba2042cc03
 # ╠═50a74032-8b52-4803-b130-303a20e0c49c
 # ╠═f4d7f4f6-e948-42de-b8d1-405a322dde86
 # ╠═df35ac7a-2a17-4fcf-a60c-869b654e53fd
+# ╟─f314e335-df3a-4115-96f2-e7a8c63aeee6
+# ╟─7a5de9b2-25e3-4c70-981f-768b13113093
+# ╟─c77f25d2-6596-4b51-a586-6c75b8534d8a
+# ╟─223a3fa6-6244-4f4e-9366-37a0fad1474e
+# ╟─7c0c6116-1675-4d43-befb-dd6a18e3454b
+# ╟─e1f68840-1eae-4939-9985-68cd2c8b680a
+# ╟─72677ba6-2004-4c56-8c66-563155256da3
 # ╠═fc543228-f307-4aa5-b805-da855c62b609
 # ╟─0f7901f9-cab9-434a-ac18-fe57148f810b
 # ╠═f5b3fbf7-2e82-4055-80ab-3a63c476e4bb

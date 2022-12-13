@@ -67,9 +67,6 @@ function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
 end
 
-# ╔═╡ 5470e42a-c562-4b4e-b4e4-37c0bf61adbf
-TYPE1 = "volume_fraction"
-
 # ╔═╡ 1af7db2f-126d-4c5e-8091-7b937744b22c
 VENDERS = ["80", "100", "120", "135"]
 
@@ -80,7 +77,97 @@ SIZES = ["small", "medium", "large"]
 DENSITIES = ["low", "normal"]
 
 # ╔═╡ 8e903267-2aca-4cf0-9970-54ccf4ef0f60
+function calc_centers_simulation(dcm_array, output, header, tmp_center, CCI_slice)
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    center, center1, center2, center3 = center_points_simulation(
+        dcm_array, output, header, tmp_center, CCI_slice
+    )
+    centers = Dict()
+    for center_index in (center1, center2, center3)
+        side_x = abs(center[1] - center_index[1])
+        side_y = abs(center[2] - center_index[2])
+        angle = angle_calc(side_x, side_y)
+        if (center_index[1] < center[1] && center_index[2] < center[2])
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
 
+        elseif (center_index[1] < center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] < center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (side_x == 0 && center_index[2] < center[2])
+            medium_calc = [center_index[1], center_index[2] + (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] + (17 / PixelSpacing[2])]
+
+        elseif (side_x == 0 && center_index[2] > center[2])
+            medium_calc = [center_index[1], center_index[2] - (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] - (17 / PixelSpacing[2])]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]), center_index[2]]
+            low_calc = [center_index[1] - (17 / PixelSpacing[1]), center_index[2]]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]), center_index[2]]
+            low_calc = [(center_index[1] + (17 / PixelSpacing[1])), center_index[1]]
+
+        else
+            error("unknown angle")
+        end
+
+        if center_index == center1
+            centers[:Large_HD] = Int.(round.(center_index))
+            centers[:Medium_HD] = Int.(round.(medium_calc))
+            centers[:Small_HD] = Int.(round.(low_calc))
+
+        elseif center_index == center2
+            centers[:Large_MD] = Int.(round.(center_index))
+            centers[:Medium_MD] = Int.(round.(medium_calc))
+            centers[:Small_MD] = Int.(round.(low_calc))
+
+        elseif center_index == center3
+            centers[:Large_LD] = Int.(round.(center_index))
+            centers[:Medium_LD] = Int.(round.(medium_calc))
+            centers[:Small_LD] = Int.(round.(low_calc))
+
+        else
+            nothing
+        end
+    end
+    return centers
+end
 
 # ╔═╡ 73f69fdd-20e7-4aa6-9a00-942ab061433c
 begin
@@ -125,6 +212,9 @@ begin
                 calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
                     masked_array, header; calcium_threshold=thresh
                 )
+				if slice_CCI == 6
+					slice_CCI = 5
+				end
 
                 root_new = string(
                     "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
@@ -1138,17 +1228,16 @@ end
 # ╠═e8ce5c83-98b6-4ec4-beac-677fd24ce62d
 # ╠═c7a8708a-14b3-418c-9a26-a45f8b84711b
 # ╠═992dca9e-3664-4798-a435-72ecd4c797d7
-# ╠═1f88f342-7418-4d8a-af66-53a985f10209
-# ╠═2e03d03e-c048-48ce-8b5a-449bea68f258
-# ╠═e5e63f2b-38de-41bc-9785-576d8f3bb8d3
-# ╠═766dcf5a-b778-423a-b39b-610299fcf910
-# ╠═39eebc5b-e16a-43ae-abdd-19e44813e9c8
-# ╠═872ec5e3-6001-40a1-b5c6-075b3560d34d
-# ╠═26fee6aa-cbf1-475b-8553-8dab04e0f80d
-# ╠═5470e42a-c562-4b4e-b4e4-37c0bf61adbf
 # ╠═1af7db2f-126d-4c5e-8091-7b937744b22c
 # ╠═3fa8dba1-e564-410c-9ce5-36870795f493
 # ╠═0d2127b5-489a-401e-a7eb-9c2f5a0aa22a
+# ╟─1f88f342-7418-4d8a-af66-53a985f10209
+# ╟─2e03d03e-c048-48ce-8b5a-449bea68f258
+# ╟─e5e63f2b-38de-41bc-9785-576d8f3bb8d3
+# ╟─766dcf5a-b778-423a-b39b-610299fcf910
+# ╟─39eebc5b-e16a-43ae-abdd-19e44813e9c8
+# ╟─872ec5e3-6001-40a1-b5c6-075b3560d34d
+# ╟─26fee6aa-cbf1-475b-8553-8dab04e0f80d
 # ╠═8e903267-2aca-4cf0-9970-54ccf4ef0f60
 # ╠═73f69fdd-20e7-4aa6-9a00-942ab061433c
 # ╟─f4e99c67-20e0-44d8-9bb0-e4ae7c162ad1

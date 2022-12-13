@@ -26,6 +26,15 @@ OUTPUT = "output_repeated"
 # ╔═╡ c2e4696a-e2e2-4f02-ab06-9ebe62732d0b
 SAVE_DF = "motion.csv"
 
+# ╔═╡ bcb96a7f-7553-426e-a1f5-317bf55d1856
+VENDERS = ["80", "100", "120", "135"]
+
+# ╔═╡ 567e50fb-3d49-4136-aa32-a0ff38a61c88
+SIZES = ["small", "medium", "large"]
+
+# ╔═╡ fdb032f0-3949-423f-9bd9-08b53d65f243
+DENSITIES = ["low", "normal"]
+
 # ╔═╡ e73c0eea-3ac4-42ad-a118-040729af29cc
 function create_mask(array, mask)
     @assert size(array) == size(mask)
@@ -67,18 +76,6 @@ function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
 end
 
-# ╔═╡ 516d8006-e325-405d-b4dc-de346421b30e
-TYPE1 = "volume_fraction"
-
-# ╔═╡ bcb96a7f-7553-426e-a1f5-317bf55d1856
-VENDERS = ["80", "100", "120", "135"]
-
-# ╔═╡ 567e50fb-3d49-4136-aa32-a0ff38a61c88
-SIZES = ["small", "medium", "large"]
-
-# ╔═╡ fdb032f0-3949-423f-9bd9-08b53d65f243
-DENSITIES = ["low", "normal"]
-
 # ╔═╡ b26eab05-14e1-40ad-980b-eb8f5206542b
 begin
     dfs_vf = []
@@ -98,7 +95,6 @@ begin
                 SCAN_NUMBER = 1
                 BASE_PATH = joinpath("/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation", IMAGES, SIZE, DENSITY)
                 root_path = joinpath(BASE_PATH, string(VENDER * "-motion"))
-				@info root_path
                 dcm_path_list = dcm_list_builder(root_path)
                 pth = dcm_path_list[SCAN_NUMBER]
                 scan = basename(pth)
@@ -1136,17 +1132,16 @@ end
 # ╠═0028f871-502e-43dd-a43a-624c032f5c8e
 # ╠═0f466539-11a6-4d6d-b579-53ffb9a25a39
 # ╠═c2e4696a-e2e2-4f02-ab06-9ebe62732d0b
-# ╠═e73c0eea-3ac4-42ad-a118-040729af29cc
-# ╠═cb23368e-79f8-4db0-b272-430956751ff6
-# ╠═10a9aa52-a8ed-4e76-ba90-43d8c77a33b7
-# ╠═715a8838-a7f0-437d-aa5f-68744e7ca668
-# ╠═facd5777-30ae-4869-9ccc-5e4128cc2de7
-# ╠═e7626765-d2ca-4129-8b47-f5925a2c0eb1
-# ╠═e6387a3a-2377-4761-a6c4-77e375afb372
-# ╠═516d8006-e325-405d-b4dc-de346421b30e
 # ╠═bcb96a7f-7553-426e-a1f5-317bf55d1856
 # ╠═567e50fb-3d49-4136-aa32-a0ff38a61c88
 # ╠═fdb032f0-3949-423f-9bd9-08b53d65f243
+# ╟─e73c0eea-3ac4-42ad-a118-040729af29cc
+# ╟─cb23368e-79f8-4db0-b272-430956751ff6
+# ╟─10a9aa52-a8ed-4e76-ba90-43d8c77a33b7
+# ╟─715a8838-a7f0-437d-aa5f-68744e7ca668
+# ╟─facd5777-30ae-4869-9ccc-5e4128cc2de7
+# ╟─e7626765-d2ca-4129-8b47-f5925a2c0eb1
+# ╟─e6387a3a-2377-4761-a6c4-77e375afb372
 # ╠═b26eab05-14e1-40ad-980b-eb8f5206542b
 # ╟─8e234939-154a-486d-a5ed-9fc9f2749965
 # ╠═1e6799f1-985c-46c0-adb3-089e40d19f0d
