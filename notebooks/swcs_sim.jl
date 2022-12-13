@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.14
+# v0.19.16
 
 using Markdown
 using InteractiveUtils
@@ -37,11 +37,11 @@ begin
     SCAN_NUMBER = 1
     VENDER = "80"
     # SIZE = "small"
-    # SIZE = "medium"
-    SIZE = "large"
+    SIZE = "medium"
+    # SIZE = "large"
     # DENSITY = "low"
     DENSITY = "normal"
-    TYPE = "agatston"
+    TYPE = "swcs"
     BASE_PATH = string(
         "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
         SIZE,
@@ -57,7 +57,7 @@ md"""
 """
 
 # ╔═╡ e0bf7c37-4de9-4bd4-802d-c9df53dfa35c
-root_path = string(BASE_PATH, VENDER)
+root_path = string(BASE_PATH, VENDER, "-motion")
 
 # ╔═╡ d29cfbc0-aa1d-475f-8d5b-6572ae96bb10
 dcm_path_list = dcm_list_builder(root_path)
@@ -320,8 +320,147 @@ output = calc_output(masked_array, header, 5, thresh, trues(3, 3));
 # ╔═╡ 8b601177-be58-4f32-a32f-2bc675c6364a
 heatmap(output[2])
 
+# ╔═╡ 7ac82afc-58a8-46f3-8027-5504d8157e71
+function center_points_simulation(dcm_array, output, header, tmp_center, CCI_slice)
+	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
+    sizes = []
+    for row in eachrow(output[3])
+		area = row[:area]
+		append!(sizes, area)
+	end
+
+	centroids = output[4]
+    largest = Dict()
+    for index in 1:length(centroids)
+		x = centroids[index][1]
+		y = centroids[index][2]
+		dist_loc = sqrt((tmp_center[2] - x)^2 + (tmp_center[1] - y)^2)
+        dist_loc *= PixelSpacing[1]
+        if dist_loc > 31
+            largest[index] = [round(y), round(x)]
+        else
+            nothing
+		end
+	end
+
+    max_dict = Dict()
+	radius = round(2.5 / PixelSpacing[1], RoundUp)
+    for key in largest
+        tmp_arr = create_circular_mask(rows, cols, (key[2][2], key[2][1]), radius)
+        tmp_arr = @. abs(tmp_arr * dcm_array[:,:,CCI_slice]) + abs(tmp_arr * dcm_array[:,:,CCI_slice - 1]) + abs(tmp_arr * dcm_array[:,:,CCI_slice + 1])
+        tmp_arr = @. ifelse(tmp_arr == 0, missing, tmp_arr)
+        max_dict[key[1]] = median(skipmissing(tmp_arr))
+	end
+    _, large1_key = maximum(zip(values(max_dict), keys(max_dict)))
+    center1 = largest[large1_key]
+	
+	center = vec(tmp_center')
+	p1 = vec(center1')
+	offset = -2π/180
+	offset2 = -5π/180
+	p2, p3 = find_triangle_points(p1, center; offset=offset, offset2=offset2)
+	cent1, cent2, cent3 = vec(p1'), vec(p2'), vec(p3')
+	
+    center = find_circle(cent1, cent2, cent3)
+	return center, cent1, cent2, cent3
+end
+
+# ╔═╡ bcd99037-53d4-4116-a899-c7a75cf065d7
+function calc_centers_simulation(dcm_array, output, header, tmp_center, CCI_slice)
+    PixelSpacing = PhantomSegmentation.get_pixel_size(header)
+    center, center1, center2, center3 = center_points_simulation(
+        dcm_array, output, header, tmp_center, CCI_slice
+    )
+    centers = Dict()
+    for center_index in (center1, center2, center3)
+        side_x = abs(center[1] - center_index[1])
+        side_y = abs(center[2] - center_index[2])
+        angle = angle_calc(side_x, side_y)
+        if (center_index[1] < center[1] && center_index[2] < center[2])
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] < center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] + (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] + (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] < center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] + (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (center_index[1] > center[1] && center_index[2] > center[2])
+            medium_calc = [
+                center_index[1] - (10.5 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (10.5 / PixelSpacing[2]) * cos(angle)),
+            ]
+            low_calc = [
+                center_index[1] - (17 / PixelSpacing[1]) * sin(angle),
+                (center_index[2] - (17 / PixelSpacing[2]) * cos(angle)),
+            ]
+
+        elseif (side_x == 0 && center_index[2] < center[2])
+            medium_calc = [center_index[1], center_index[2] + (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] + (17 / PixelSpacing[2])]
+
+        elseif (side_x == 0 && center_index[2] > center[2])
+            medium_calc = [center_index[1], center_index[2] - (10.5 / PixelSpacing[2])]
+            low_calc = [center_index[1], center_index[2] - (17 / PixelSpacing[2])]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [center_index[1] - (10.5 / PixelSpacing[1]), center_index[2]]
+            low_calc = [center_index[1] - (17 / PixelSpacing[1]), center_index[2]]
+
+        elseif (center_index[1] > center[1] && side_y == 0)
+            medium_calc = [center_index[1] + (10.5 / PixelSpacing[1]), center_index[2]]
+            low_calc = [(center_index[1] + (17 / PixelSpacing[1])), center_index[1]]
+
+        else
+            error("unknown angle")
+        end
+
+        if center_index == center1
+            centers[:Large_HD] = Int.(round.(center_index))
+            centers[:Medium_HD] = Int.(round.(medium_calc))
+            centers[:Small_HD] = Int.(round.(low_calc))
+
+        elseif center_index == center2
+            centers[:Large_MD] = Int.(round.(center_index))
+            centers[:Medium_MD] = Int.(round.(medium_calc))
+            centers[:Small_MD] = Int.(round.(low_calc))
+
+        elseif center_index == center3
+            centers[:Large_LD] = Int.(round.(center_index))
+            centers[:Medium_LD] = Int.(round.(medium_calc))
+            centers[:Small_LD] = Int.(round.(low_calc))
+
+        else
+            nothing
+        end
+    end
+    return centers
+end
+
 # ╔═╡ bd6a4dee-1055-4c14-bafd-74b64daa0715
-insert_centers = calc_centers(dcm_array, output, header, center_insert, slice_CCI)
+insert_centers = calc_centers_simulation(dcm_array, output, header, center_insert, slice_CCI)
 
 # ╔═╡ d0194709-f4f5-4f7a-acba-76b600dcff92
 center_large_LD = insert_centers[:Large_LD]
@@ -1068,6 +1207,8 @@ push!(dfs, df)
 # ╟─c3b659fe-b9bc-44d6-8cf1-5ad18c4fa346
 # ╠═84df1941-72a6-4cf5-9e6e-7f79d2534dd6
 # ╠═8b601177-be58-4f32-a32f-2bc675c6364a
+# ╠═7ac82afc-58a8-46f3-8027-5504d8157e71
+# ╠═bcd99037-53d4-4116-a899-c7a75cf065d7
 # ╠═bd6a4dee-1055-4c14-bafd-74b64daa0715
 # ╠═d0194709-f4f5-4f7a-acba-76b600dcff92
 # ╠═72dcf6e7-8fb8-47f7-bfaa-f5529210e8d0

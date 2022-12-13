@@ -7,11 +7,11 @@ using InteractiveUtils
 # ╔═╡ c82bb3e6-e052-11ec-3392-eba4a4b464ba
 # ╠═╡ show_logs = false
 begin
-    using Pkg
-    Pkg.activate(".")
+	using Pkg
+	Pkg.activate(".")
 
     using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase
-    using StatsBase: quantile!, rmsd
+	using StatsBase: quantile!, rmsd
 end
 
 # ╔═╡ 2df207ed-cf9c-4d7d-8354-4da14f93276c
@@ -43,11 +43,11 @@ function prepare_linear_regression(df)
     r_squared = GLM.r2(model)
     rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
 
-    x = DataFrame(; X=collect(1:1000))
+	x = DataFrame(; X=collect(1:1000))
     fitted_line = GLM.predict(model, x)
-    coefficient = coef(model)
+	coefficient = coef(model)
 
-    return r_squared, rms_values, fitted_line, coefficient
+	return r_squared, rms_values, fitted_line, coefficient
 end
 
 # ╔═╡ 4a255a58-b9a0-4175-a750-b2562361631d
@@ -67,51 +67,51 @@ function prepare_linear_regression(df_large, df_medium, df_small, df_reprod_larg
     r_squared = GLM.r2(model)
     rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
 
-    x = DataFrame(; X=collect(1:1000))
+	x = DataFrame(; X=collect(1:1000))
     fitted_line = GLM.predict(model, x)
-    coefficient = coef(model)
+	coefficient = coef(model)
 
-    return r_squared, rms_values, fitted_line, coefficient
+	return r_squared, rms_values, fitted_line, coefficient
 end
 
 # ╔═╡ 7fc65de7-7514-4532-803e-1120150fd2fb
 function remove_false_negatives(df, array, df_reprod, array_reprod)
-
-    idxs_r_large = Tuple(findall(x -> x <= 0, array_reprod[:, 1]))
+	
+	idxs_r_large = Tuple(findall(x -> x <= 0, array_reprod[:, 1]))
     idxs_large = Tuple(findall(x -> x <= 0, array[:, 1]))
     indxs_large_tot = Tuple(unique([idxs_r_large..., idxs_large...]))
 
-    idxs_r_med = Tuple(findall(x -> x <= 0, array_reprod[:, 2]))
+	idxs_r_med = Tuple(findall(x -> x <= 0, array_reprod[:, 2]))
     idxs_med = Tuple(findall(x -> x <= 0, array[:, 2]))
     indxs_med_tot = Tuple(unique([idxs_r_med..., idxs_med...]))
 
-    idxs_r_small = Tuple(findall(x -> x <= 0, array_reprod[:, 3]))
+	idxs_r_small = Tuple(findall(x -> x <= 0, array_reprod[:, 3]))
     idxs_small = Tuple(findall(x -> x <= 0, array[:, 3]))
     indxs_small_tot = Tuple(unique([idxs_r_small..., idxs_small...]))
 
-    if length(indxs_large_tot) > 0
+	if length(indxs_large_tot) > 0
         df_large = df[Not(indxs_large_tot...), :]
         df_r_large = df_reprod[Not(indxs_large_tot...), :]
-    else
-        df_large = copy(df)
-        df_r_large = copy(df_reprod)
+	else
+		df_large = copy(df)
+		df_r_large = copy(df_reprod)
     end
     if length(indxs_med_tot) > 0
         df_med = df[Not(indxs_med_tot...), :]
         df_r_med = df_reprod[Not(indxs_med_tot...), :]
     else
-        df_med = copy(df)
-        df_r_med = copy(df_reprod)
+		df_med = copy(df)
+		df_r_med = copy(df_reprod)
     end
     if length(indxs_small_tot) > 0
         df_small = df[Not(indxs_small_tot...), :]
         df_r_small = df_reprod[Not(indxs_small_tot...), :]
-    else
-        df_small = copy(df)
-        df_r_small = copy(df_reprod)
+	else
+		df_small = copy(df)
+		df_r_small= copy(df_reprod)
     end
 
-    return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
+	return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
 end
 
 # ╔═╡ 043dec5f-07a8-472d-8082-c7a771f93270
@@ -128,14 +128,10 @@ md"""
 """
 
 # ╔═╡ 57d46998-368a-4916-8380-ee49d5473a49
-path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated_scoring";
+path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated";
 
 # ╔═╡ 2c960bd8-ae64-453f-b29f-275bf5263774
-begin
-    df_i = CSV.read(string(path_integrated, "/full2.csv"), DataFrame)
-    df_i, df_irest = groupby(df_i, :blur)
-    df_i = df_i[!, 2:end]
-end;
+df_i = CSV.read(string(path_integrated, "/motion.csv"), DataFrame);
 
 # ╔═╡ 7f4fae09-7916-4a98-a102-7f861900c457
 df_i_low, df_i_normal = groupby(df_i, :DENSITY);
@@ -155,11 +151,7 @@ md"""
 path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/agatston";
 
 # ╔═╡ 3fa3748a-22d6-49d8-9888-a749dca99ce2
-begin
-    df_a = CSV.read(string(path_agat, "/full2.csv"), DataFrame)
-    df_a, df_arest = groupby(df_a, :blur)
-    df_a = df_a[!, 2:end]
-end;
+df_a = CSV.read(string(path_agat, "/motion.csv"), DataFrame);
 
 # ╔═╡ c38b9994-7698-4c81-b65b-534b994d8ff0
 df_a_low, df_a_normal = groupby(df_a, :DENSITY);
@@ -179,11 +171,7 @@ md"""
 path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/swcs";
 
 # ╔═╡ 317f8c26-7b39-45c3-b9d3-02925d4b0514
-begin
-    df_s = CSV.read(string(path_swcs, "/full2.csv"), DataFrame)
-    df_s, df_srest = groupby(df_s, :blur)
-    df_s = df_s[!, 2:end]
-end;
+df_s = CSV.read(string(path_swcs, "/motion.csv"), DataFrame);
 
 # ╔═╡ 06deefa7-9170-4e2f-ac49-d6dc65c0af76
 df_s_low, df_s_normal = groupby(df_s, :DENSITY);
@@ -203,10 +191,7 @@ md"""
 path_vf = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/volume_fraction";
 
 # ╔═╡ 5e803aad-9d82-4801-aff6-3c1c2f748b02
-begin
-    df_vf = CSV.read(string(path_vf, "/motion.csv"), DataFrame)
-    # df_vf = df_vf[!, 2:end]
-end;
+df_vf = CSV.read(string(path_vf, "/motion.csv"), DataFrame);
 
 # ╔═╡ 5c76c3c7-bb56-4d90-8f0f-7f7d0e271d3c
 df_vf_low, df_vf_normal = groupby(df_vf, :DENSITY);
@@ -244,7 +229,7 @@ medphys_theme = Theme(;
         leftspinecolor=:black,
         titlefont=:Helvetica,
         titlesize=30,
-    )
+    ),
 )
 
 # ╔═╡ 7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
@@ -309,7 +294,7 @@ function lin_reg_norm()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[1, 1];
         placeholder="RMSE: $(trunc(rms_values_normal_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_i[2]; digits=3))",
         tellheight=false,
@@ -317,7 +302,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
 
     xlims!(ax1; low=0, high=200)
@@ -327,7 +312,7 @@ function lin_reg_norm()
     ax1.xlabel = "Known Mass (mg)"
     ax1.ylabel = "Calculated Mass (mg)"
     ax1.title = "Integrated (Normal-Density)"
-
+	
     ##-- B --##
     ax2 = Axis(f[2, 1])
 
@@ -367,7 +352,7 @@ function lin_reg_norm()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[2, 1];
         placeholder="RMSE: $(trunc(rms_values_normal_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_vf[2]; digits=3))",
         tellheight=false,
@@ -375,7 +360,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
 
     xlims!(ax2; low=0, high=200)
@@ -426,7 +411,7 @@ function lin_reg_norm()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[3, 1];
         placeholder="RMSE: $(trunc(rms_values_normal_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_a[2]; digits=3))",
         tellheight=false,
@@ -434,7 +419,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
 
     xlims!(ax2; low=0, high=200)
@@ -450,7 +435,7 @@ function lin_reg_norm()
         f,
         [sc1, sc2, sc3, ln1, ln2],
         ["Large Inserts", "Medium Inserts", "Small Inserts", "Unity", "Fitted Line"];
-        framevisible=false
+        framevisible=false,
     )
 
     for (label, layout) in zip(["A", "B", "C"], [f[1, 1], f[2, 1], f[3, 1]])
@@ -459,11 +444,11 @@ function lin_reg_norm()
             label;
             textsize=25,
             padding=(0, 90, 25, 0),
-            halign=:right
+            halign=:right,
         )
     end
 
-    save(joinpath(dirname(pwd()), "figures", FIGURE_PATH, "accuracy_normal.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_normal.png"), f)
     return f
 end
 
@@ -528,7 +513,7 @@ function lin_reg_low()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[1, 1];
         placeholder="RMSE: $(trunc(rms_values_low_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_i[2]; digits=3))",
         tellheight=false,
@@ -536,7 +521,7 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
 
     xlims!(ax1; low=0, high=25)
@@ -548,7 +533,7 @@ function lin_reg_low()
     ax1.title = "Integrated (Low-Density)"
     # hidedecorations!(ax1, ticklabels=false, ticks=false, label=false)
 
-    ##-- B --##
+	##-- B --##
     ax2 = Axis(f[2, 1])
 
     df4 = df_vf_low
@@ -587,7 +572,7 @@ function lin_reg_low()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[2, 1];
         placeholder="RMSE: $(trunc(rms_values_low_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_vf[2]; digits=3))",
         tellheight=false,
@@ -595,9 +580,9 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
-
+	
     xlims!(ax2; low=0, high=25)
     ylims!(ax2; low=-10, high=30)
     ax2.xticks = [0, 5, 10, 15, 20, 25]
@@ -646,7 +631,7 @@ function lin_reg_low()
     #     valign=:top,
     #     textsize=12,
     # )
-    Textbox(
+	Textbox(
         f[3, 1];
         placeholder="RMSE: $(trunc(rms_values_low_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_a[2]; digits=3))",
         tellheight=false,
@@ -654,7 +639,7 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12
+        textsize=12,
     )
 
     xlims!(ax2; low=0, high=25)
@@ -672,7 +657,7 @@ function lin_reg_low()
         f,
         [sc1, sc2, sc3, ln1, ln2],
         ["Large Inserts", "Medium Inserts", "Small Inserts", "Unity", "Fitted Line"];
-        framevisible=false
+        framevisible=false,
     )
 
     for (label, layout) in zip(["A", "B", "C"], [f[1, 1], f[2, 1], f[3, 1]])
@@ -681,11 +666,11 @@ function lin_reg_low()
             label;
             textsize=25,
             padding=(0, 90, 25, 0),
-            halign=:right
+            halign=:right,
         )
     end
 
-    save(joinpath(dirname(pwd()), "figures", FIGURE_PATH, "accuracy_low.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_low.png"), f)
     return f
 end
 
@@ -705,11 +690,11 @@ md"""
 """
 
 # ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
-path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated_scoring";
+path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated";
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
 begin
-    df_i_r = CSV.read(string(path_integrated_r, "/full2.csv"), DataFrame)
+    df_i_r = CSV.read(string(path_integrated_r, "/motion.csv"), DataFrame)
     df_i_r, df_i_r_rest = groupby(df_i_r, :blur)
     df_i_r = df_i_r[!, 2:end]
 end;
@@ -742,7 +727,7 @@ path_volume_fraction_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simula
 
 # ╔═╡ d2e4fa84-1f12-4924-823a-6ea7ab0d3d8e
 begin
-    df_vf_r = CSV.read(string(path_volume_fraction_r, "/full2.csv"), DataFrame)
+    df_vf_r = CSV.read(string(path_volume_fraction_r, "/motion.csv"), DataFrame)
     df_vf_r, df_vf_r_rest = groupby(df_vf_r, :blur)
     df_vf_r = df_vf_r[!, 2:end]
 end;
@@ -775,7 +760,7 @@ path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output
 
 # ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
 begin
-    df_a_r = CSV.read(string(path_agat_r, "/full2.csv"), DataFrame)
+    df_a_r = CSV.read(string(path_agat_r, "/motion.csv"), DataFrame)
     df_a_r, df_a_r_rest = groupby(df_a_r, :blur)
     df_a_r = df_a_r[!, 2:end]
 end;
@@ -808,7 +793,7 @@ path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output
 
 # ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
 begin
-    df_s_r = CSV.read(string(path_swcs_r, "/full2.csv"), DataFrame)
+    df_s_r = CSV.read(string(path_swcs_r, "/motion.csv"), DataFrame)
     df_s_r, df_s_r_rest = groupby(df_s_r, :blur)
     df_s_r = df_s_r[!, 2:end]
 end;
@@ -839,45 +824,45 @@ end
 
 # ╔═╡ 1ecb8fd3-a36b-4b06-8daf-e598e297ecf8
 function remove_false_negatives(df, array, df_reprod, array_reprod, swcs::Bool)
-    if swcs == true
-        idxs_r_large = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 1]))
-        idxs_large = Tuple(findall(x -> x <= mean_bkg_s, array[:, 1]))
-        global indxs_large_tot = Tuple(unique([idxs_r_large..., idxs_large...]))
-
-        idxs_r_med = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 2]))
-        idxs_med = Tuple(findall(x -> x <= mean_bkg_s, array[:, 2]))
-        indxs_med_tot = Tuple(unique([idxs_r_med..., idxs_med...]))
-
-        idxs_r_small = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 3]))
-        idxs_small = Tuple(findall(x -> x <= mean_bkg_s, array[:, 3]))
-        indxs_small_tot = Tuple(unique([idxs_r_small..., idxs_small...]))
-
-        if length(indxs_large_tot) > 0
-            df_large = df[Not(indxs_large_tot...), :]
-            df_r_large = df_reprod[Not(indxs_large_tot...), :]
-        else
-            df_large = copy(df)
-            df_r_large = copy(df_reprod)
-        end
-        if length(indxs_med_tot) > 0
-            df_med = df[Not(indxs_med_tot...), :]
-            df_r_med = df_reprod[Not(indxs_med_tot...), :]
-        else
-            df_med = copy(df)
-            df_r_med = copy(df_reprod)
-        end
-        if length(indxs_small_tot) > 0
-            df_small = df[Not(indxs_small_tot...), :]
-            df_r_small = df_reprod[Not(indxs_small_tot...), :]
-        else
-            df_small = copy(df)
-            df_r_small = copy(df_reprod)
-        end
-
-        return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
-    else
-        error("Not using SWCS)")
-    end
+	if swcs == true
+		idxs_r_large = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 1]))
+	    idxs_large = Tuple(findall(x -> x <= mean_bkg_s, array[:, 1]))
+	    global indxs_large_tot = Tuple(unique([idxs_r_large..., idxs_large...]))
+	
+		idxs_r_med = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 2]))
+	    idxs_med = Tuple(findall(x -> x <= mean_bkg_s, array[:, 2]))
+	    indxs_med_tot = Tuple(unique([idxs_r_med..., idxs_med...]))
+	
+		idxs_r_small = Tuple(findall(x -> x <= mean_bkg_s_r, array_reprod[:, 3]))
+	    idxs_small = Tuple(findall(x -> x <= mean_bkg_s, array[:, 3]))
+	    indxs_small_tot = Tuple(unique([idxs_r_small..., idxs_small...]))
+	
+		if length(indxs_large_tot) > 0
+	        df_large = df[Not(indxs_large_tot...), :]
+	        df_r_large = df_reprod[Not(indxs_large_tot...), :]
+		else
+			df_large = copy(df)
+			df_r_large = copy(df_reprod)
+	    end
+	    if length(indxs_med_tot) > 0
+	        df_med = df[Not(indxs_med_tot...), :]
+	        df_r_med = df_reprod[Not(indxs_med_tot...), :]
+	    else
+			df_med = copy(df)
+			df_r_med = copy(df_reprod)
+	    end
+	    if length(indxs_small_tot) > 0
+	        df_small = df[Not(indxs_small_tot...), :]
+	        df_r_small = df_reprod[Not(indxs_small_tot...), :]
+		else
+			df_small = copy(df)
+			df_r_small= copy(df_reprod)
+	    end
+	
+		return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
+	else
+		error("Not using SWCS)")
+	end
 end
 
 # ╔═╡ 3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
@@ -903,7 +888,7 @@ end;
 
 # ╔═╡ d3e13dcd-201a-49ab-86f7-a7d3320088c2
 begin
-    array_s = Array(df_s[!, 12:14])
+	array_s = Array(df_s[!, 12:14])
     array_s_80 = Array(df_s_80[!, 12:14])
     array_s_100 = Array(df_s_100[!, 12:14])
     array_s_120 = Array(df_s_120[!, 12:14])
@@ -990,7 +975,7 @@ function reprod()
         ax1,
         df_i_r_small[!, :calculated_mass_small],
         df_i_small[!, :calculated_mass_small];
-        color=:red
+        color=:red,
     )
     lines!(ax1, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax1, collect(1:1000), fitted_line_reprod_i; linestyle=:dashdot)
@@ -1018,7 +1003,7 @@ function reprod()
     #     )
     # end
 
-    if coefficient_reprod_i[1] > 0
+	if coefficient_reprod_i[1] > 0
         Textbox(
             f[1, 1];
             placeholder="RMSE: $(trunc(rms_values_reprod_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_i[2]; digits=3))",
@@ -1027,7 +1012,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     else
         Textbox(
@@ -1038,7 +1023,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     end
 
@@ -1050,26 +1035,26 @@ function reprod()
     ax1.ylabel = "Mass 2 (mg)"
     ax1.title = "Integrated"
 
-    ##-- B --##
+	##-- B --##
     ax2 = Axis(f[2, 1])
     scatter!(
         ax2,
         df_vf_r_large[!, :calculated_mass_large],
         df_vf_large[!, :calculated_mass_large];
-        label="Large Inserts"
+        label="Large Inserts",
     )
     scatter!(
         ax2,
         df_vf_r_medium[!, :calculated_mass_medium],
         df_vf_medium[!, :calculated_mass_medium];
-        label="Medium Inserts"
+        label="Medium Inserts",
     )
     scatter!(
         ax2,
         df_vf_r_small[!, :calculated_mass_small],
         df_vf_small[!, :calculated_mass_small];
         label="Small Inserts",
-        color=:red
+        color=:red,
     )
     lines!(ax2, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax2, collect(1:1000), fitted_line_reprod_vf; linestyle=:dashdot)
@@ -1097,7 +1082,7 @@ function reprod()
     #     )
     # end
 
-    if coefficient_reprod_vf[1] > 0
+	if coefficient_reprod_vf[1] > 0
         Textbox(
             f[2, 1];
             placeholder="RMSE: $(trunc(rms_values_reprod_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_vf[2]; digits=3))",
@@ -1106,7 +1091,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     else
         Textbox(
@@ -1117,7 +1102,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     end
 
@@ -1135,20 +1120,20 @@ function reprod()
         ax3,
         df_a_r_large[!, :calculated_mass_large],
         df_a_large[!, :calculated_mass_large];
-        label="Large Inserts"
+        label="Large Inserts",
     )
     scatter!(
         ax3,
         df_a_r_medium[!, :calculated_mass_medium],
         df_a_medium[!, :calculated_mass_medium];
-        label="Medium Inserts"
+        label="Medium Inserts",
     )
     scatter!(
         ax3,
         df_a_r_small[!, :calculated_mass_small],
         df_a_small[!, :calculated_mass_small];
         label="Small Inserts",
-        color=:red
+        color=:red,
     )
     lines!(ax3, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax3, collect(1:1000), fitted_line_reprod_a; linestyle=:dashdot)
@@ -1176,7 +1161,7 @@ function reprod()
     #     )
     # end
 
-    if coefficient_reprod_a[1] > 0
+	if coefficient_reprod_a[1] > 0
         Textbox(
             f[1, 2];
             placeholder="RMSE: $(trunc(rms_values_reprod_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_a[2]; digits=3))",
@@ -1185,7 +1170,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     else
         Textbox(
@@ -1196,7 +1181,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     end
 
@@ -1214,20 +1199,20 @@ function reprod()
         ax4,
         df_s_r_large[!, :calculated_swcs_large],
         df_s_large[!, :calculated_swcs_large];
-        label="Large Inserts"
+        label="Large Inserts",
     )
     scatter!(
         ax4,
         df_s_r_medium[!, :calculated_swcs_medium],
         df_s_medium[!, :calculated_swcs_medium];
-        label="Medium Inserts"
+        label="Medium Inserts",
     )
     scatter!(
         ax4,
         df_s_r_small[!, :calculated_swcs_small],
         df_s_small[!, :calculated_swcs_small];
         label="Small Inserts",
-        color=:red
+        color=:red,
     )
     lines!(ax4, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax4, collect(1:1000), fitted_line_reprod_s; linestyle=:dashdot, label="Fitted Line")
@@ -1255,7 +1240,7 @@ function reprod()
     #     )
     # end
 
-    if coefficient_reprod_s[1] > 0
+	if coefficient_reprod_s[1] > 0
         Textbox(
             f[2, 2];
             placeholder="RMSE: $(trunc(rms_values_reprod_s[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_s[2]; digits=3))",
@@ -1264,7 +1249,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     else
         Textbox(
@@ -1275,7 +1260,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12
+            textsize=12,
         )
     end
 
@@ -1295,11 +1280,11 @@ function reprod()
             label;
             textsize=25,
             padding=(0, 0, 40, 0),
-            halign=:right
+            halign=:right,
         )
     end
 
-    save(joinpath(dirname(pwd()), "figures", FIGURE_PATH, "reproducibility.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "reproducibility.png"), f)
     return f
 end
 
@@ -1321,8 +1306,8 @@ function false_negative()
 
     table = [1, 2, 3, 4]
     heights1 = [
-        (total_zero_i / total_cac) * 100,
-        (total_zero_vf / total_cac) * 100,
+		(total_zero_i / total_cac) * 100,
+		(total_zero_vf / total_cac) * 100,
         (total_zero_s / total_cac) * 100,
         (num_zero_a / total_cac) * 100,
     ]
@@ -1333,7 +1318,7 @@ function false_negative()
     ylims!(axtop; low=0, high=100)
     axtop.yticks = [0, 25, 50, 75, 100]
 
-    save(joinpath(dirname(pwd()), "figures", FIGURE_PATH, "false_negative.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
     return f
 end
 
@@ -1357,42 +1342,42 @@ md"""
 
 # ╔═╡ 21b03bf8-47ba-4915-936a-92c488671bb1
 parameters = [
-    "Manufacturer",
-    "CT System",
-    "Reconstruction",
-    "Tube Voltage (kVp)",
-    "Exposure Small (mR)",
-    "Exposure Medium (mR)",
-    "Exposure Large (mR)",
-    "Slice Thickness (mm)",
-    "Matrix Size Small",
-    "Mtrix Size Medium",
-    "Matrix Size Large",
-    "Detector Element Width (mm)",
-    "Detector Thickness (mm)",
+	"Manufacturer",
+	"CT System",
+	"Reconstruction",
+	"Tube Voltage (kVp)",
+	"Exposure Small (mR)",
+	"Exposure Medium (mR)",
+	"Exposure Large (mR)",
+	"Slice Thickness (mm)",
+	"Matrix Size Small",
+	"Mtrix Size Medium",
+	"Matrix Size Large",
+	"Detector Element Width (mm)",
+	"Detector Thickness (mm)",
 ]
 
 # ╔═╡ e0a66c8a-e1b6-4c70-9996-ec3fe62786f3
 simulations = [
-    "Canon"
-    "Aquilion One Vision"
-    "FBP"
-    "120"
-    "0.9"
-    "2"
-    "5.4"
-    "0.5"
-    "640x440"
-    "740x540"
-    "840x640"
-    "0.5"
-    "0.5"
+	"Canon"
+	"Aquilion One Vision"
+	"FBP"
+	"120"
+	"0.9"
+	"2"
+	"5.4"
+	"0.5"
+	"640x440"
+	"740x540"
+	"840x640"
+	"0.5"
+	"0.5"
 ]
 
 # ╔═╡ bf3b0e00-5f2b-435b-9717-96052f7e9071
 simulation_parameters = DataFrame(
-    "Parameter" => parameters,
-    "Simulation" => simulations
+	"Parameter" => parameters,
+	"Simulation" => simulations
 )
 
 # ╔═╡ 09e62a9b-4f42-4285-88de-3b90a8a4003a
@@ -1402,33 +1387,33 @@ md"""
 
 # ╔═╡ d74aa830-5a48-4535-8579-39ce2dc8142d
 kvp = [
-    80
-    100
-    120
-    135
+	80
+	100
+	120
+	135
 ]
 
 # ╔═╡ 6eed3e33-f8f1-41f8-96b1-6e38fa129733
 means = [
-    201.4898
-    174.3658
-    158.2645
-    152.8815
+	201.4898
+	174.3658
+	158.2645
+	152.8815
 ]
 
 # ╔═╡ 36962426-647f-4194-92cc-aed51c628484
 stds = [
-    34.3038
-    28.1708
-    22.9656
-    21.0778
+	34.3038
+	28.1708
+	22.9656
+	21.0778
 ]
 
 # ╔═╡ 512f3683-3231-4140-96d8-dd2378f5094d
 means_stds = DataFrame(
-    "kVp" => kvp,
-    "Mean" => means,
-    "Std" => stds
+	"kVp" => kvp,
+	"Mean" => means,
+	"Std" => stds
 )
 
 # ╔═╡ 235bc94e-166d-4df1-9ed6-f331e6e1cf0c
@@ -1448,31 +1433,31 @@ md"""
 
 # ╔═╡ 7c314dcf-aa06-491d-bb45-89c5c8006688
 r_squared_values_normal = [
-    r_squared_normal_i,
-    r_squared_normal_vf,
-    r_squared_normal_a,
+	r_squared_normal_i,
+	r_squared_normal_vf,
+	r_squared_normal_a,
 ]
 
 # ╔═╡ 5daffb8c-9387-4bdf-9fd1-46dd8bd1b873
 rmse_values_normal = [
-    rms_values_normal_i[1],
-    rms_values_normal_vf[1],
-    rms_values_normal_a[1]
+	rms_values_normal_i[1],
+	rms_values_normal_vf[1],
+	rms_values_normal_a[1]
 ]
 
 # ╔═╡ 9f1b2d37-1d54-4339-869a-a927c66618c4
 rmsd_values_normal = [
-    rms_values_normal_i[2],
-    rms_values_normal_vf[2],
-    rms_values_normal_a[2]
+	rms_values_normal_i[2],
+	rms_values_normal_vf[2],
+	rms_values_normal_a[2]
 ]
 
 # ╔═╡ a6c8ebe4-e598-4cb7-a2c2-568f9ddd1b3a
 summ_regression_normal = DataFrame(
-    "Techniques" => ["Integrated", "Volume Fraction", "Agatston"],
-    "R Correlation Coefficient" => r_squared_values_normal,
-    "RMSE" => rmse_values_normal,
-    "RMSD" => rmsd_values_normal
+	"Techniques" => ["Integrated", "Volume Fraction", "Agatston"],
+	"R Correlation Coefficient" => r_squared_values_normal,
+	"RMSE" => rmse_values_normal,
+	"RMSD" => rmsd_values_normal
 )
 
 # ╔═╡ 39f1f521-990a-4646-94bd-93def74bdafb
@@ -1482,31 +1467,31 @@ md"""
 
 # ╔═╡ 387c9e36-b67a-4aaa-8138-aef34951702e
 r_squared_values_low = [
-    r_squared_low_i,
-    r_squared_low_vf,
-    r_squared_low_a,
+	r_squared_low_i,
+	r_squared_low_vf,
+	r_squared_low_a,
 ]
 
 # ╔═╡ 7f5848a9-8d1b-4b81-b90f-d1c88a7f1fee
 rmse_values_low = [
-    rms_values_low_i[1],
-    rms_values_low_vf[1],
-    rms_values_low_a[1]
+	rms_values_low_i[1],
+	rms_values_low_vf[1],
+	rms_values_low_a[1]
 ]
 
 # ╔═╡ 142a8cb0-e296-47d1-b584-24a35b8d3339
 rmsd_values_low = [
-    rms_values_low_i[2],
-    rms_values_low_vf[2],
-    rms_values_low_a[2]
+	rms_values_low_i[2],
+	rms_values_low_vf[2],
+	rms_values_low_a[2]
 ]
 
 # ╔═╡ d3ebd2b6-c3c6-415a-b656-9025c2a66836
 summ_regression_low = DataFrame(
-    "Techniques" => ["Integrated", "Volume Fraction", "Agatston"],
-    "R Correlation Coefficient" => r_squared_values_low,
-    "RMSE" => rmse_values_low,
-    "RMSD" => rmsd_values_low
+	"Techniques" => ["Integrated", "Volume Fraction", "Agatston"],
+	"R Correlation Coefficient" => r_squared_values_low,
+	"RMSE" => rmse_values_low,
+	"RMSD" => rmsd_values_low
 )
 
 # ╔═╡ 4ab40ed8-eaa8-42a8-a9ef-5cd06161a9c2
@@ -1516,31 +1501,31 @@ md"""
 
 # ╔═╡ e9dc2696-d2a8-4c4f-8665-da526e242570
 r_squared_values_reprod = [
-    r_squared_reprod_i
-    r_squared_reprod_a
-    r_squared_reprod_s
+	r_squared_reprod_i
+	r_squared_reprod_a
+	r_squared_reprod_s
 ]
 
 # ╔═╡ 574b38a3-964a-4d7a-adf4-e36198c003a3
 rmse_values_reprod = [
-    rms_values_reprod_i[1]
-    rms_values_reprod_a[1]
-    rms_values_reprod_s[1]
+	rms_values_reprod_i[1]
+	rms_values_reprod_a[1]
+	rms_values_reprod_s[1]
 ]
 
 # ╔═╡ bc0ede74-4122-4d56-8d99-0043013752df
 rmsd_values_reprod = [
-    rms_values_reprod_i[2]
-    rms_values_reprod_a[2]
-    rms_values_reprod_s[2]
+	rms_values_reprod_i[2]
+	rms_values_reprod_a[2]
+	rms_values_reprod_s[2]
 ]
 
 # ╔═╡ 165f2e6f-afd4-4f65-aae7-0023a531dbd0
 summ_reprod = DataFrame(
-    "Techniques" => ["Integrated", "SWCS", "Agatston"],
-    "R Correlation Coefficient" => r_squared_values_reprod,
-    "RMSE" => rmse_values_reprod,
-    "RMSD" => rmsd_values_reprod
+	"Techniques" => ["Integrated", "SWCS", "Agatston"],
+	"R Correlation Coefficient" => r_squared_values_reprod,
+	"RMSE" => rmse_values_reprod,
+	"RMSD" => rmsd_values_reprod
 )
 
 # ╔═╡ 70043dad-f0db-4ebc-a9a6-57ba93bb9ae2
@@ -1550,25 +1535,25 @@ md"""
 
 # ╔═╡ 8ef3a331-fd8f-4b61-b355-b133f0480432
 zero_cac_num = [
-    string(total_zero_i, "/", total_cac)
-    string(total_zero_vf, "/", total_cac)
-    string(total_zero_s, "/", total_cac)
-    string(num_zero_a, "/", total_cac)
+	string(total_zero_i, "/", total_cac)
+	string(total_zero_vf, "/", total_cac)
+	string(total_zero_s, "/", total_cac)
+	string(num_zero_a, "/", total_cac)
 ]
 
 # ╔═╡ 6cf69eaf-aaf2-4bc1-aa10-e22efae2b175
 zero_cac_perc = [
-    round(total_zero_i / total_cac * 100, digits=2)
-    round(total_zero_vf / total_cac * 100, digits=2)
-    round(total_zero_s / total_cac * 100, digits=2)
-    round(num_zero_a / total_cac * 100, digits=2)
+	round(total_zero_i / total_cac * 100, digits=2)
+	round(total_zero_vf / total_cac * 100, digits=2)
+	round(total_zero_s / total_cac * 100, digits=2)
+	round(num_zero_a / total_cac * 100, digits=2)
 ]
 
 # ╔═╡ 38f87d7b-6d22-41de-97da-927a478d8e8b
 summ_zero_cac = DataFrame(
-    "Techniques" => ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"],
-    "False Negatives (CAC=0)" => zero_cac_num,
-    "Percentage False Negatives (%)" => zero_cac_perc
+	"Techniques" => ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"],
+	"False Negatives (CAC=0)" => zero_cac_num,
+	"Percentage False Negatives (%)" => zero_cac_perc
 )
 
 # ╔═╡ Cell order:

@@ -128,14 +128,10 @@ md"""
 """
 
 # ╔═╡ 57d46998-368a-4916-8380-ee49d5473a49
-path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated_scoring";
+path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated";
 
 # ╔═╡ 2c960bd8-ae64-453f-b29f-275bf5263774
-begin
-    df_i = CSV.read(string(path_integrated, "/full2.csv"), DataFrame)
-    df_i, df_irest = groupby(df_i, :blur)
-    df_i = df_i[!, 2:end]
-end;
+df_i = CSV.read(string(path_integrated, "/full2.csv"), DataFrame);
 
 # ╔═╡ 7f4fae09-7916-4a98-a102-7f861900c457
 df_i_low, df_i_normal = groupby(df_i, :DENSITY);
@@ -155,11 +151,7 @@ md"""
 path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/agatston";
 
 # ╔═╡ 3fa3748a-22d6-49d8-9888-a749dca99ce2
-begin
-    df_a = CSV.read(string(path_agat, "/full2.csv"), DataFrame)
-    df_a, df_arest = groupby(df_a, :blur)
-    df_a = df_a[!, 2:end]
-end;
+df_a = CSV.read(string(path_agat, "/full2.csv"), DataFrame);
 
 # ╔═╡ c38b9994-7698-4c81-b65b-534b994d8ff0
 df_a_low, df_a_normal = groupby(df_a, :DENSITY);
@@ -179,11 +171,7 @@ md"""
 path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/swcs";
 
 # ╔═╡ 317f8c26-7b39-45c3-b9d3-02925d4b0514
-begin
-    df_s = CSV.read(string(path_swcs, "/full2.csv"), DataFrame)
-    df_s, df_srest = groupby(df_s, :blur)
-    df_s = df_s[!, 2:end]
-end;
+df_s = CSV.read(string(path_swcs, "/full2.csv"), DataFrame);
 
 # ╔═╡ 06deefa7-9170-4e2f-ac49-d6dc65c0af76
 df_s_low, df_s_normal = groupby(df_s, :DENSITY);
@@ -203,11 +191,7 @@ md"""
 path_vf = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/volume_fraction";
 
 # ╔═╡ 5e803aad-9d82-4801-aff6-3c1c2f748b02
-begin
-    df_vf = CSV.read(string(path_vf, "/full2.csv"), DataFrame)
-    df_vf, df_vfrest = groupby(df_vf, :blur)
-    df_vf = df_vf[!, 2:end]
-end;
+df_vf = CSV.read(string(path_vf, "/full2.csv"), DataFrame);
 
 # ╔═╡ 5c76c3c7-bb56-4d90-8f0f-7f7d0e271d3c
 df_vf_low, df_vf_normal = groupby(df_vf, :DENSITY);
@@ -706,7 +690,7 @@ md"""
 """
 
 # ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
-path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated_scoring";
+path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated";
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
 begin
