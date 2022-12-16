@@ -22,58 +22,6 @@ md"""
 #### Helper Functions
 """
 
-# ╔═╡ cabe7e9a-e932-406b-95dd-2c9128decdc7
-function prepare_linear_regression(df)
-    gt_array = vec(
-        hcat(
-            df[!, :ground_truth_mass_large],
-            df[!, :ground_truth_mass_medium],
-            df[!, :ground_truth_mass_small],
-        ),
-    )
-    calc_array = vec(
-        hcat(
-            df[!, :calculated_mass_large],
-            df[!, :calculated_mass_medium],
-            df[!, :calculated_mass_small],
-        ),
-    )
-    data = DataFrame(; X=gt_array, Y=calc_array)
-    model = lm(@formula(Y ~ X), data)
-    r_squared = GLM.r2(model)
-    rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
-
-	x = DataFrame(; X=collect(1:1000))
-    fitted_line = GLM.predict(model, x)
-	coefficient = coef(model)
-
-	return r_squared, rms_values, fitted_line, coefficient
-end
-
-# ╔═╡ 4a255a58-b9a0-4175-a750-b2562361631d
-function prepare_linear_regression(df_large, df_medium, df_small, df_reprod_large, df_reprod_medium, df_reprod_small)
-    r_array = [
-        Tuple(df_reprod_large[!, :calculated_mass_large])...,
-        Tuple(df_reprod_medium[!, :calculated_mass_medium])...,
-        Tuple(df_reprod_small[!, :calculated_mass_small])...,
-    ]
-    calc_array = [
-        Tuple(df_large[!, :calculated_mass_large])...,
-        Tuple(df_medium[!, :calculated_mass_medium])...,
-        Tuple(df_small[!, :calculated_mass_small])...,
-    ]
-    data = DataFrame(; X=r_array, Y=calc_array)
-    model = lm(@formula(Y ~ X), data)
-    r_squared = GLM.r2(model)
-    rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
-
-	x = DataFrame(; X=collect(1:1000))
-    fitted_line = GLM.predict(model, x)
-	coefficient = coef(model)
-
-	return r_squared, rms_values, fitted_line, coefficient
-end
-
 # ╔═╡ 7fc65de7-7514-4532-803e-1120150fd2fb
 function remove_false_negatives(df, array, df_reprod, array_reprod)
 	
@@ -237,18 +185,100 @@ md"""
 ## Accuracy
 """
 
+# ╔═╡ cabe7e9a-e932-406b-95dd-2c9128decdc7
+function prepare_linear_regression(df)
+    gt_array = vec(
+        hcat(
+            df[!, :ground_truth_mass_large],
+            df[!, :ground_truth_mass_medium],
+            df[!, :ground_truth_mass_small],
+        ),
+    )
+    calc_array = vec(
+        hcat(
+            df[!, :calculated_mass_large],
+            df[!, :calculated_mass_medium],
+            df[!, :calculated_mass_small],
+        ),
+    )
+    data = DataFrame(; X=gt_array, Y=calc_array)
+    model = lm(@formula(Y ~ X), data)
+    r_squared = GLM.r2(model)
+    rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
+
+	x = DataFrame(; X=collect(1:1000))
+    fitted_line = GLM.predict(model, x)
+	coefficient = coef(model)
+
+	return r_squared, rms_values, fitted_line, coefficient
+end
+
+# ╔═╡ 4a255a58-b9a0-4175-a750-b2562361631d
+function prepare_linear_regression(df_large, df_medium, df_small, df_reprod_large, df_reprod_medium, df_reprod_small)
+	local r_array
+	local calc_array
+	try
+	    r_array = [
+	        Tuple(df_reprod_large[!, :calculated_mass_large])...,
+	        Tuple(df_reprod_medium[!, :calculated_mass_medium])...,
+	        Tuple(df_reprod_small[!, :calculated_mass_small])...,
+	    ]
+	    calc_array = [
+	        Tuple(df_large[!, :calculated_mass_large])...,
+	        Tuple(df_medium[!, :calculated_mass_medium])...,
+	        Tuple(df_small[!, :calculated_mass_small])...,
+	    ]
+	catch
+		r_array = [
+	        Tuple(df_reprod_large[!, :calculated_swcs_large])...,
+	        Tuple(df_reprod_medium[!, :calculated_swcs_medium])...,
+	        Tuple(df_reprod_small[!, :calculated_swcs_small])...,
+	    ]
+	    calc_array = [
+	        Tuple(df_large[!, :calculated_swcs_large])...,
+	        Tuple(df_medium[!, :calculated_swcs_medium])...,
+	        Tuple(df_small[!, :calculated_swcs_small])...,
+	    ]
+	end
+    data = DataFrame(; X=r_array, Y=calc_array)
+    model = lm(@formula(Y ~ X), data)
+    r_squared = GLM.r2(model)
+    rms_values = [rms(data[!, :X], data[!, :Y]), rmsd(data[!, :Y], GLM.predict(model))]
+
+	x = DataFrame(; X=collect(1:1000))
+    fitted_line = GLM.predict(model, x)
+	coefficient = coef(model)
+
+	return r_squared, rms_values, fitted_line, coefficient
+end
+
 # ╔═╡ 79a09453-d375-4f1d-9318-887d806dbb14
 md"""
 #### Normal Density
 """
 
+# ╔═╡ 8e8dbcd5-8e6a-4ba6-a1f7-76bd16888960
+df_i_normal
+
+# ╔═╡ de2a20ed-5f0e-4df9-8327-86bd30fa429d
+df_vf_normal
+
 # ╔═╡ 166718a5-1403-4f1b-b0f7-539fa006997a
+# r_squared_normal_i, rms_values_normal_i, fitted_line_normal_i, coefficient_normal_i = prepare_linear_regression(df_i_normal[Not([28,29,30]), :])
 r_squared_normal_i, rms_values_normal_i, fitted_line_normal_i, coefficient_normal_i = prepare_linear_regression(df_i_normal)
 
+# ╔═╡ e2157bbc-e4c0-4c86-a175-933937d4a50a
+df_i_normal
+
+# ╔═╡ ef36acf7-5d47-4673-a922-8fe75b63aaf2
+df_vf_normal
+
 # ╔═╡ bcedd090-80d5-480a-aad7-97a5fb8131f5
+# r_squared_normal_vf, rms_values_normal_vf, fitted_line_normal_vf, coefficient_normal_vf = prepare_linear_regression(df_vf_normal[Not([28,29,30]), :])
 r_squared_normal_vf, rms_values_normal_vf, fitted_line_normal_vf, coefficient_normal_vf = prepare_linear_regression(df_vf_normal)
 
 # ╔═╡ e0175e63-0ba9-4763-8ce6-e1df05966497
+# r_squared_normal_a, rms_values_normal_a, fitted_line_normal_a, coefficient_normal_a = prepare_linear_regression(df_a_normal[Not([28,29,30]), :])
 r_squared_normal_a, rms_values_normal_a, fitted_line_normal_a, coefficient_normal_a = prepare_linear_regression(df_a_normal)
 
 # ╔═╡ c93ba92a-ccc7-4ae0-9207-300715821fc5
@@ -849,20 +879,51 @@ function remove_false_negatives(df, array, df_reprod, array_reprod, swcs::Bool)
 	end
 end
 
-# ╔═╡ 3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
+# ╔═╡ 63c4ce79-fcde-4e6e-bca9-6d3c6552d98e
 md"""
-## Sensitivity
+## Sensitivity and Specificity
 """
 
-# ╔═╡ 932e1a11-ec52-48bc-af27-bb3e09e6b27f
+# ╔═╡ 43168827-8a92-4e0c-a33c-a909a6606162
+md"""
+### False Negative
+"""
+
+# ╔═╡ 14408c8c-0a6b-4843-b14d-c6635d54c00e
+# ## ---- FIND OPTIMAL THRESHOLD FOR SENS/SPEC ---- ##
+# begin
+# 	cutoffs = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
+# 	for cutoff in cutoffs
+# 		global total_zero_i, total_zero_vf, total_zero_i_pos, total_zero_vf_pos
+
+# 		total_zero_i = length(findall(x -> x <= cutoff, array_i))
+# 		total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
+# 		total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
+# 		total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
+		
+		
+# 		rms_i_neg = rmsd([0], [total_zero_i])
+# 		rms_vf_neg = rmsd([0], [total_zero_vf])
+# 		rms_i_pos = rmsd([0], [total_zero_i_pos])
+# 		rms_vf_pos = rmsd([0], [total_zero_vf_pos])
+
+# 		tot_rms = mean([rms_i_neg, rms_vf_neg, rms_i_pos, rms_vf_pos])
+# 		@show tot_rms, cutoff
+# 	end
+# end
+
+# ╔═╡ eab067e7-5917-4ce5-9022-271238eb3fb6
+cutoff = 0.25
+
+# ╔═╡ 8a8bcf13-0e70-4706-9903-e9ccc227b335
 md"""
 #### SWCS
 """
 
-# ╔═╡ dc8805a5-2b4c-47fe-88c8-0f4434ddd5cf
+# ╔═╡ d6da1ea7-fb85-4144-b04c-450a33439de0
 df_s_80, df_s_100, df_s_120, df_s_135, = groupby(df_s, :scan);
 
-# ╔═╡ 2c78dcc4-03c7-49b5-ac45-30c198671761
+# ╔═╡ bf9024c9-7f7e-41e6-9770-ce59911322be
 begin
     mean_swcs_80, std_swcs_80 = mean(df_s_80[!, :swcs_bkg]), std(df_s_80[!, :swcs_bkg])
     mean_swcs_100, std_swcs_100 = mean(df_s_100[!, :swcs_bkg]), std(df_s_100[!, :swcs_bkg])
@@ -870,13 +931,13 @@ begin
     mean_swcs_135, std_swcs_135 = mean(df_s_135[!, :swcs_bkg]), std(df_s_135[!, :swcs_bkg])
 end;
 
-# ╔═╡ d3e13dcd-201a-49ab-86f7-a7d3320088c2
+# ╔═╡ 1abe1d61-44dd-4e48-a79f-1cdd57fc5c96
 begin
-	array_s = Array(df_s[!, 12:14])
-    array_s_80 = Array(df_s_80[!, 12:14])
-    array_s_100 = Array(df_s_100[!, 12:14])
-    array_s_120 = Array(df_s_120[!, 12:14])
-    array_s_135 = Array(df_s_135[!, 12:14])
+	array_s = Array(hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]))
+    array_s_80 = Array(hcat(df_s_80[!, :calculated_swcs_large], df_s_80[!, :calculated_swcs_medium], df_s_80[!, :calculated_swcs_small]))
+    array_s_100 = Array(hcat(df_s_100[!, :calculated_swcs_large], df_s_100[!, :calculated_swcs_medium], df_s_100[!, :calculated_swcs_small]))
+    array_s_120 = Array(hcat(df_s_120[!, :calculated_swcs_large], df_s_120[!, :calculated_swcs_medium], df_s_120[!, :calculated_swcs_small]))
+    array_s_135 = Array(hcat(df_s_135[!, :calculated_swcs_large], df_s_135[!, :calculated_swcs_medium], df_s_135[!, :calculated_swcs_small]))
 end;
 
 # ╔═╡ 97f07af4-a4af-4a26-9f81-5acb836c9f2c
@@ -885,7 +946,7 @@ df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small =
 # ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
 r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
 
-# ╔═╡ 4b97d892-b0db-4f75-9239-9da215f905f0
+# ╔═╡ b830faad-831d-4437-90b0-84a7f6140825
 begin
     num_zeroCAC_80 = length(findall(x -> x < mean_swcs_80, array_s_80))
     num_zeroCAC_100 = length(findall(x -> x < mean_swcs_100, array_s_100))
@@ -896,15 +957,15 @@ begin
     total_cac = length(array_s_80) * 4
 end;
 
-# ╔═╡ da2b55dc-2fe9-468f-a53e-baf232ca79cd
+# ╔═╡ 230a51cf-2429-43d7-a7db-80016948513a
 total_cac
 
-# ╔═╡ 01d903d8-fca2-4317-a2d7-93429f06d47c
+# ╔═╡ 43b931de-5ca8-4f08-89c4-f1969471e639
 md"""
 #### Agatston
 """
 
-# ╔═╡ 97a612d5-44e7-43f1-b61e-8518c7e6aa28
+# ╔═╡ ec479a18-3847-4d56-971e-fff60cf8bb2d
 array_a = hcat(df_a[!, :calculated_mass_large], df_a[!, :calculated_mass_medium], df_a[!, :calculated_mass_small]);
 
 # ╔═╡ ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
@@ -913,15 +974,15 @@ df_a_large, df_a_r_large, df_a_medium, df_a_r_medium, df_a_small, df_a_r_small =
 # ╔═╡ 3d987e71-9742-4b70-be10-2ed82a6df5f4
 r_squared_reprod_a, rms_values_reprod_a, fitted_line_reprod_a, coefficient_reprod_a = prepare_linear_regression(df_a_r_large, df_a_r_medium, df_a_r_small, df_a_large, df_a_medium, df_a_small)
 
-# ╔═╡ a31dfad2-e420-4c41-b805-227778a39fc9
+# ╔═╡ 6aa7494d-df55-4c88-83f1-45f1658f7c85
 num_zero_a = length(findall(x -> x <= 0, array_a))
 
-# ╔═╡ 86d5f7fd-6a1b-4fdc-9e06-6cd66f8a169c
+# ╔═╡ d9197002-4811-42cc-9bd5-54cabaa51701
 md"""
 #### Integrated
 """
 
-# ╔═╡ 79ad1bda-835e-4da2-8eae-6047a25ed99e
+# ╔═╡ 943c5370-3389-420c-9d7b-f002f5b03016
 array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
 
 # ╔═╡ 4b79a10e-d861-44ee-8b07-877e51145d5d
@@ -930,15 +991,15 @@ df_i_large, df_i_r_large, df_i_medium, df_i_r_medium, df_i_small, df_i_r_small =
 # ╔═╡ 14cdef5f-c9ba-4810-93fe-0f0915b803a2
 r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small);
 
-# ╔═╡ fb50a01e-819f-4e4b-aef4-39d8255443a3
-total_zero_i = length(findall(x -> x <= 0, array_i))
+# ╔═╡ 740b384b-6de5-445b-9b2d-df097aaca8eb
+total_zero_i = length(findall(x -> x <= cutoff, array_i))
 
-# ╔═╡ 99162b79-82a7-4293-b616-5e7669d04235
+# ╔═╡ 81247cb1-280b-4418-9808-8b9fadb66060
 md"""
 #### Volume Fraction
 """
 
-# ╔═╡ 9abd5004-6d24-49e0-95a1-e62d1ce853cf
+# ╔═╡ 38d1bc6a-22e4-492f-99c0-c22f755c1d3c
 array_vf = hcat(df_vf[!, :calculated_mass_large], df_vf[!, :calculated_mass_medium], df_vf[!, :calculated_mass_small]);
 
 # ╔═╡ e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
@@ -1277,10 +1338,10 @@ with_theme(medphys_theme) do
     reprod()
 end
 
-# ╔═╡ 965264df-f9d8-4730-b7bb-d7f5334bb5c5
-total_zero_vf = length(findall(x -> x <= 0, array_vf))
+# ╔═╡ c69cce01-4181-4aa4-ba13-6e03fcac8357
+total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
 
-# ╔═╡ 01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
+# ╔═╡ 0dbe1577-e831-47a4-b3fa-a1148bcf8c59
 function false_negative()
     f = Figure()
     colors = Makie.wong_colors()
@@ -1306,13 +1367,121 @@ function false_negative()
     return f
 end
 
-# ╔═╡ cc88bab2-8b5e-474a-889d-f0fbfec790a2
+# ╔═╡ 42227f67-4c93-47d0-9bd9-12772b713342
 with_theme(medphys_theme) do
     false_negative()
 end
 
-# ╔═╡ f4b51729-d53a-40e2-919b-5d4562cffbc0
+# ╔═╡ d826c801-972e-489e-b1e8-ee5d9fda7908
 total_zero_i, total_zero_vf, total_zero_s, num_zero_a
+
+# ╔═╡ 8f3d2313-89a9-4453-8a59-bcb96a02ea64
+md"""
+### False Positive
+"""
+
+# ╔═╡ f6e6e34f-bad9-4fb9-b796-5581b441e553
+md"""
+#### SWCS
+"""
+
+# ╔═╡ 0816f71c-38b8-4a2b-8c1b-1ee5750e6e2c
+begin
+	array_s_pos = Array(df_s[!, :swcs_bkg])
+    array_s_80_pos = Array(df_s_80[!, :swcs_bkg])
+    array_s_100_pos = Array(df_s_100[!, :swcs_bkg])
+    array_s_120_pos = Array(df_s_120[!, :swcs_bkg])
+    array_s_135_pos = Array(df_s_135[!, :swcs_bkg])
+end;
+
+# ╔═╡ dca1fede-6fb3-4154-b4b5-bb06757c1a9e
+begin
+ #    num_zeroCAC_80_pos = length(findall(x -> x > mean_swcs_80, array_s_80_pos))
+ #    num_zeroCAC_100_pos = length(findall(x -> x > mean_swcs_100, array_s_100_pos))
+ #    num_zeroCAC_120_pos = length(findall(x -> x > mean_swcs_120, array_s_120_pos))
+ #    num_zeroCAC_135_pos = length(findall(x -> x > mean_swcs_135, array_s_135_pos))
+
+ #    total_zero_s_pos = num_zeroCAC_80_pos + num_zeroCAC_100_pos + num_zeroCAC_120_pos + num_zeroCAC_135_pos
+
+
+	mean_swcs = mean(array_s_pos)
+	total_zero_s_pos = length(findall(x -> x > mean_swcs, array_s_pos))
+
+	total_cac_pos = length(array_s_pos)
+end
+
+# ╔═╡ 3438208d-9556-4f2f-8303-44a7d3e06b62
+# num_zeroCAC_80_pos, num_zeroCAC_100_pos, num_zeroCAC_120_pos, num_zeroCAC_135_pos
+
+# ╔═╡ 9bd986a8-e96e-4d67-83b2-ee3cc18635d0
+total_zero_s_pos, total_cac_pos
+
+# ╔═╡ dc33fe86-eda3-4265-b2e7-05682d23f3a8
+total_zero_s_pos / total_cac_pos
+
+# ╔═╡ 6af3972f-fc16-4305-b9b4-b6851c254777
+md"""
+#### Agatston
+"""
+
+# ╔═╡ 8eeabb4a-77e0-4835-82d6-c7660e2e2a09
+array_a_pos = df_a[!, :mass_bkg]
+
+# ╔═╡ be1263bf-e503-4141-8d3b-78956c6ee6ec
+total_zero_a_pos = length(findall(x -> x > 0, array_a_pos))
+
+# ╔═╡ b1eb6846-d37b-466f-896b-fc7b3abff84f
+md"""
+#### Integrated
+"""
+
+# ╔═╡ e3cf5797-de71-42ec-82f6-5008a5601441
+array_i_pos = df_i[!, :mass_bkg]
+
+# ╔═╡ 0f3aa7ad-403c-4ae0-8018-a3a11059c9d6
+total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
+
+# ╔═╡ d91e7943-3b87-4fd4-9d0b-c716256246fe
+md"""
+#### Volume Fraction
+"""
+
+# ╔═╡ 7ffb223a-81c7-4630-956b-c236dc0bb0e2
+array_vf_pos = df_vf[!, :mass_bkg]
+
+# ╔═╡ 64815452-a7bc-4d04-b7b0-1b5d47143234
+total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
+
+# ╔═╡ 7c7d91ee-c503-4891-85af-fe4d88b4703a
+function false_positive()
+    f = Figure()
+    colors = Makie.wong_colors()
+
+    ##-- TOP --##
+    axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
+
+    table = [1, 2, 3, 4]
+    heights1 = [
+		(total_zero_i_pos / total_cac_pos) * 100,
+		(total_zero_vf_pos / total_cac_pos) * 100,
+        (total_zero_s_pos / total_cac_pos) * 100,
+        (total_zero_a_pos / total_cac_pos) * 100,
+    ]
+    barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+
+    axtop.title = "False-Positive Scores (CAC>0)"
+    axtop.ylabel = "% False-Positive CAC Scores"
+    ylims!(axtop; low=0, high=100)
+    axtop.yticks = [0, 25, 50, 75, 100]
+
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_positive.png"), f)
+    return f
+end
+
+# ╔═╡ cb0d0feb-9871-4841-a417-4e9513ed0893
+with_theme(medphys_theme) do
+    false_positive()
+end
 
 # ╔═╡ a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 md"""
@@ -1544,8 +1713,6 @@ summ_zero_cac = DataFrame(
 # ╠═c82bb3e6-e052-11ec-3392-eba4a4b464ba
 # ╠═2df207ed-cf9c-4d7d-8354-4da14f93276c
 # ╟─d72c94c2-a208-430c-9d76-85d8cfb33a22
-# ╟─cabe7e9a-e932-406b-95dd-2c9128decdc7
-# ╟─4a255a58-b9a0-4175-a750-b2562361631d
 # ╟─7fc65de7-7514-4532-803e-1120150fd2fb
 # ╟─1ecb8fd3-a36b-4b06-8daf-e598e297ecf8
 # ╠═043dec5f-07a8-472d-8082-c7a771f93270
@@ -1581,8 +1748,14 @@ summ_zero_cac = DataFrame(
 # ╟─a4bc0a8a-4904-4217-97a9-44158f99ae70
 # ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 # ╟─98c3eaef-502e-4a20-b5b6-46a3d6b394d3
+# ╟─cabe7e9a-e932-406b-95dd-2c9128decdc7
+# ╟─4a255a58-b9a0-4175-a750-b2562361631d
 # ╟─79a09453-d375-4f1d-9318-887d806dbb14
+# ╠═8e8dbcd5-8e6a-4ba6-a1f7-76bd16888960
+# ╠═de2a20ed-5f0e-4df9-8327-86bd30fa429d
 # ╠═166718a5-1403-4f1b-b0f7-539fa006997a
+# ╠═e2157bbc-e4c0-4c86-a175-933937d4a50a
+# ╠═ef36acf7-5d47-4673-a922-8fe75b63aaf2
 # ╠═bcedd090-80d5-480a-aad7-97a5fb8131f5
 # ╠═e0175e63-0ba9-4763-8ce6-e1df05966497
 # ╟─cf59cd3f-026c-4321-a1ac-de217177b52e
@@ -1629,25 +1802,46 @@ summ_zero_cac = DataFrame(
 # ╠═e8b56e73-f22b-4587-9141-558f5f545a5e
 # ╠═97f07af4-a4af-4a26-9f81-5acb836c9f2c
 # ╠═a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
-# ╟─3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
-# ╟─01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
-# ╟─cc88bab2-8b5e-474a-889d-f0fbfec790a2
-# ╠═f4b51729-d53a-40e2-919b-5d4562cffbc0
-# ╠═da2b55dc-2fe9-468f-a53e-baf232ca79cd
-# ╟─932e1a11-ec52-48bc-af27-bb3e09e6b27f
-# ╠═dc8805a5-2b4c-47fe-88c8-0f4434ddd5cf
-# ╠═2c78dcc4-03c7-49b5-ac45-30c198671761
-# ╠═d3e13dcd-201a-49ab-86f7-a7d3320088c2
-# ╠═4b97d892-b0db-4f75-9239-9da215f905f0
-# ╟─01d903d8-fca2-4317-a2d7-93429f06d47c
-# ╠═97a612d5-44e7-43f1-b61e-8518c7e6aa28
-# ╠═a31dfad2-e420-4c41-b805-227778a39fc9
-# ╟─86d5f7fd-6a1b-4fdc-9e06-6cd66f8a169c
-# ╠═79ad1bda-835e-4da2-8eae-6047a25ed99e
-# ╠═fb50a01e-819f-4e4b-aef4-39d8255443a3
-# ╟─99162b79-82a7-4293-b616-5e7669d04235
-# ╠═9abd5004-6d24-49e0-95a1-e62d1ce853cf
-# ╠═965264df-f9d8-4730-b7bb-d7f5334bb5c5
+# ╟─63c4ce79-fcde-4e6e-bca9-6d3c6552d98e
+# ╟─43168827-8a92-4e0c-a33c-a909a6606162
+# ╟─0dbe1577-e831-47a4-b3fa-a1148bcf8c59
+# ╠═42227f67-4c93-47d0-9bd9-12772b713342
+# ╠═d826c801-972e-489e-b1e8-ee5d9fda7908
+# ╠═230a51cf-2429-43d7-a7db-80016948513a
+# ╠═14408c8c-0a6b-4843-b14d-c6635d54c00e
+# ╠═eab067e7-5917-4ce5-9022-271238eb3fb6
+# ╟─8a8bcf13-0e70-4706-9903-e9ccc227b335
+# ╠═d6da1ea7-fb85-4144-b04c-450a33439de0
+# ╠═bf9024c9-7f7e-41e6-9770-ce59911322be
+# ╠═1abe1d61-44dd-4e48-a79f-1cdd57fc5c96
+# ╠═b830faad-831d-4437-90b0-84a7f6140825
+# ╟─43b931de-5ca8-4f08-89c4-f1969471e639
+# ╠═ec479a18-3847-4d56-971e-fff60cf8bb2d
+# ╠═6aa7494d-df55-4c88-83f1-45f1658f7c85
+# ╟─d9197002-4811-42cc-9bd5-54cabaa51701
+# ╠═943c5370-3389-420c-9d7b-f002f5b03016
+# ╠═740b384b-6de5-445b-9b2d-df097aaca8eb
+# ╟─81247cb1-280b-4418-9808-8b9fadb66060
+# ╠═38d1bc6a-22e4-492f-99c0-c22f755c1d3c
+# ╠═c69cce01-4181-4aa4-ba13-6e03fcac8357
+# ╟─8f3d2313-89a9-4453-8a59-bcb96a02ea64
+# ╟─7c7d91ee-c503-4891-85af-fe4d88b4703a
+# ╠═cb0d0feb-9871-4841-a417-4e9513ed0893
+# ╟─f6e6e34f-bad9-4fb9-b796-5581b441e553
+# ╠═0816f71c-38b8-4a2b-8c1b-1ee5750e6e2c
+# ╠═dca1fede-6fb3-4154-b4b5-bb06757c1a9e
+# ╠═3438208d-9556-4f2f-8303-44a7d3e06b62
+# ╠═9bd986a8-e96e-4d67-83b2-ee3cc18635d0
+# ╠═dc33fe86-eda3-4265-b2e7-05682d23f3a8
+# ╟─6af3972f-fc16-4305-b9b4-b6851c254777
+# ╠═8eeabb4a-77e0-4835-82d6-c7660e2e2a09
+# ╠═be1263bf-e503-4141-8d3b-78956c6ee6ec
+# ╟─b1eb6846-d37b-466f-896b-fc7b3abff84f
+# ╠═e3cf5797-de71-42ec-82f6-5008a5601441
+# ╠═0f3aa7ad-403c-4ae0-8018-a3a11059c9d6
+# ╟─d91e7943-3b87-4fd4-9d0b-c716256246fe
+# ╠═7ffb223a-81c7-4630-956b-c236dc0bb0e2
+# ╠═64815452-a7bc-4d04-b7b0-1b5d47143234
 # ╟─a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 # ╟─b7064bb1-f21a-4bb6-a395-9f1c73102058
 # ╟─21b03bf8-47ba-4915-936a-92c488671bb1

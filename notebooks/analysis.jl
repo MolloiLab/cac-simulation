@@ -52,16 +52,31 @@ end
 
 # ╔═╡ 4a255a58-b9a0-4175-a750-b2562361631d
 function prepare_linear_regression(df_large, df_medium, df_small, df_reprod_large, df_reprod_medium, df_reprod_small)
-    r_array = [
-        Tuple(df_reprod_large[!, :calculated_mass_large])...,
-        Tuple(df_reprod_medium[!, :calculated_mass_medium])...,
-        Tuple(df_reprod_small[!, :calculated_mass_small])...,
-    ]
-    calc_array = [
-        Tuple(df_large[!, :calculated_mass_large])...,
-        Tuple(df_medium[!, :calculated_mass_medium])...,
-        Tuple(df_small[!, :calculated_mass_small])...,
-    ]
+	local r_array
+	local calc_array
+	try
+	    r_array = [
+	        Tuple(df_reprod_large[!, :calculated_mass_large])...,
+	        Tuple(df_reprod_medium[!, :calculated_mass_medium])...,
+	        Tuple(df_reprod_small[!, :calculated_mass_small])...,
+	    ]
+	    calc_array = [
+	        Tuple(df_large[!, :calculated_mass_large])...,
+	        Tuple(df_medium[!, :calculated_mass_medium])...,
+	        Tuple(df_small[!, :calculated_mass_small])...,
+	    ]
+	catch
+		r_array = [
+	        Tuple(df_reprod_large[!, :calculated_swcs_large])...,
+	        Tuple(df_reprod_medium[!, :calculated_swcs_medium])...,
+	        Tuple(df_reprod_small[!, :calculated_swcs_small])...,
+	    ]
+	    calc_array = [
+	        Tuple(df_large[!, :calculated_swcs_large])...,
+	        Tuple(df_medium[!, :calculated_swcs_medium])...,
+	        Tuple(df_small[!, :calculated_swcs_small])...,
+	    ]
+	end
     data = DataFrame(; X=r_array, Y=calc_array)
     model = lm(@formula(Y ~ X), data)
     r_squared = GLM.r2(model)
@@ -684,123 +699,123 @@ md"""
 ## Reproducibility
 """
 
-# ╔═╡ 88df8b9d-ff41-41d3-99fe-8ab9a050a803
+# ╔═╡ e869e1ea-65bb-4a95-a98d-26776e57e109
 md"""
 #### Integrated
 """
 
-# ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
+# ╔═╡ ec2ca363-555d-41dc-88a9-42ab2bba53ee
 path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated";
 
-# ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
+# ╔═╡ 41a74395-bc72-4642-bc6f-a55707a02ecf
 df_i_r = CSV.read(string(path_integrated_r, "/full2.csv"), DataFrame);
 
-# ╔═╡ 4f5328e7-66dd-433c-a7f6-5dc461c83a4c
+# ╔═╡ cddbb574-6b13-4e05-a6ae-236e8aaeb9b5
 df_i_low_r, df_i_normal_r = groupby(df_i_r, :DENSITY);
 
-# ╔═╡ 6e515ee8-2836-4285-a0a9-131e1e7b4b7f
+# ╔═╡ 54d7b531-7cf9-4972-bebd-6eb626f85896
 df_i_low_small_r, df_i_low_medium_r, df_i_low_large_r = groupby(df_i_low_r, :SIZE);
 
-# ╔═╡ 9ae3b4cb-fac5-4168-868d-724de9b0c9d2
+# ╔═╡ 8910eda9-93d3-4f06-a8ad-cb59aeb8620c
 df_i_normal_small_r, df_i_normal_medium_r, df_i_normal_large_r = groupby(
     df_i_normal_r, :SIZE
 );
 
-# ╔═╡ d9e26f65-6d40-48e5-b567-4cce5a2c530b
+# ╔═╡ e21fb40e-7863-448b-8971-c50fd9a7707c
 array_i_r = hcat(
     df_i_r[!, :calculated_mass_large],
     df_i_r[!, :calculated_mass_medium],
     df_i_r[!, :calculated_mass_small],
 )
 
-# ╔═╡ 4c9feda4-9fc1-42c7-8cac-a17d51627c6d
+# ╔═╡ 5d3bb4c8-73ea-456f-9d67-b96604bf230c
 md"""
 #### Volume Fraction
 """
 
-# ╔═╡ e261c635-98d7-4357-a429-a34b73b47bb5
+# ╔═╡ 4967ccc8-d4b7-406c-a968-f98c582daab5
 path_volume_fraction_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/volume_fraction";
 
-# ╔═╡ d2e4fa84-1f12-4924-823a-6ea7ab0d3d8e
+# ╔═╡ 91a26dd7-2e32-4596-9301-9f07339ad065
 df_vf_r = CSV.read(string(path_volume_fraction_r, "/full2.csv"), DataFrame);
 
-# ╔═╡ 101b02a5-9e67-460d-9db0-140684bd1e11
+# ╔═╡ 6011ee2d-b229-4190-8006-1f29cb469ec1
 df_vf_low_r, df_vf_normal_r = groupby(df_vf_r, :DENSITY);
 
-# ╔═╡ fe275fdc-c833-43ac-a4c7-7a49b2b728f8
+# ╔═╡ a779377a-f9b6-440c-9bee-ef02d3559e57
 df_vf_low_small_r, df_vf_low_medium_r, df_vf_low_large_r = groupby(df_vf_low_r, :SIZE);
 
-# ╔═╡ 8babe305-6bf0-43e3-9fe7-ded195d2addf
+# ╔═╡ cb0bd249-692f-433e-9f94-3d27d5361f4c
 df_vf_normal_small_r, df_vf_normal_medium_r, df_vf_normal_large_r = groupby(
     df_vf_normal_r, :SIZE
 );
 
-# ╔═╡ ea17e8f9-c06e-439e-82f9-dbfdef759998
+# ╔═╡ 04e034e8-195b-4dfb-acea-1fd9ff7be1d4
 array_vf_r = hcat(
     df_vf_r[!, :calculated_mass_large],
     df_vf_r[!, :calculated_mass_medium],
     df_vf_r[!, :calculated_mass_small],
 )
 
-# ╔═╡ 8eaec985-641a-498f-9cd9-c2c85d877142
+# ╔═╡ fb6f9e96-11c1-401a-a4de-04907195fdc5
 md"""
 #### Agatston
 """
 
-# ╔═╡ fcd83805-06e2-4cda-aa56-0c13c69424d8
+# ╔═╡ 3ceab5be-aa44-414a-a750-27e56fcb202d
 path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/agatston";
 
-# ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
+# ╔═╡ a8c90830-da28-468c-9931-d9956b3499bf
 df_a_r = CSV.read(string(path_agat_r, "/full2.csv"), DataFrame);
 
-# ╔═╡ 869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
+# ╔═╡ ea036472-53d2-4ae3-afa1-fd4760e2ac91
 df_a_low_r, df_a_normal_r = groupby(df_a_r, :DENSITY);
 
-# ╔═╡ 43b3ba9b-247c-41cd-968e-3a27736426b0
+# ╔═╡ 4a6bf494-dd85-4d22-84dc-22b82c77e431
 df_a_low_small_r, df_a_low_medium_r, df_a_low_large_r = groupby(df_a_low_r, :SIZE);
 
-# ╔═╡ b16090b5-a232-4e71-9148-b71296efa999
+# ╔═╡ c9005ee7-4b44-46de-8238-89c38adce453
 df_a_normal_small_r, df_a_normal_medium_r, df_a_normal_large_r = groupby(
     df_a_normal_r, :SIZE
 );
 
-# ╔═╡ 24034fa9-f9d4-4bd0-a736-488b06403adc
+# ╔═╡ f4709c60-6d80-4b0f-bbd8-f2560f30553b
 array_a_r = hcat(
     df_a_r[!, :calculated_mass_large],
     df_a_r[!, :calculated_mass_medium],
     df_a_r[!, :calculated_mass_large],
 );
 
-# ╔═╡ 5bc912d4-be86-4cca-9e8b-8af31d269edf
+# ╔═╡ da658c77-4e3d-43fb-8974-021b89c482f2
 md"""
 #### SWCS
 """
 
-# ╔═╡ 594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
+# ╔═╡ 26d5f43d-96c5-4c59-83eb-5d21a468484f
 path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/swcs";
 
-# ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
+# ╔═╡ 7f1691b0-4e4c-451b-a29a-4b1152aa11d8
 df_s_r = CSV.read(string(path_swcs_r, "/full2.csv"), DataFrame);
 
-# ╔═╡ a9f68d7e-7818-47d5-ba1f-965634225b30
+# ╔═╡ af702f3f-579e-4dc2-b87a-4af8522fa9e0
 df_s_low_r, df_s_normal_r = groupby(df_s_r, :DENSITY);
 
-# ╔═╡ f2177e1f-2a55-4f81-9a69-ab985ae3b7c2
+# ╔═╡ eeb91413-19d3-43f9-881e-7ba1a72979a2
 df_s_low_small_r, df_s_low_medium_r, df_s_low_large_r = groupby(df_s_low_r, :SIZE);
 
-# ╔═╡ 35bc90e2-9d70-4daf-a825-b462831c5bf6
+# ╔═╡ 572c928b-f73a-4cc2-bad1-b1ad40198a6a
 df_s_normal_small_r, df_s_normal_medium_r, df_s_normal_large_r = groupby(
     df_s_normal_r, :SIZE
 );
 
-# ╔═╡ 624074ec-572a-45ab-932a-aed7edb1f846
+# ╔═╡ 84d0db6e-a378-4863-8aa0-be817f7bd9c0
 array_s_r = hcat(
     df_s_r[!, :calculated_swcs_large],
     df_s_r[!, :calculated_swcs_medium],
     df_s_r[!, :calculated_swcs_small],
 );
 
-# ╔═╡ e8b56e73-f22b-4587-9141-558f5f545a5e
+# ╔═╡ 2cf3160f-1a95-446d-9d54-36e72b8178ad
 begin
     mean_bkg_s = mean(df_s[!, :swcs_bkg])
     mean_bkg_s_r = mean(df_s_r[!, :swcs_bkg])
@@ -851,18 +866,50 @@ end
 
 # ╔═╡ 3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
 md"""
-## Sensitivity
+## Sensitivity and Specificity
 """
+
+# ╔═╡ 25a8bc6a-5172-441d-9e91-e21624fe64bb
+md"""
+### False Negative
+"""
+
+# ╔═╡ fdb7fdb6-7466-48ba-bee2-c2a9f4bc266c
+# ## ---- FIND OPTIMAL THRESHOLD FOR SENS/SPEC ---- ##
+# begin
+# 	cutoffs = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
+# 	for cutoff in cutoffs
+# 		global total_zero_i, total_zero_vf, total_zero_i_pos, total_zero_vf_pos
+
+# 		total_zero_i = length(findall(x -> x <= cutoff, array_i))
+# 		total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
+# 		total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
+# 		total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
+		
+		
+# 		rms_i_neg = rmsd([0], [total_zero_i])
+# 		rms_vf_neg = rmsd([0], [total_zero_vf])
+# 		rms_i_pos = rmsd([0], [total_zero_i_pos])
+# 		rms_vf_pos = rmsd([0], [total_zero_vf_pos])
+
+# 		tot_rms = mean([rms_i_neg, rms_vf_neg, rms_i_pos, rms_vf_pos])
+# 		@show tot_rms, cutoff
+# 	end
+# end
+
+# ╔═╡ 8c77654d-e7e4-4afe-ba92-c5ac1afc963b
+cutoff = 0.25
+# cutoff = 0
 
 # ╔═╡ 932e1a11-ec52-48bc-af27-bb3e09e6b27f
 md"""
 #### SWCS
 """
 
-# ╔═╡ dc8805a5-2b4c-47fe-88c8-0f4434ddd5cf
+# ╔═╡ b21b7c6e-85f5-4d46-a2b8-5d5ae512a75e
 df_s_80, df_s_100, df_s_120, df_s_135, = groupby(df_s, :scan);
 
-# ╔═╡ 2c78dcc4-03c7-49b5-ac45-30c198671761
+# ╔═╡ 9911ef08-c00d-417d-9ef1-d911dba5d65c
 begin
     mean_swcs_80, std_swcs_80 = mean(df_s_80[!, :swcs_bkg]), std(df_s_80[!, :swcs_bkg])
     mean_swcs_100, std_swcs_100 = mean(df_s_100[!, :swcs_bkg]), std(df_s_100[!, :swcs_bkg])
@@ -870,22 +917,22 @@ begin
     mean_swcs_135, std_swcs_135 = mean(df_s_135[!, :swcs_bkg]), std(df_s_135[!, :swcs_bkg])
 end;
 
-# ╔═╡ d3e13dcd-201a-49ab-86f7-a7d3320088c2
+# ╔═╡ 4e6fdad1-98d7-4956-a76d-3a94e9db3384
 begin
-	array_s = Array(df_s[!, 12:14])
-    array_s_80 = Array(df_s_80[!, 12:14])
-    array_s_100 = Array(df_s_100[!, 12:14])
-    array_s_120 = Array(df_s_120[!, 12:14])
-    array_s_135 = Array(df_s_135[!, 12:14])
+	array_s = Array(hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]))
+    array_s_80 = Array(hcat(df_s_80[!, :calculated_swcs_large], df_s_80[!, :calculated_swcs_medium], df_s_80[!, :calculated_swcs_small]))
+    array_s_100 = Array(hcat(df_s_100[!, :calculated_swcs_large], df_s_100[!, :calculated_swcs_medium], df_s_100[!, :calculated_swcs_small]))
+    array_s_120 = Array(hcat(df_s_120[!, :calculated_swcs_large], df_s_120[!, :calculated_swcs_medium], df_s_120[!, :calculated_swcs_small]))
+    array_s_135 = Array(hcat(df_s_135[!, :calculated_swcs_large], df_s_135[!, :calculated_swcs_medium], df_s_135[!, :calculated_swcs_small]))
 end;
 
-# ╔═╡ 97f07af4-a4af-4a26-9f81-5acb836c9f2c
+# ╔═╡ af15b58b-243c-4743-9167-db9c0d6599d9
 df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small = remove_false_negatives(df_s, array_s, df_s_r, array_s_r, true);
 
-# ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
+# ╔═╡ c6cc5506-2474-40b3-bc49-6700922b2f7a
 r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
 
-# ╔═╡ 4b97d892-b0db-4f75-9239-9da215f905f0
+# ╔═╡ a3ad4d4b-a736-4bf6-abee-72ca973456f7
 begin
     num_zeroCAC_80 = length(findall(x -> x < mean_swcs_80, array_s_80))
     num_zeroCAC_100 = length(findall(x -> x < mean_swcs_100, array_s_100))
@@ -907,10 +954,10 @@ md"""
 # ╔═╡ 97a612d5-44e7-43f1-b61e-8518c7e6aa28
 array_a = hcat(df_a[!, :calculated_mass_large], df_a[!, :calculated_mass_medium], df_a[!, :calculated_mass_small]);
 
-# ╔═╡ ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
+# ╔═╡ 3db60b45-48d2-485a-a4b2-e6341b0a656e
 df_a_large, df_a_r_large, df_a_medium, df_a_r_medium, df_a_small, df_a_r_small = remove_false_negatives(df_a, array_a, df_a_r, array_a_r);
 
-# ╔═╡ 3d987e71-9742-4b70-be10-2ed82a6df5f4
+# ╔═╡ 261c85f1-75d7-4845-bb0e-8c6395515b78
 r_squared_reprod_a, rms_values_reprod_a, fitted_line_reprod_a, coefficient_reprod_a = prepare_linear_regression(df_a_r_large, df_a_r_medium, df_a_r_small, df_a_large, df_a_medium, df_a_small)
 
 # ╔═╡ a31dfad2-e420-4c41-b805-227778a39fc9
@@ -924,14 +971,14 @@ md"""
 # ╔═╡ 79ad1bda-835e-4da2-8eae-6047a25ed99e
 array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
 
-# ╔═╡ 4b79a10e-d861-44ee-8b07-877e51145d5d
+# ╔═╡ 92180dfb-5567-4826-856d-fadf219d291f
 df_i_large, df_i_r_large, df_i_medium, df_i_r_medium, df_i_small, df_i_r_small = remove_false_negatives(df_i, array_i, df_i_r, array_i_r);
 
-# ╔═╡ 14cdef5f-c9ba-4810-93fe-0f0915b803a2
+# ╔═╡ b554b648-bb3f-48a0-b9d2-f01532819b3f
 r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small);
 
 # ╔═╡ fb50a01e-819f-4e4b-aef4-39d8255443a3
-total_zero_i = length(findall(x -> x <= 0, array_i))
+total_zero_i = length(findall(x -> x <= cutoff, array_i))
 
 # ╔═╡ 99162b79-82a7-4293-b616-5e7669d04235
 md"""
@@ -941,13 +988,13 @@ md"""
 # ╔═╡ 9abd5004-6d24-49e0-95a1-e62d1ce853cf
 array_vf = hcat(df_vf[!, :calculated_mass_large], df_vf[!, :calculated_mass_medium], df_vf[!, :calculated_mass_small]);
 
-# ╔═╡ e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
+# ╔═╡ 60382a2b-55fc-4436-b6b7-95f1331810ff
 df_vf_large, df_vf_r_large, df_vf_medium, df_vf_r_medium, df_vf_small, df_vf_r_small = remove_false_negatives(df_vf, array_vf, df_vf_r, array_vf_r);
 
-# ╔═╡ 54e384c2-ac35-4679-8be5-ac96fa778c81
+# ╔═╡ 406053d4-524a-484c-9226-406d13f369f8
 r_squared_reprod_vf, rms_values_reprod_vf, fitted_line_reprod_vf, coefficient_reprod_vf = prepare_linear_regression(df_vf_r_large, df_vf_r_medium, df_vf_r_small, df_vf_large, df_vf_medium, df_vf_small);
 
-# ╔═╡ a85f777a-76f2-4c64-9973-ea9dec245600
+# ╔═╡ 5602422d-f87d-4be2-803d-5393c9382af1
 function reprod()
     f = Figure()
 
@@ -1272,13 +1319,13 @@ function reprod()
     return f
 end
 
-# ╔═╡ d2b90d91-4e63-45b0-8273-5231dbf2778e
+# ╔═╡ 7aa5fcfd-44b0-4fac-a2b1-7952861af699
 with_theme(medphys_theme) do
     reprod()
 end
 
 # ╔═╡ 965264df-f9d8-4730-b7bb-d7f5334bb5c5
-total_zero_vf = length(findall(x -> x <= 0, array_vf))
+total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
 
 # ╔═╡ 01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
 function false_negative()
@@ -1313,6 +1360,117 @@ end
 
 # ╔═╡ f4b51729-d53a-40e2-919b-5d4562cffbc0
 total_zero_i, total_zero_vf, total_zero_s, num_zero_a
+
+# ╔═╡ ddd2982b-afc4-434f-bce0-4b6f314e0687
+md"""
+### False Positive
+"""
+
+# ╔═╡ e04ecf1a-a46a-4a35-80a3-cdcb5de458dd
+md"""
+#### SWCS
+"""
+
+# ╔═╡ e375a86e-851a-4cd9-8de8-798bb7817711
+df_s
+
+# ╔═╡ 89c9e274-531b-49bc-a4c3-09cc4fc394fc
+begin
+	array_s_pos = Array(df_s[!, :swcs_bkg])
+    array_s_80_pos = Array(df_s_80[!, :swcs_bkg])
+    array_s_100_pos = Array(df_s_100[!, :swcs_bkg])
+    array_s_120_pos = Array(df_s_120[!, :swcs_bkg])
+    array_s_135_pos = Array(df_s_135[!, :swcs_bkg])
+end;
+
+# ╔═╡ 788ff2af-d862-431b-95b2-4ae498cf1cbd
+begin
+ #    num_zeroCAC_80_pos = length(findall(x -> x > mean_swcs_80, array_s_80_pos))
+ #    num_zeroCAC_100_pos = length(findall(x -> x > mean_swcs_100, array_s_100_pos))
+ #    num_zeroCAC_120_pos = length(findall(x -> x > mean_swcs_120, array_s_120_pos))
+ #    num_zeroCAC_135_pos = length(findall(x -> x > mean_swcs_135, array_s_135_pos))
+
+ #    total_zero_s_pos = num_zeroCAC_80_pos + num_zeroCAC_100_pos + num_zeroCAC_120_pos + num_zeroCAC_135_pos
+
+
+	mean_swcs = mean(array_s_pos)
+	total_zero_s_pos = length(findall(x -> x > mean_swcs, array_s_pos))
+
+	total_cac_pos = length(array_s_pos)
+end
+
+# ╔═╡ 7e0a3c06-a2ac-4087-9a69-d60d5e0b01de
+# num_zeroCAC_80_pos, num_zeroCAC_100_pos, num_zeroCAC_120_pos, num_zeroCAC_135_pos
+
+# ╔═╡ d0ebd8e4-c428-492f-8107-b199a44ce61d
+total_zero_s_pos, total_cac_pos
+
+# ╔═╡ a5a08c0d-121a-47e0-b7f9-d952454d91f6
+total_zero_s_pos / total_cac_pos
+
+# ╔═╡ aff535e7-69a3-4307-907b-5b3d21dd5b74
+md"""
+#### Agatston
+"""
+
+# ╔═╡ f2506042-fcb7-4e6a-bf31-bd4cd271e58e
+array_a_pos = df_a[!, :mass_bkg]
+
+# ╔═╡ 38c2e2ed-280e-474c-aebe-8730ce4c53fc
+total_zero_a_pos = length(findall(x -> x > 0, array_a_pos))
+
+# ╔═╡ 4997dd12-1341-47a4-90e2-444005297fca
+md"""
+#### Integrated
+"""
+
+# ╔═╡ 450375f0-fc12-47cf-9bc0-4094aac71635
+array_i_pos = df_i[!, :mass_bkg]
+
+# ╔═╡ 1486496f-28e0-494f-b6c0-7edb9b472ffc
+total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
+
+# ╔═╡ 326bfb42-92d2-41f3-8a2d-283702432f8b
+md"""
+#### Volume Fraction
+"""
+
+# ╔═╡ e95d8d89-b6e9-4b8d-93fc-5ab51658923a
+array_vf_pos = df_vf[!, :mass_bkg]
+
+# ╔═╡ 596677ab-b772-47ff-9523-0c60d96a3a8f
+total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
+
+# ╔═╡ ec5f781a-a0e1-4ab5-b5c8-0bbd898352fe
+function false_positive()
+    f = Figure()
+    colors = Makie.wong_colors()
+
+    ##-- TOP --##
+    axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
+
+    table = [1, 2, 3, 4]
+    heights1 = [
+		(total_zero_i_pos / total_cac_pos) * 100,
+		(total_zero_vf_pos / total_cac_pos) * 100,
+        (total_zero_s_pos / total_cac_pos) * 100,
+        (total_zero_a_pos / total_cac_pos) * 100,
+    ]
+    barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+
+    axtop.title = "False-Positive Scores (CAC>0)"
+    axtop.ylabel = "% False-Positive CAC Scores"
+    ylims!(axtop; low=0, high=100)
+    axtop.yticks = [0, 25, 50, 75, 100]
+
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_positive.png"), f)
+    return f
+end
+
+# ╔═╡ c691f783-da60-4c4d-8000-6dcfcc8466b2
+with_theme(medphys_theme) do
+    false_positive()
+end
 
 # ╔═╡ a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 md"""
@@ -1590,55 +1748,59 @@ summ_zero_cac = DataFrame(
 # ╠═1886135c-4ecc-4f27-9a77-7ead70d7735d
 # ╠═8b5c75a7-8973-46bf-88bf-0fe65f4d20ce
 # ╟─7ec78f71-6b20-4c8c-a9da-a216404bee72
-# ╟─a85f777a-76f2-4c64-9973-ea9dec245600
-# ╟─d2b90d91-4e63-45b0-8273-5231dbf2778e
-# ╟─88df8b9d-ff41-41d3-99fe-8ab9a050a803
-# ╠═53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
-# ╠═89b28ac5-dd69-4812-84fd-64b54606d146
-# ╠═4f5328e7-66dd-433c-a7f6-5dc461c83a4c
-# ╠═6e515ee8-2836-4285-a0a9-131e1e7b4b7f
-# ╠═9ae3b4cb-fac5-4168-868d-724de9b0c9d2
-# ╠═d9e26f65-6d40-48e5-b567-4cce5a2c530b
-# ╠═4b79a10e-d861-44ee-8b07-877e51145d5d
-# ╠═14cdef5f-c9ba-4810-93fe-0f0915b803a2
-# ╟─4c9feda4-9fc1-42c7-8cac-a17d51627c6d
-# ╠═e261c635-98d7-4357-a429-a34b73b47bb5
-# ╠═d2e4fa84-1f12-4924-823a-6ea7ab0d3d8e
-# ╠═101b02a5-9e67-460d-9db0-140684bd1e11
-# ╠═fe275fdc-c833-43ac-a4c7-7a49b2b728f8
-# ╠═8babe305-6bf0-43e3-9fe7-ded195d2addf
-# ╠═ea17e8f9-c06e-439e-82f9-dbfdef759998
-# ╠═e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
-# ╠═54e384c2-ac35-4679-8be5-ac96fa778c81
-# ╟─8eaec985-641a-498f-9cd9-c2c85d877142
-# ╠═fcd83805-06e2-4cda-aa56-0c13c69424d8
-# ╠═5f2eb2d2-84c4-4160-a92a-f181b4126450
-# ╠═869de9cc-6ab0-4e0b-ad1f-59db1fd2f69f
-# ╠═43b3ba9b-247c-41cd-968e-3a27736426b0
-# ╠═b16090b5-a232-4e71-9148-b71296efa999
-# ╠═24034fa9-f9d4-4bd0-a736-488b06403adc
-# ╠═ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
-# ╠═3d987e71-9742-4b70-be10-2ed82a6df5f4
-# ╟─5bc912d4-be86-4cca-9e8b-8af31d269edf
-# ╠═594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
-# ╠═1d208fd8-b847-4afe-84b5-3a553f50a858
-# ╠═a9f68d7e-7818-47d5-ba1f-965634225b30
-# ╠═f2177e1f-2a55-4f81-9a69-ab985ae3b7c2
-# ╠═35bc90e2-9d70-4daf-a825-b462831c5bf6
-# ╠═624074ec-572a-45ab-932a-aed7edb1f846
-# ╠═e8b56e73-f22b-4587-9141-558f5f545a5e
-# ╠═97f07af4-a4af-4a26-9f81-5acb836c9f2c
-# ╠═a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
+# ╟─5602422d-f87d-4be2-803d-5393c9382af1
+# ╟─7aa5fcfd-44b0-4fac-a2b1-7952861af699
+# ╟─e869e1ea-65bb-4a95-a98d-26776e57e109
+# ╠═ec2ca363-555d-41dc-88a9-42ab2bba53ee
+# ╠═41a74395-bc72-4642-bc6f-a55707a02ecf
+# ╠═cddbb574-6b13-4e05-a6ae-236e8aaeb9b5
+# ╠═54d7b531-7cf9-4972-bebd-6eb626f85896
+# ╠═8910eda9-93d3-4f06-a8ad-cb59aeb8620c
+# ╠═e21fb40e-7863-448b-8971-c50fd9a7707c
+# ╠═92180dfb-5567-4826-856d-fadf219d291f
+# ╠═b554b648-bb3f-48a0-b9d2-f01532819b3f
+# ╟─5d3bb4c8-73ea-456f-9d67-b96604bf230c
+# ╠═4967ccc8-d4b7-406c-a968-f98c582daab5
+# ╠═91a26dd7-2e32-4596-9301-9f07339ad065
+# ╠═6011ee2d-b229-4190-8006-1f29cb469ec1
+# ╠═a779377a-f9b6-440c-9bee-ef02d3559e57
+# ╠═cb0bd249-692f-433e-9f94-3d27d5361f4c
+# ╠═04e034e8-195b-4dfb-acea-1fd9ff7be1d4
+# ╠═60382a2b-55fc-4436-b6b7-95f1331810ff
+# ╠═406053d4-524a-484c-9226-406d13f369f8
+# ╟─fb6f9e96-11c1-401a-a4de-04907195fdc5
+# ╠═3ceab5be-aa44-414a-a750-27e56fcb202d
+# ╠═a8c90830-da28-468c-9931-d9956b3499bf
+# ╠═ea036472-53d2-4ae3-afa1-fd4760e2ac91
+# ╠═4a6bf494-dd85-4d22-84dc-22b82c77e431
+# ╠═c9005ee7-4b44-46de-8238-89c38adce453
+# ╠═f4709c60-6d80-4b0f-bbd8-f2560f30553b
+# ╠═3db60b45-48d2-485a-a4b2-e6341b0a656e
+# ╠═261c85f1-75d7-4845-bb0e-8c6395515b78
+# ╟─da658c77-4e3d-43fb-8974-021b89c482f2
+# ╠═26d5f43d-96c5-4c59-83eb-5d21a468484f
+# ╠═7f1691b0-4e4c-451b-a29a-4b1152aa11d8
+# ╠═af702f3f-579e-4dc2-b87a-4af8522fa9e0
+# ╠═eeb91413-19d3-43f9-881e-7ba1a72979a2
+# ╠═572c928b-f73a-4cc2-bad1-b1ad40198a6a
+# ╠═84d0db6e-a378-4863-8aa0-be817f7bd9c0
+# ╠═2cf3160f-1a95-446d-9d54-36e72b8178ad
+# ╠═af15b58b-243c-4743-9167-db9c0d6599d9
+# ╠═c6cc5506-2474-40b3-bc49-6700922b2f7a
 # ╟─3a8c6f3c-0fa6-477c-85e2-7739cf2537ae
-# ╟─01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
 # ╟─cc88bab2-8b5e-474a-889d-f0fbfec790a2
+# ╟─c691f783-da60-4c4d-8000-6dcfcc8466b2
+# ╟─25a8bc6a-5172-441d-9e91-e21624fe64bb
+# ╟─01ecd9f2-4aa6-4f9e-b1ec-e51e3aa99571
 # ╠═f4b51729-d53a-40e2-919b-5d4562cffbc0
 # ╠═da2b55dc-2fe9-468f-a53e-baf232ca79cd
+# ╠═fdb7fdb6-7466-48ba-bee2-c2a9f4bc266c
+# ╠═8c77654d-e7e4-4afe-ba92-c5ac1afc963b
 # ╟─932e1a11-ec52-48bc-af27-bb3e09e6b27f
-# ╠═dc8805a5-2b4c-47fe-88c8-0f4434ddd5cf
-# ╠═2c78dcc4-03c7-49b5-ac45-30c198671761
-# ╠═d3e13dcd-201a-49ab-86f7-a7d3320088c2
-# ╠═4b97d892-b0db-4f75-9239-9da215f905f0
+# ╠═b21b7c6e-85f5-4d46-a2b8-5d5ae512a75e
+# ╠═9911ef08-c00d-417d-9ef1-d911dba5d65c
+# ╠═4e6fdad1-98d7-4956-a76d-3a94e9db3384
+# ╠═a3ad4d4b-a736-4bf6-abee-72ca973456f7
 # ╟─01d903d8-fca2-4317-a2d7-93429f06d47c
 # ╠═97a612d5-44e7-43f1-b61e-8518c7e6aa28
 # ╠═a31dfad2-e420-4c41-b805-227778a39fc9
@@ -1648,6 +1810,24 @@ summ_zero_cac = DataFrame(
 # ╟─99162b79-82a7-4293-b616-5e7669d04235
 # ╠═9abd5004-6d24-49e0-95a1-e62d1ce853cf
 # ╠═965264df-f9d8-4730-b7bb-d7f5334bb5c5
+# ╟─ddd2982b-afc4-434f-bce0-4b6f314e0687
+# ╟─ec5f781a-a0e1-4ab5-b5c8-0bbd898352fe
+# ╟─e04ecf1a-a46a-4a35-80a3-cdcb5de458dd
+# ╠═e375a86e-851a-4cd9-8de8-798bb7817711
+# ╠═89c9e274-531b-49bc-a4c3-09cc4fc394fc
+# ╠═788ff2af-d862-431b-95b2-4ae498cf1cbd
+# ╠═7e0a3c06-a2ac-4087-9a69-d60d5e0b01de
+# ╠═d0ebd8e4-c428-492f-8107-b199a44ce61d
+# ╠═a5a08c0d-121a-47e0-b7f9-d952454d91f6
+# ╟─aff535e7-69a3-4307-907b-5b3d21dd5b74
+# ╠═f2506042-fcb7-4e6a-bf31-bd4cd271e58e
+# ╠═38c2e2ed-280e-474c-aebe-8730ce4c53fc
+# ╟─4997dd12-1341-47a4-90e2-444005297fca
+# ╠═450375f0-fc12-47cf-9bc0-4094aac71635
+# ╠═1486496f-28e0-494f-b6c0-7edb9b472ffc
+# ╟─326bfb42-92d2-41f3-8a2d-283702432f8b
+# ╠═e95d8d89-b6e9-4b8d-93fc-5ab51658923a
+# ╠═596677ab-b772-47ff-9523-0c60d96a3a8f
 # ╟─a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 # ╟─b7064bb1-f21a-4bb6-a395-9f1c73102058
 # ╟─21b03bf8-47ba-4915-936a-92c488671bb1
