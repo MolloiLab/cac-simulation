@@ -34,6 +34,12 @@ md"""
 ## 2.1 - Simulation
 """
 
+# ╔═╡ 208eaf04-df19-4c39-afb2-3a78a07486f7
+load(joinpath(dirname(pwd()), "figures", "phantom materials.png"))
+
+# ╔═╡ 052c0b93-c3b7-40c1-8aec-062c3e9a224d
+load(joinpath(dirname(pwd()), "figures", "phantom geometries.png"))
+
 # ╔═╡ f722fa66-c6c7-4d5b-8ee9-c552f703a2ba
 md"""
 ### 2.1.1 - Motion Blurring
@@ -103,11 +109,8 @@ md"""
 ### 3.1.3 - Sensitivity and Specificity
 """
 
-# ╔═╡ 669b5161-7fa2-4a46-9d9d-12ced29ea186
-load(joinpath(dirname(pwd()), "figures", "stationary", "false_negative.png"))
-
-# ╔═╡ c4c31725-5ff2-41e6-a9c8-2e3a78c845af
-load(joinpath(dirname(pwd()), "figures", "stationary", "false_positive.png"))
+# ╔═╡ ad82f85c-fe65-44a8-a1e8-b9e7665fcdb7
+load(joinpath(dirname(pwd()), "figures", "stationary", "sensitivity_specificity.png"))
 
 # ╔═╡ f6c2118f-29c5-4dfa-bf8a-4ee30f8be196
 md"""
@@ -138,11 +141,8 @@ md"""
 ### 3.1.3 - Sensitivity and Specificity
 """
 
-# ╔═╡ 88de4995-e0ab-475e-b9ba-17fccc6d45f8
-load(joinpath(dirname(pwd()), "figures", "motion", "false_negative.png"))
-
-# ╔═╡ 020b9761-43fd-4097-90be-d9717433f252
-load(joinpath(dirname(pwd()), "figures", "motion", "false_positive.png"))
+# ╔═╡ b55ce920-715b-4549-a6d0-2ecce40d21bd
+load(joinpath(dirname(pwd()), "figures", "motion", "sensitivity_specificity.png"))
 
 # ╔═╡ 36f6c9c0-8963-449a-ad4d-33bc6fa6d44a
 md"""
@@ -170,11 +170,8 @@ md"""
 ### 3.1.3 - Sensitivity and Specificity
 """
 
-# ╔═╡ 1d81bb43-c524-4011-8d4c-96fa366ef9b9
-load(joinpath(dirname(pwd()), "figures", "physical", "false_negative.png"))
-
-# ╔═╡ af3d3cf4-360e-45c7-b909-d5c866156bc7
-load(joinpath(dirname(pwd()), "figures", "physical", "false_positive.png"))
+# ╔═╡ b009fdb8-f059-4d8b-8069-158daf50820c
+load(joinpath(dirname(pwd()), "figures", "physical", "sensitivity_specificity.png"))
 
 # ╔═╡ 75aaf5be-9013-4b92-99a4-a862d2e5343a
 md"""
@@ -203,6 +200,8 @@ md"""
 # ╟─8ace0d7f-1863-49a0-897c-5fabc85b1a13
 # ╟─2453932a-7525-419d-8ba2-f8d1289a0c0f
 # ╟─946fdf4b-519a-4b7c-a025-3f8c0e3d594d
+# ╟─208eaf04-df19-4c39-afb2-3a78a07486f7
+# ╟─052c0b93-c3b7-40c1-8aec-062c3e9a224d
 # ╟─f722fa66-c6c7-4d5b-8ee9-c552f703a2ba
 # ╟─bc049335-7083-4626-9625-b82b16abc1ad
 # ╟─6cf1b2c9-325e-4237-9f78-4c1266b9e521
@@ -218,8 +217,7 @@ md"""
 # ╟─70ff5fd1-da44-4cb8-95b6-6680ef4002f0
 # ╟─6bd02498-6cc2-4311-9370-78bfd9dca0da
 # ╟─9b2b3a55-905f-4aa8-8d6b-136ac8f140de
-# ╟─669b5161-7fa2-4a46-9d9d-12ced29ea186
-# ╟─c4c31725-5ff2-41e6-a9c8-2e3a78c845af
+# ╟─ad82f85c-fe65-44a8-a1e8-b9e7665fcdb7
 # ╟─f6c2118f-29c5-4dfa-bf8a-4ee30f8be196
 # ╟─03b59f85-f72b-4100-8aa7-3767fca347c4
 # ╟─6f614da3-da89-41d2-bf1b-9cc7761ccc99
@@ -227,16 +225,14 @@ md"""
 # ╟─caf409b6-eac7-422e-8480-04a55ad19d3c
 # ╟─831bb50b-e268-476f-a87b-f532c847aa60
 # ╟─62532e8f-5e71-489a-89a1-70a56f1b1d7a
-# ╟─88de4995-e0ab-475e-b9ba-17fccc6d45f8
-# ╟─020b9761-43fd-4097-90be-d9717433f252
+# ╟─b55ce920-715b-4549-a6d0-2ecce40d21bd
 # ╟─36f6c9c0-8963-449a-ad4d-33bc6fa6d44a
 # ╟─812cb8f8-0ae6-4cb8-a15c-b34a6fc0e196
 # ╟─81744560-96ef-468d-a17b-91598f1129fe
 # ╟─c66b50d3-8a0b-4f78-8e1d-324ece091d98
 # ╟─21c2ea30-2b7c-4e10-b8f6-b616be8e8ce2
 # ╟─c2da7cda-f636-4c97-aca3-09a649e29731
-# ╟─1d81bb43-c524-4011-8d4c-96fa366ef9b9
-# ╟─af3d3cf4-360e-45c7-b909-d5c866156bc7
+# ╟─b009fdb8-f059-4d8b-8069-158daf50820c
 # ╟─75aaf5be-9013-4b92-99a4-a862d2e5343a
 # ╟─269f772d-bbd2-4224-aeea-711a308b1eb8
 # ╟─fa9db86b-0894-4ce5-b431-8ae4b6dacf24

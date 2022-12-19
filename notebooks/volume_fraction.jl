@@ -42,7 +42,7 @@ begin
 
 	IMAGES = "images_new"
 
-	VENDOR = VENDORS[4]
+	VENDOR = VENDORS[2]
 	SIZE = SIZES[1]
 	DENSITY = DENSITIES[2]
 	
@@ -422,6 +422,12 @@ end
 
 # ╔═╡ 0a062ed7-661e-478b-80a3-d0d54de035fb
 hu_heart_tissue_bkg
+
+# ╔═╡ 8753c93e-b7fc-4ba5-9837-c78dbb7e1f91
+mass_bkg
+
+# ╔═╡ 4f329f6b-a1df-4f49-8ea7-73771861afe1
+noise_bkg = std(arr[background_ring])
 
 # ╔═╡ f9c9f86a-1e90-448a-b0e2-270e82068f27
 size(background_mask)
@@ -894,6 +900,8 @@ push!(dfs, df)
 # ╟─15a30f21-f31f-4c56-b955-b8f119834c32
 # ╠═21e1ae40-dfd0-44c5-8c1d-ef5a68d13f79
 # ╠═0a062ed7-661e-478b-80a3-d0d54de035fb
+# ╠═8753c93e-b7fc-4ba5-9837-c78dbb7e1f91
+# ╠═4f329f6b-a1df-4f49-8ea7-73771861afe1
 # ╠═f9c9f86a-1e90-448a-b0e2-270e82068f27
 # ╟─6dc6ba21-30c9-48ec-aec1-9ea817bcae9c
 # ╟─0853e72a-0e38-4ff8-adad-40f740dd1ddd

@@ -879,66 +879,54 @@ function remove_false_negatives(df, array, df_reprod, array_reprod, swcs::Bool)
 	end
 end
 
-# ╔═╡ 63c4ce79-fcde-4e6e-bca9-6d3c6552d98e
+# ╔═╡ 86472f5a-0d0a-4c2e-9c01-dac3e8e57885
 md"""
 ## Sensitivity and Specificity
 """
 
-# ╔═╡ 43168827-8a92-4e0c-a33c-a909a6606162
+# ╔═╡ d7393fcd-aced-4c6b-8196-218e0f78e286
 md"""
 ### False Negative
 """
 
-# ╔═╡ 14408c8c-0a6b-4843-b14d-c6635d54c00e
-# ## ---- FIND OPTIMAL THRESHOLD FOR SENS/SPEC ---- ##
-# begin
-# 	cutoffs = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
-# 	for cutoff in cutoffs
-# 		global total_zero_i, total_zero_vf, total_zero_i_pos, total_zero_vf_pos
+# ╔═╡ dd4a85f5-8825-4af1-9be3-783d7c126e3e
+# function false_negative()
+#     f = Figure()
+#     colors = Makie.wong_colors()
 
-# 		total_zero_i = length(findall(x -> x <= cutoff, array_i))
-# 		total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
-# 		total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
-# 		total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
-		
-		
-# 		rms_i_neg = rmsd([0], [total_zero_i])
-# 		rms_vf_neg = rmsd([0], [total_zero_vf])
-# 		rms_i_pos = rmsd([0], [total_zero_i_pos])
-# 		rms_vf_pos = rmsd([0], [total_zero_vf_pos])
+#     ##-- TOP --##
+#     axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
 
-# 		tot_rms = mean([rms_i_neg, rms_vf_neg, rms_i_pos, rms_vf_pos])
-# 		@show tot_rms, cutoff
-# 	end
+#     table = [1, 2, 3, 4]
+#     heights1 = [
+# 		(total_zero_i / total_cac) * 100,
+# 		(total_zero_vf / total_cac) * 100,
+#         (total_zero_s / total_cac) * 100,
+#         (num_zero_a / total_cac) * 100,
+#     ]
+#     barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+
+#     axtop.title = "False-Negative Scores (CAC=0)"
+#     axtop.ylabel = "% False-Negative Zero CAC Scores"
+#     ylims!(axtop; low=0, high=100)
+#     axtop.yticks = [0, 25, 50, 75, 100]
+
+#     save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
+#     return f
 # end
 
-# ╔═╡ eab067e7-5917-4ce5-9022-271238eb3fb6
-cutoff = 0.25
+# ╔═╡ 98b99cc0-c22c-488e-a98d-002e042c6c01
+# with_theme(medphys_theme) do
+#     false_negative()
+# end
 
-# ╔═╡ 8a8bcf13-0e70-4706-9903-e9ccc227b335
+# ╔═╡ 7384e7ae-6283-4656-8a46-722105daf20e
 md"""
 #### SWCS
 """
 
-# ╔═╡ d6da1ea7-fb85-4144-b04c-450a33439de0
-df_s_80, df_s_100, df_s_120, df_s_135, = groupby(df_s, :scan);
-
-# ╔═╡ bf9024c9-7f7e-41e6-9770-ce59911322be
-begin
-    mean_swcs_80, std_swcs_80 = mean(df_s_80[!, :swcs_bkg]), std(df_s_80[!, :swcs_bkg])
-    mean_swcs_100, std_swcs_100 = mean(df_s_100[!, :swcs_bkg]), std(df_s_100[!, :swcs_bkg])
-    mean_swcs_120, std_swcs_120 = mean(df_s_120[!, :swcs_bkg]), std(df_s_120[!, :swcs_bkg])
-    mean_swcs_135, std_swcs_135 = mean(df_s_135[!, :swcs_bkg]), std(df_s_135[!, :swcs_bkg])
-end;
-
-# ╔═╡ 1abe1d61-44dd-4e48-a79f-1cdd57fc5c96
-begin
-	array_s = Array(hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]))
-    array_s_80 = Array(hcat(df_s_80[!, :calculated_swcs_large], df_s_80[!, :calculated_swcs_medium], df_s_80[!, :calculated_swcs_small]))
-    array_s_100 = Array(hcat(df_s_100[!, :calculated_swcs_large], df_s_100[!, :calculated_swcs_medium], df_s_100[!, :calculated_swcs_small]))
-    array_s_120 = Array(hcat(df_s_120[!, :calculated_swcs_large], df_s_120[!, :calculated_swcs_medium], df_s_120[!, :calculated_swcs_small]))
-    array_s_135 = Array(hcat(df_s_135[!, :calculated_swcs_large], df_s_135[!, :calculated_swcs_medium], df_s_135[!, :calculated_swcs_small]))
-end;
+# ╔═╡ 01fdb9d2-6d65-4b24-b0c7-3b48c3bedcb6
+array_s = Array(hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]));
 
 # ╔═╡ 97f07af4-a4af-4a26-9f81-5acb836c9f2c
 df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small = remove_false_negatives(df_s, array_s, df_s_r, array_s_r, true);
@@ -946,26 +934,21 @@ df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small =
 # ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
 r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
 
-# ╔═╡ b830faad-831d-4437-90b0-84a7f6140825
-begin
-    num_zeroCAC_80 = length(findall(x -> x < mean_swcs_80, array_s_80))
-    num_zeroCAC_100 = length(findall(x -> x < mean_swcs_100, array_s_100))
-    num_zeroCAC_120 = length(findall(x -> x < mean_swcs_120, array_s_120))
-    num_zeroCAC_135 = length(findall(x -> x < mean_swcs_135, array_s_135))
+# ╔═╡ cad984e3-4243-45c5-a8c7-b498a7d9fcca
+total_cac = length(array_s)
 
-    total_zero_s = num_zeroCAC_80 + num_zeroCAC_100 + num_zeroCAC_120 + num_zeroCAC_135
-    total_cac = length(array_s_80) * 4
-end;
+# ╔═╡ 40823ab6-49fc-468c-803b-a30877a651df
+mean_s, std_s = mean(df_s[!, :swcs_bkg]), std(df_s[!, :swcs_bkg])
 
-# ╔═╡ 230a51cf-2429-43d7-a7db-80016948513a
-total_cac
+# ╔═╡ 6cefb906-028d-4d22-b8cb-aa35f47faed9
+total_zero_s = length(findall(x -> x <= mean_s + std_s, array_s))
 
-# ╔═╡ 43b931de-5ca8-4f08-89c4-f1969471e639
+# ╔═╡ 11815da6-0128-483c-8b99-a7c2d930a066
 md"""
 #### Agatston
 """
 
-# ╔═╡ ec479a18-3847-4d56-971e-fff60cf8bb2d
+# ╔═╡ 94e0969e-ef78-4a30-ba7e-d35a8f932bac
 array_a = hcat(df_a[!, :calculated_mass_large], df_a[!, :calculated_mass_medium], df_a[!, :calculated_mass_small]);
 
 # ╔═╡ ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
@@ -974,15 +957,15 @@ df_a_large, df_a_r_large, df_a_medium, df_a_r_medium, df_a_small, df_a_r_small =
 # ╔═╡ 3d987e71-9742-4b70-be10-2ed82a6df5f4
 r_squared_reprod_a, rms_values_reprod_a, fitted_line_reprod_a, coefficient_reprod_a = prepare_linear_regression(df_a_r_large, df_a_r_medium, df_a_r_small, df_a_large, df_a_medium, df_a_small)
 
-# ╔═╡ 6aa7494d-df55-4c88-83f1-45f1658f7c85
+# ╔═╡ 12f90c32-20da-4a1a-90ff-e451fcf1f029
 num_zero_a = length(findall(x -> x <= 0, array_a))
 
-# ╔═╡ d9197002-4811-42cc-9bd5-54cabaa51701
+# ╔═╡ 1372524e-508f-472d-b46d-3e00812d74b8
 md"""
 #### Integrated
 """
 
-# ╔═╡ 943c5370-3389-420c-9d7b-f002f5b03016
+# ╔═╡ 11ebd9be-cd44-4656-9793-fb9127ef880a
 array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
 
 # ╔═╡ 4b79a10e-d861-44ee-8b07-877e51145d5d
@@ -991,15 +974,18 @@ df_i_large, df_i_r_large, df_i_medium, df_i_r_medium, df_i_small, df_i_r_small =
 # ╔═╡ 14cdef5f-c9ba-4810-93fe-0f0915b803a2
 r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small);
 
-# ╔═╡ 740b384b-6de5-445b-9b2d-df097aaca8eb
-total_zero_i = length(findall(x -> x <= cutoff, array_i))
+# ╔═╡ 03d2d117-57f2-4fd4-835f-f4833841fff7
+mean_i, std_i = mean(df_i[!, :mass_bkg]), std(df_i[!, :mass_bkg])
 
-# ╔═╡ 81247cb1-280b-4418-9808-8b9fadb66060
+# ╔═╡ d7e39197-4428-4559-a323-cde583406e1c
+total_zero_i = length(findall(x -> x <= mean_i + std_i, array_i))
+
+# ╔═╡ 98514ba4-72f0-4606-b92d-784c15fc94ce
 md"""
 #### Volume Fraction
 """
 
-# ╔═╡ 38d1bc6a-22e4-492f-99c0-c22f755c1d3c
+# ╔═╡ 6fcc6d43-dde1-4bec-a783-3cf4d2e59911
 array_vf = hcat(df_vf[!, :calculated_mass_large], df_vf[!, :calculated_mass_medium], df_vf[!, :calculated_mass_small]);
 
 # ╔═╡ e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
@@ -1338,16 +1324,105 @@ with_theme(medphys_theme) do
     reprod()
 end
 
-# ╔═╡ c69cce01-4181-4aa4-ba13-6e03fcac8357
-total_zero_vf = length(findall(x -> x <= cutoff, array_vf))
+# ╔═╡ 3c2261a8-c99c-4810-b978-dfd8cde386b1
+mean_vf, std_vf = mean(df_vf[!, :mass_bkg]), std(df_vf[!, :mass_bkg])
 
-# ╔═╡ 0dbe1577-e831-47a4-b3fa-a1148bcf8c59
-function false_negative()
+# ╔═╡ d0ea1838-e52a-4229-91b3-62500fb70ed0
+total_zero_vf = length(findall(x -> x <= mean_i + std_i, array_i))
+
+# ╔═╡ 52d90be9-6c07-4289-82c5-0d19f7c7db5b
+total_zero_i, total_zero_vf, total_zero_s, num_zero_a
+
+# ╔═╡ 92d37f45-02b2-415c-a5cf-a0654b3bf778
+md"""
+### False Positive
+"""
+
+# ╔═╡ c019d057-b19b-4e77-b59d-bff4f9de5c79
+# function false_positive()
+#     f = Figure()
+#     colors = Makie.wong_colors()
+
+#     ##-- TOP --##
+#     axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
+
+#     table = [1, 2, 3, 4]
+#     heights1 = [
+# 		(total_zero_i_pos / total_cac_pos) * 100,
+# 		(total_zero_vf_pos / total_cac_pos) * 100,
+#         (total_zero_s_pos / total_cac_pos) * 100,
+#         (total_zero_a_pos / total_cac_pos) * 100,
+#     ]
+#     barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+
+#     axtop.title = "False-Positive Scores (CAC>0)"
+#     axtop.ylabel = "% False-Positive CAC Scores"
+#     ylims!(axtop; low=0, high=100)
+#     axtop.yticks = [0, 25, 50, 75, 100]
+
+#     save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_positive.png"), f)
+#     return f
+# end
+
+# ╔═╡ 2b539e29-ee73-4ae1-9917-50b9887919dd
+# with_theme(medphys_theme) do
+#     false_positive()
+# end
+
+# ╔═╡ 01060359-facb-4f3d-8096-f8a0ad60afc3
+md"""
+#### SWCS
+"""
+
+# ╔═╡ e9930852-95cf-4750-8287-d2da21f071bd
+array_s_pos = df_s[!, :swcs_bkg]
+
+# ╔═╡ 3b92b783-7cc3-46d5-a479-d5c4b2673bf2
+total_cac_pos = length(array_s_pos)
+
+# ╔═╡ 4fccc2b4-25b0-43ee-bc6b-9d27af54a745
+total_zero_s_pos = length(findall(x -> x >= mean_s + std_s, array_s_pos))
+
+# ╔═╡ 25b17523-054b-40a8-a5ae-c2d0eebe95b0
+md"""
+#### Agatston
+"""
+
+# ╔═╡ df26a723-cb82-4f97-93c4-385c9a68ad93
+array_a_pos = df_a[!, :mass_bkg]
+
+# ╔═╡ 71525bbb-36f0-4c45-aeb0-d25a5e65c81f
+total_zero_a_pos = length(findall(x -> x > 0, array_a_pos))
+
+# ╔═╡ 7e1aaca3-4eae-45a1-ae7c-d52a4c3b0ad6
+md"""
+#### Integrated
+"""
+
+# ╔═╡ 6cb4a96d-f4a9-443a-980d-0ed5aa86217b
+array_i_pos = df_i[!, :mass_bkg]
+
+# ╔═╡ 9a33c08b-9018-4b16-904c-351c7f164c96
+total_zero_i_pos = length(findall(x -> x >= mean_i + std_i, array_i_pos))
+
+# ╔═╡ f0ea9553-e678-43ed-ae5a-9956c2223411
+md"""
+#### Volume Fraction
+"""
+
+# ╔═╡ cfe900b1-c11d-43e7-8859-8088b06ef4ce
+array_vf_pos = df_vf[!, :mass_bkg]
+
+# ╔═╡ 47800d50-2e56-4ec3-ba12-13aae206d694
+total_zero_vf_pos = length(findall(x -> x >= mean_vf + std_vf, array_vf_pos))
+
+# ╔═╡ d6cd9cf6-4571-4dad-bda6-56fd783e4b8d
+function sensitivity_specificity()
     f = Figure()
     colors = Makie.wong_colors()
 
     ##-- TOP --##
-    axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
+    ax1 = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
 
     table = [1, 2, 3, 4]
     heights1 = [
@@ -1356,109 +1431,15 @@ function false_negative()
         (total_zero_s / total_cac) * 100,
         (num_zero_a / total_cac) * 100,
     ]
-    barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+    barplot!(ax1, table, heights1; color=colors[1:4], bar_labels=:y)
 
-    axtop.title = "False-Negative Scores (CAC=0)"
-    axtop.ylabel = "% False-Negative Zero CAC Scores"
-    ylims!(axtop; low=0, high=100)
-    axtop.yticks = [0, 25, 50, 75, 100]
+    ax1.title = "False-Negative Scores (CAC=0)"
+    ax1.ylabel = "% False-Negative Zero CAC Scores"
+    ylims!(ax1; low=0, high=100)
+    ax1.yticks = [0, 25, 50, 75, 100]
 
-    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
-    return f
-end
-
-# ╔═╡ 42227f67-4c93-47d0-9bd9-12772b713342
-with_theme(medphys_theme) do
-    false_negative()
-end
-
-# ╔═╡ d826c801-972e-489e-b1e8-ee5d9fda7908
-total_zero_i, total_zero_vf, total_zero_s, num_zero_a
-
-# ╔═╡ 8f3d2313-89a9-4453-8a59-bcb96a02ea64
-md"""
-### False Positive
-"""
-
-# ╔═╡ f6e6e34f-bad9-4fb9-b796-5581b441e553
-md"""
-#### SWCS
-"""
-
-# ╔═╡ 0816f71c-38b8-4a2b-8c1b-1ee5750e6e2c
-begin
-	array_s_pos = Array(df_s[!, :swcs_bkg])
-    array_s_80_pos = Array(df_s_80[!, :swcs_bkg])
-    array_s_100_pos = Array(df_s_100[!, :swcs_bkg])
-    array_s_120_pos = Array(df_s_120[!, :swcs_bkg])
-    array_s_135_pos = Array(df_s_135[!, :swcs_bkg])
-end;
-
-# ╔═╡ dca1fede-6fb3-4154-b4b5-bb06757c1a9e
-begin
- #    num_zeroCAC_80_pos = length(findall(x -> x > mean_swcs_80, array_s_80_pos))
- #    num_zeroCAC_100_pos = length(findall(x -> x > mean_swcs_100, array_s_100_pos))
- #    num_zeroCAC_120_pos = length(findall(x -> x > mean_swcs_120, array_s_120_pos))
- #    num_zeroCAC_135_pos = length(findall(x -> x > mean_swcs_135, array_s_135_pos))
-
- #    total_zero_s_pos = num_zeroCAC_80_pos + num_zeroCAC_100_pos + num_zeroCAC_120_pos + num_zeroCAC_135_pos
-
-
-	mean_swcs = mean(array_s_pos)
-	total_zero_s_pos = length(findall(x -> x > mean_swcs, array_s_pos))
-
-	total_cac_pos = length(array_s_pos)
-end
-
-# ╔═╡ 3438208d-9556-4f2f-8303-44a7d3e06b62
-# num_zeroCAC_80_pos, num_zeroCAC_100_pos, num_zeroCAC_120_pos, num_zeroCAC_135_pos
-
-# ╔═╡ 9bd986a8-e96e-4d67-83b2-ee3cc18635d0
-total_zero_s_pos, total_cac_pos
-
-# ╔═╡ dc33fe86-eda3-4265-b2e7-05682d23f3a8
-total_zero_s_pos / total_cac_pos
-
-# ╔═╡ 6af3972f-fc16-4305-b9b4-b6851c254777
-md"""
-#### Agatston
-"""
-
-# ╔═╡ 8eeabb4a-77e0-4835-82d6-c7660e2e2a09
-array_a_pos = df_a[!, :mass_bkg]
-
-# ╔═╡ be1263bf-e503-4141-8d3b-78956c6ee6ec
-total_zero_a_pos = length(findall(x -> x > 0, array_a_pos))
-
-# ╔═╡ b1eb6846-d37b-466f-896b-fc7b3abff84f
-md"""
-#### Integrated
-"""
-
-# ╔═╡ e3cf5797-de71-42ec-82f6-5008a5601441
-array_i_pos = df_i[!, :mass_bkg]
-
-# ╔═╡ 0f3aa7ad-403c-4ae0-8018-a3a11059c9d6
-total_zero_i_pos = length(findall(x -> x > cutoff, array_i_pos))
-
-# ╔═╡ d91e7943-3b87-4fd4-9d0b-c716256246fe
-md"""
-#### Volume Fraction
-"""
-
-# ╔═╡ 7ffb223a-81c7-4630-956b-c236dc0bb0e2
-array_vf_pos = df_vf[!, :mass_bkg]
-
-# ╔═╡ 64815452-a7bc-4d04-b7b0-1b5d47143234
-total_zero_vf_pos = length(findall(x -> x > cutoff, array_vf_pos))
-
-# ╔═╡ 7c7d91ee-c503-4891-85af-fe4d88b4703a
-function false_positive()
-    f = Figure()
-    colors = Makie.wong_colors()
-
-    ##-- TOP --##
-    axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
+	##-- TOP --##
+    ax2 = Axis(f[2, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
 
     table = [1, 2, 3, 4]
     heights1 = [
@@ -1467,20 +1448,22 @@ function false_positive()
         (total_zero_s_pos / total_cac_pos) * 100,
         (total_zero_a_pos / total_cac_pos) * 100,
     ]
-    barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
+    barplot!(ax2, table, heights1; color=colors[1:4], bar_labels=:y)
 
-    axtop.title = "False-Positive Scores (CAC>0)"
-    axtop.ylabel = "% False-Positive CAC Scores"
-    ylims!(axtop; low=0, high=100)
-    axtop.yticks = [0, 25, 50, 75, 100]
+    ax2.title = "False-Positive Scores (CAC>0)"
+    ax2.ylabel = "% False-Positive CAC Scores"
+    ylims!(ax2; low=0, high=100)
+    ax2.yticks = [0, 25, 50, 75, 100]
 
-    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_positive.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "sensitivity_specificity.png"), f, resolution=(800, 800))
+
+	
     return f
 end
 
-# ╔═╡ cb0d0feb-9871-4841-a417-4e9513ed0893
+# ╔═╡ 5e2dafd8-5853-4215-be35-9a6fcf47cec1
 with_theme(medphys_theme) do
-    false_positive()
+    sensitivity_specificity()
 end
 
 # ╔═╡ a6f0d36e-823d-4198-b4ea-d95ce16ac65c
@@ -1802,46 +1785,45 @@ summ_zero_cac = DataFrame(
 # ╠═e8b56e73-f22b-4587-9141-558f5f545a5e
 # ╠═97f07af4-a4af-4a26-9f81-5acb836c9f2c
 # ╠═a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
-# ╟─63c4ce79-fcde-4e6e-bca9-6d3c6552d98e
-# ╟─43168827-8a92-4e0c-a33c-a909a6606162
-# ╟─0dbe1577-e831-47a4-b3fa-a1148bcf8c59
-# ╠═42227f67-4c93-47d0-9bd9-12772b713342
-# ╠═d826c801-972e-489e-b1e8-ee5d9fda7908
-# ╠═230a51cf-2429-43d7-a7db-80016948513a
-# ╠═14408c8c-0a6b-4843-b14d-c6635d54c00e
-# ╠═eab067e7-5917-4ce5-9022-271238eb3fb6
-# ╟─8a8bcf13-0e70-4706-9903-e9ccc227b335
-# ╠═d6da1ea7-fb85-4144-b04c-450a33439de0
-# ╠═bf9024c9-7f7e-41e6-9770-ce59911322be
-# ╠═1abe1d61-44dd-4e48-a79f-1cdd57fc5c96
-# ╠═b830faad-831d-4437-90b0-84a7f6140825
-# ╟─43b931de-5ca8-4f08-89c4-f1969471e639
-# ╠═ec479a18-3847-4d56-971e-fff60cf8bb2d
-# ╠═6aa7494d-df55-4c88-83f1-45f1658f7c85
-# ╟─d9197002-4811-42cc-9bd5-54cabaa51701
-# ╠═943c5370-3389-420c-9d7b-f002f5b03016
-# ╠═740b384b-6de5-445b-9b2d-df097aaca8eb
-# ╟─81247cb1-280b-4418-9808-8b9fadb66060
-# ╠═38d1bc6a-22e4-492f-99c0-c22f755c1d3c
-# ╠═c69cce01-4181-4aa4-ba13-6e03fcac8357
-# ╟─8f3d2313-89a9-4453-8a59-bcb96a02ea64
-# ╟─7c7d91ee-c503-4891-85af-fe4d88b4703a
-# ╠═cb0d0feb-9871-4841-a417-4e9513ed0893
-# ╟─f6e6e34f-bad9-4fb9-b796-5581b441e553
-# ╠═0816f71c-38b8-4a2b-8c1b-1ee5750e6e2c
-# ╠═dca1fede-6fb3-4154-b4b5-bb06757c1a9e
-# ╠═3438208d-9556-4f2f-8303-44a7d3e06b62
-# ╠═9bd986a8-e96e-4d67-83b2-ee3cc18635d0
-# ╠═dc33fe86-eda3-4265-b2e7-05682d23f3a8
-# ╟─6af3972f-fc16-4305-b9b4-b6851c254777
-# ╠═8eeabb4a-77e0-4835-82d6-c7660e2e2a09
-# ╠═be1263bf-e503-4141-8d3b-78956c6ee6ec
-# ╟─b1eb6846-d37b-466f-896b-fc7b3abff84f
-# ╠═e3cf5797-de71-42ec-82f6-5008a5601441
-# ╠═0f3aa7ad-403c-4ae0-8018-a3a11059c9d6
-# ╟─d91e7943-3b87-4fd4-9d0b-c716256246fe
-# ╠═7ffb223a-81c7-4630-956b-c236dc0bb0e2
-# ╠═64815452-a7bc-4d04-b7b0-1b5d47143234
+# ╟─86472f5a-0d0a-4c2e-9c01-dac3e8e57885
+# ╟─d6cd9cf6-4571-4dad-bda6-56fd783e4b8d
+# ╟─5e2dafd8-5853-4215-be35-9a6fcf47cec1
+# ╟─d7393fcd-aced-4c6b-8196-218e0f78e286
+# ╟─dd4a85f5-8825-4af1-9be3-783d7c126e3e
+# ╟─98b99cc0-c22c-488e-a98d-002e042c6c01
+# ╠═52d90be9-6c07-4289-82c5-0d19f7c7db5b
+# ╟─7384e7ae-6283-4656-8a46-722105daf20e
+# ╠═01fdb9d2-6d65-4b24-b0c7-3b48c3bedcb6
+# ╠═cad984e3-4243-45c5-a8c7-b498a7d9fcca
+# ╠═40823ab6-49fc-468c-803b-a30877a651df
+# ╠═6cefb906-028d-4d22-b8cb-aa35f47faed9
+# ╟─11815da6-0128-483c-8b99-a7c2d930a066
+# ╠═94e0969e-ef78-4a30-ba7e-d35a8f932bac
+# ╠═12f90c32-20da-4a1a-90ff-e451fcf1f029
+# ╟─1372524e-508f-472d-b46d-3e00812d74b8
+# ╠═11ebd9be-cd44-4656-9793-fb9127ef880a
+# ╠═03d2d117-57f2-4fd4-835f-f4833841fff7
+# ╠═d7e39197-4428-4559-a323-cde583406e1c
+# ╟─98514ba4-72f0-4606-b92d-784c15fc94ce
+# ╠═6fcc6d43-dde1-4bec-a783-3cf4d2e59911
+# ╠═3c2261a8-c99c-4810-b978-dfd8cde386b1
+# ╠═d0ea1838-e52a-4229-91b3-62500fb70ed0
+# ╟─92d37f45-02b2-415c-a5cf-a0654b3bf778
+# ╟─c019d057-b19b-4e77-b59d-bff4f9de5c79
+# ╟─2b539e29-ee73-4ae1-9917-50b9887919dd
+# ╟─01060359-facb-4f3d-8096-f8a0ad60afc3
+# ╠═e9930852-95cf-4750-8287-d2da21f071bd
+# ╠═3b92b783-7cc3-46d5-a479-d5c4b2673bf2
+# ╠═4fccc2b4-25b0-43ee-bc6b-9d27af54a745
+# ╟─25b17523-054b-40a8-a5ae-c2d0eebe95b0
+# ╠═df26a723-cb82-4f97-93c4-385c9a68ad93
+# ╠═71525bbb-36f0-4c45-aeb0-d25a5e65c81f
+# ╟─7e1aaca3-4eae-45a1-ae7c-d52a4c3b0ad6
+# ╠═6cb4a96d-f4a9-443a-980d-0ed5aa86217b
+# ╠═9a33c08b-9018-4b16-904c-351c7f164c96
+# ╟─f0ea9553-e678-43ed-ae5a-9956c2223411
+# ╠═cfe900b1-c11d-43e7-8859-8088b06ef4ce
+# ╠═47800d50-2e56-4ec3-ba12-13aae206d694
 # ╟─a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 # ╟─b7064bb1-f21a-4bb6-a395-9f1c73102058
 # ╟─21b03bf8-47ba-4915-936a-92c488671bb1

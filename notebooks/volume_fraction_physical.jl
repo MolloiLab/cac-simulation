@@ -39,7 +39,7 @@ begin
 	SAVE_DF = "physical.csv"
 	VENDORS = ["Canon_Aquilion_One_Vision"]
 	# SCANS = [1, 2, 6, 8]
-	SCANS = [1]
+	SCANS = [6]
 
 	VENDOR = VENDORS[1]
 	SCAN = SCANS[1]
@@ -52,6 +52,9 @@ begin
 	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
 	kV = header[tag"KVP"]
 end
+
+# ╔═╡ 5ac3c47d-7a97-4c88-ba11-c09da14434a7
+pth
 
 # ╔═╡ 28a061b7-5a67-4454-80d8-d8db807f2d33
 md"""
@@ -389,8 +392,14 @@ begin
 	mass_bkg = score(arr[background_mask], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
 end
 
+# ╔═╡ 2f4d99e4-b3b1-4ebe-88ae-4ac1bff0d1f4
+mass_bkg
+
 # ╔═╡ 97dbd4e9-ac4a-4f4e-aa2b-de123102bec1
 hu_heart_tissue_bkg
+
+# ╔═╡ ced6ef7c-8819-43e1-a9a9-65ba3f5b8cc4
+noise_bkg = std(arr[background_ring])
 
 # ╔═╡ 6a01dbc6-d8ca-4cad-a83c-995442c0b6e5
 size(background_mask)
@@ -403,6 +412,9 @@ overlay_mask_plot(arr, background_mask, q1, "dilated mask")
 
 # ╔═╡ ff0b1b99-ec2d-4610-97f2-ccb68a854460
 overlay_mask_plot(arr, background_ring, q1, "dilated mask")
+
+# ╔═╡ 5249f4d4-22af-4d9e-a309-e391ed51c0d7
+# mass_bkg = score(arr[background_ring], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
 
 # ╔═╡ 5aaabb67-d87b-4761-a927-2f53448ee697
 md"""
@@ -811,6 +823,7 @@ push!(dfs, df)
 # ╠═163ffa5f-0509-44db-a5e5-1f93d625079b
 # ╟─01526785-a645-4b1a-afc2-0bc828c2db3a
 # ╠═0a2c9749-e2bd-4d5e-9ef5-a07834f6684b
+# ╠═5ac3c47d-7a97-4c88-ba11-c09da14434a7
 # ╟─28a061b7-5a67-4454-80d8-d8db807f2d33
 # ╟─f07b68cb-97fe-4073-8363-55bbf4e49a3f
 # ╟─5ae40e25-6c2b-4a69-ae75-71e022efc50f
@@ -845,11 +858,14 @@ push!(dfs, df)
 # ╠═6173c719-886d-4142-b2e3-cee8f9babdc6
 # ╟─1cd4003d-02bb-4c6b-8bf0-0b5e1299d148
 # ╠═072167d0-65e9-427f-991c-6e3aa23c172c
+# ╠═2f4d99e4-b3b1-4ebe-88ae-4ac1bff0d1f4
 # ╠═97dbd4e9-ac4a-4f4e-aa2b-de123102bec1
+# ╠═ced6ef7c-8819-43e1-a9a9-65ba3f5b8cc4
 # ╠═6a01dbc6-d8ca-4cad-a83c-995442c0b6e5
 # ╟─e80a1e90-a89c-4530-88c0-dd2b80c7bd3f
 # ╟─c095470d-c1a8-46eb-99c9-65cb3dfffd34
 # ╟─ff0b1b99-ec2d-4610-97f2-ccb68a854460
+# ╠═5249f4d4-22af-4d9e-a309-e391ed51c0d7
 # ╟─5aaabb67-d87b-4761-a927-2f53448ee697
 # ╟─7d06e368-c46c-451a-84c8-424fbf12f06b
 # ╟─24d9ad56-8c07-4af9-b216-de9bdcd16fb3
