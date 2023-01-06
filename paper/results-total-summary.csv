@@ -1,0 +1,39 @@
+Phantom,Results,Metrics,Integrated,Volume Fraction,Agatston,SWCS
+Stationary,Accuracy (Normal Density),r^2,1.0,1.0,1.0,
+Stationary,Accuracy (Normal Density),RMSE,0.677,0.609,1.65,
+Stationary,Accuracy (Normal Density),RMSD,0.602,0.599,0.906,
+Stationary,Accuracy (Normal Density),Best Fit Line,y = 0.993x + 0.165,y = 0.997x + 0.109,y = 1.026x + -0.136,
+Stationary,Accuracy (Low Density),r^2,0.991,0.989,0.789,
+Stationary,Accuracy (Low Density),RMSE,0.495,0.585,3.509,
+Stationary,Accuracy (Low Density),RMSD,0.494,0.575,2.24,
+Stationary,Accuracy (Low Density),Best Fit Line,y = 1.002x + 0.016,y = 1.017x + -0.031,y = 0.814x + -1.62,
+Stationary,Reproducibility,r^2,1.0,1.0,0.999,0.998
+Stationary,Reproducibility,RMSE,0.708,0.783,0.982,4.722
+Stationary,Reproducibility,RMSD,0.692,0.776,0.98,4.714
+Stationary,Reproducibility,Best Fit Line,y = 1.002x + 0.083,y = 1.001x + 0.068,y = 1.001x + 0.006,y = 0.998x + 0.41
+Stationary,Specificity,False Negatives,24 / 216,24 / 216,84 / 216,92 / 216
+Stationary,Sensitivity,False Positives,8 / 72,8 / 72,0 / 72,12 / 72
+Motion,Accuracy (Normal Density),r^2,1.0,1.0,0.999,
+Motion,Accuracy (Normal Density),RMSE,0.974,0.911,2.897,
+Motion,Accuracy (Normal Density),RMSD,0.926,0.843,1.266,
+Motion,Accuracy (Normal Density),Best Fit Line,y = 0.994x + 0.096,y = 1.006x + 0.003,y = 1.053x + -0.722,
+Motion,Accuracy (Low Density),r^2,0.992,0.989,0.748,
+Motion,Accuracy (Low Density),RMSE,0.51,0.629,3.822,
+Motion,Accuracy (Low Density),RMSD,0.499,0.575,2.44,
+Motion,Accuracy (Low Density),Best Fit Line,y = 1.016x + -0.023,y = 1.042x + -0.08,y = 0.789x + -1.706,
+Motion,Reproducibility,r^2,0.999,0.999,0.998,0.987
+Motion,Reproducibility,RMSE,0.994,1.019,1.948,13.687
+Motion,Reproducibility,RMSD,0.992,1.004,1.938,13.499
+Motion,Reproducibility,Best Fit Line,y = 0.998x + 0.075,y = 1.004x + 0.009,y = 1.004x + -0.228,y = 1.013x + -0.396
+Motion,Specificity,False Negatives,21 / 216,21 / 216,91 / 216,95 / 216
+Motion,Sensitivity,False Positives,10 / 72,10 / 72,2 / 72,12 / 72
+Physical,Accuracy (Normal Density),r^2,0.981,0.975,0.973,
+Physical,Accuracy (Normal Density),RMSE,8.811,8.559,22.485,
+Physical,Accuracy (Normal Density),RMSD,5.752,6.647,4.653,
+Physical,Accuracy (Normal Density),Best Fit Line,y = 0.962x + -5.0,y = 0.966x + -3.907,y = 0.662x + -3.643,
+Physical,Reproducibility,r^2,0.998,0.998,0.996,
+Physical,Reproducibility,RMSE,2.838,3.203,2.144,
+Physical,Reproducibility,RMSD,1.906,1.777,1.792,
+Physical,Reproducibility,Best Fit Line,y = 1.032x + 0.591,y = 1.041x + 0.669,y = 1.02x + 0.48,
+Physical,Specificity,False Negatives,6 / 36,6 / 36,7 / 36,
+Physical,Sensitivity,False Positives,1 / 12,1 / 12,0 / 12,

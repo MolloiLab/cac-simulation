@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.18
 
 using Markdown
 using InteractiveUtils
@@ -76,6 +76,21 @@ function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
 end
 
+# ╔═╡ a4bfdd6c-7398-4410-9114-043b97d4f493
+function dilate_mask_large_bkg(mask)
+    return dilate(dilate(mask))
+end
+
+# ╔═╡ cd010671-9d2e-464f-bdcd-8505060b1a07
+function dilate_mask_medium_bkg(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ ae8706ae-ca51-4fc7-b21c-115b97ce4a95
+function dilate_mask_small_bkg(mask)
+    return (mask)
+end
+
 # ╔═╡ fc543228-f307-4aa5-b805-da855c62b609
 begin
     dfs_vf = []
@@ -135,6 +150,23 @@ begin
                 arr = masked_array[:, :, 4:6]
                 pixel_size = DICOMUtils.get_pixel_size(header)
                 voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
+
+                ## Background
+                background_mask = zeros(size(arr)...)
+                background_mask[
+                    (center_insert[1]-5):(center_insert[1]+5),
+                    (center_insert[2]-5):(center_insert[2]+5),
+                    2,
+                ] .= 1
+
+                dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
+                ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
+
+                dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
+                ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
+
+                dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+                ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
 
                 ## Large
                 ### High Density
@@ -225,34 +257,40 @@ begin
                 bool_arr = array_filtered .> 0
                 bool_arr_erode = (((erode(erode(bool_arr)))))
                 c_img = calcium_image[:, :, 1:3]
-                mask_cal_3D = Array{Bool}(undef, size(c_img))
+                # mask_cal_3D = Array{Bool}(undef, size(c_img))
+                # for z in 1:size(c_img, 3)
+                #     mask_cal_3D[:, :, z] = bool_arr_erode
+                # end
+
+                # if VENDOR == "80"
+                #     hu_calcium = 377.3
+                # elseif VENDOR == "100"
+                #     hu_calcium = 326.0
+                # elseif VENDOR == "120"
+                #     hu_calcium = 296.9
+                # else
+                #     hu_calcium = 282.7
+                # end
+                mask_cal_3D = zeros(size(c_img))
                 for z in 1:size(c_img, 3)
-                    mask_cal_3D[:, :, z] = bool_arr_erode
+                    mask_cal_3D[:, :, z] = Bool.(erode(bool_arr_erode))
                 end
 
-                if VENDOR == "80"
-                    hu_calcium = 377.3
-                elseif VENDOR == "100"
-                    hu_calcium = 326.0
-                elseif VENDOR == "120"
-                    hu_calcium = 296.9
-                else
-                    hu_calcium = 282.7
-                end
+                hu_calcium = mean(c_img[Bool.(mask_cal_3D)])
                 ρ_calcium = 0.2
 
 
                 # Background
-                background_mask = zeros(size(arr)...)
-                background_mask[
-                    (center_insert[1]-5):(center_insert[1]+5),
-                    (center_insert[2]-5):(center_insert[2]+5),
-                    2,
-                ] .= 1
-                background_mask = Bool.(background_mask)
-                background_ring = ring_mask_large(background_mask)
-                hu_heart_tissue_bkg = mean(arr[background_ring])
-                mass_bkg = score(arr[background_mask], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
+                hu_heart_tissue_large_bkg = mean(arr[ring_mask_L_bkg])
+                mass_large_bkg = score(arr[dilated_mask_L_bkg], hu_calcium, hu_heart_tissue_large_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+                hu_heart_tissue_medium_bkg = mean(arr[ring_mask_M_bkg])
+                mass_medium_bkg = score(arr[dilated_mask_M_bkg], hu_calcium, hu_heart_tissue_medium_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+                hu_heart_tissue_small_bkg = mean(arr[ring_mask_S_bkg])
+                mass_small_bkg = score(arr[dilated_mask_S_bkg], hu_calcium, hu_heart_tissue_small_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+                mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
 
                 # Score Large Inserts
                 ## High Density
@@ -346,7 +384,9 @@ begin
                     intensity_array = [20, 55.5, 282.7, 1019.7]
                 end
 
-                df_cal = DataFrame(:density => [0, 0.025, 0.200, 0.800], :intensity => intensity_array)
+                # df_cal = DataFrame(:density => [0, 0.025, 0.200, 0.800], :intensity => intensity_array)
+                df_cal = DataFrame(:density => [0, 0.2], :intensity => [hu_heart_tissue_large_bkg, hu_calcium])
+
 
                 linearRegressor = lm(@formula(intensity ~ density), df_cal)
                 linearFit = GLM.predict(linearRegressor)
@@ -356,24 +396,22 @@ begin
                 intensity(ρ) = m * ρ + b
 
                 # Score background
-                background_mask = zeros(size(arr)...)
-                background_mask[
-                    (center_insert[1]-5):(center_insert[1]+5),
-                    (center_insert[2]-5):(center_insert[2]+5),
-                    2,
-                ] .= 1
-                background_mask = Bool.(background_mask)
-                background_mask_dil = dilate(dilate(background_mask))
-
-                single_bkg_center = Bool.(background_mask[:, :, 2])
                 S_Obj = intensity(ρ_calcium)
                 ρ = ρ_calcium # mg/mm^3
 
-                ring_background = Bool.(background_mask_dil - background_mask)
-                s_bkg = mean(arr[ring_background])
-                alg_bkg = Integrated(arr[background_mask])
+                S_bkg_large = mean(arr[ring_mask_L_bkg])
+                alg_bkg_large = Integrated(arr[dilated_mask_L_bkg])
+                mass_large_bkg = score(S_bkg_large, S_Obj, pixel_size, ρ, alg_bkg_large)
 
-                mass_bkg = score(s_bkg, S_Obj, pixel_size, ρ, alg_bkg)
+                S_bkg_medium = mean(arr[ring_mask_M_bkg])
+                alg_bkg_medium = Integrated(arr[dilated_mask_M_bkg])
+                mass_medium_bkg = score(S_bkg_medium, S_Obj, pixel_size, ρ, alg_bkg_medium)
+
+                S_bkg_small = mean(arr[ring_mask_S_bkg])
+                alg_bkg_small = Integrated(arr[dilated_mask_S_bkg])
+                mass_small_bkg = score(S_bkg_small, S_Obj, pixel_size, ρ, alg_bkg_small)
+
+                mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
 
                 # Score Large Insert
                 ## High Density
@@ -457,6 +495,8 @@ begin
                     VENDOR == "135"
                     μ, σ = 155, 40
                 end
+                # μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
+
 
                 # Mask Calibration Factor
                 output = calc_output(
@@ -480,14 +520,11 @@ begin
                 # Background
                 alg2 = SpatiallyWeighted()
 
-                background_mask = zeros(size(arr)...)
-                background_mask[
-                    (center_insert[1]-5):(center_insert[1]+5),
-                    (center_insert[2]-5):(center_insert[2]+5),
-                    2,
-                ] .= 1
-                background_mask = Bool.(background_mask)
-                swcs_bkg = score(background_mask, μ, σ, alg2)
+                swcs_bkg_large = score(dilated_mask_L_bkg, μ, σ, alg2)
+                swcs_bkg_medium = score(dilated_mask_M_bkg, μ, σ, alg2)
+                swcs_bkg_small = score(dilated_mask_S_bkg, μ, σ, alg2)
+
+                swcs_bkg = [swcs_bkg_large, swcs_bkg_medium, swcs_bkg_small]
 
                 # Score Large Inserts
                 ## High Density
@@ -574,22 +611,36 @@ begin
                 local agat_thresh
                 agat_thresh = 130
 
-                background_mask = zeros(size(arr)...)
-                background_mask[
-                    (center_insert[1]-5):(center_insert[1]+5),
-                    (center_insert[2]-5):(center_insert[2]+5),
-                    2,
-                ] .= 1
-                background_mask = Bool.(background_mask)
+                # Background
+
                 alg = Agatston()
-                overlayed_bkg_mask = create_mask(arr, background_mask)
-                agat_bkg, mass_bkg = score(
-                    overlayed_bkg_mask,
+                overlayed_bkg_mask_L = create_mask(arr, dilated_mask_L_bkg)
+                overlayed_bkg_mask_M = create_mask(arr, dilated_mask_M_bkg)
+                overlayed_bkg_mask_S = create_mask(arr, dilated_mask_S_bkg)
+
+                agat_bkg, mass_bkg_large = score(
+                    overlayed_bkg_mask_L,
                     pixel_size,
                     mass_cal_factor,
                     alg;
                     kV=kV
                 )
+                agat_bkg, mass_bkg_medium = score(
+                    overlayed_bkg_mask_M,
+                    pixel_size,
+                    mass_cal_factor,
+                    alg;
+                    kV=kV
+                )
+                agat_bkg, mass_bkg_small = score(
+                    overlayed_bkg_mask_S,
+                    pixel_size,
+                    mass_cal_factor,
+                    alg;
+                    kV=kV
+                )
+
+                mass_bkg = [mass_bkg_large, mass_bkg_medium, mass_bkg_small]
 
                 # Score Large Inserts
                 ## High Density
@@ -792,6 +843,9 @@ end
 # ╟─7c0c6116-1675-4d43-befb-dd6a18e3454b
 # ╟─e1f68840-1eae-4939-9985-68cd2c8b680a
 # ╟─72677ba6-2004-4c56-8c66-563155256da3
+# ╠═a4bfdd6c-7398-4410-9114-043b97d4f493
+# ╠═cd010671-9d2e-464f-bdcd-8505060b1a07
+# ╠═ae8706ae-ca51-4fc7-b21c-115b97ce4a95
 # ╠═fc543228-f307-4aa5-b805-da855c62b609
 # ╟─0f7901f9-cab9-434a-ac18-fe57148f810b
 # ╠═f5b3fbf7-2e82-4055-80ab-3a63c476e4bb

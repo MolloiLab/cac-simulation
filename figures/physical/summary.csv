@@ -1,0 +1,11 @@
+Results,Metrics,Integrated,Volume Fraction,Agatston
+Accuracy (Normal Density),r^2,0.981,0.975,0.973
+Accuracy (Normal Density),RMSE,8.811,8.559,22.485
+Accuracy (Normal Density),RMSD,5.752,6.647,4.653
+Accuracy (Normal Density),Best Fit Line,y = 0.962x + -5.0,y = 0.966x + -3.907,y = 0.662x + -3.643
+Reproducibility,r^2,0.998,0.998,0.996
+Reproducibility,RMSE,2.838,3.203,2.144
+Reproducibility,RMSD,1.906,1.777,1.792
+Reproducibility,Best Fit Line,y = 1.032x + 0.591,y = 1.041x + 0.669,y = 1.02x + 0.48
+Specificity,False Negatives,6 / 36,6 / 36,7 / 36
+Sensitivity,False Positives,1 / 12,1 / 12,0 / 12

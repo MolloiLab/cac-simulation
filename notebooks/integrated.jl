@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.18
 
 using Markdown
 using InteractiveUtils
@@ -140,6 +140,21 @@ end
 # ╔═╡ 8678df23-ef1c-42b0-8102-84ca44f4f7d8
 function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ e4d10b8b-93fb-415e-bd35-aca8fee7510e
+function dilate_mask_large_bkg(mask)
+    return dilate(dilate(mask))
+end
+
+# ╔═╡ d6a34d2d-937f-4f59-9e77-c8d484bbe75b
+function dilate_mask_medium_bkg(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ 2985cf19-4a56-478f-9eda-5387b9fbec08
+function dilate_mask_small_bkg(mask)
+    return (mask)
 end
 
 # ╔═╡ b3bae2ad-16ed-4381-b6a4-448cb5f0c6c1
@@ -395,6 +410,63 @@ heatmap(bool_arr; colormap=:grays)
 # ╔═╡ 5fec186d-82bb-4b37-b0c6-c3781f2a166d
 heatmap(bool_arr_erode; colormap=:grays)
 
+# ╔═╡ e50baf62-0a02-47ee-8440-551f68baee0d
+md"""
+We can see from above that the linear regression returns a best fit line with the formula:
+
+```math
+y = mx + b
+```
+
+Which can be solved for ``x`` and then used to calculate the density (``x``) given some measured intensity (``y``)
+
+```math
+x = \frac{y - b}{m}
+```
+
+"""
+
+# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
+# let
+#     f = Figure()
+#     ax1 = Axis(f[1, 1])
+
+#     scatter!([0, density_array...], intensity_array)
+#     lines!([0, density_array...], linearFit; color=:red)
+#     ax1.title = "Calibration Line (Intensity vs Density)"
+#     ax1.ylabel = "Intensity (HU)"
+#     ax1.xlabel = "Density (mg/cm^3)"
+
+#     f
+# end
+
+# ╔═╡ 1e68e0e8-a605-4557-925a-501ba8b9a1e1
+md"""
+# Score Background
+"""
+
+# ╔═╡ cd5770d8-6e31-4842-a350-e506d23ee77d
+begin
+	background_mask = zeros(size(arr)...)
+	background_mask[
+		(center_insert[1]-5):(center_insert[1]+5),
+		(center_insert[2]-5):(center_insert[2]+5),
+		2,
+	] .= 1
+	
+	dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
+	ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
+
+	dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
+	ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
+
+	dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+	ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
+end;
+
+# ╔═╡ 9bafed48-5d63-4512-9ea7-bd17dc2e0737
+hu_heart_tissue_large_bkg = mean(arr[ring_mask_L_bkg])
+
 # ╔═╡ 6c3f0dc5-9db2-4db8-abb0-64e4cda6d6fe
 begin
 	# if VENDOR == "80"
@@ -417,7 +489,8 @@ begin
 		intensity_array = [20, 55.5, 282.7, 1019.7]
 	end
 
-	df_cal = DataFrame(:density => [0, 0.025, 0.200, 0.800], :intensity => intensity_array)
+	# df_cal = DataFrame(:density => [0, 0.025, 0.200, 0.800], :intensity => intensity_array)
+	df_cal = DataFrame(:density => [0, 0.2], :intensity => [hu_heart_tissue_large_bkg, hu_calcium])
 
 	linearRegressor = lm(@formula(intensity ~ density), df_cal)
 	linearFit = GLM.predict(linearRegressor)
@@ -427,64 +500,26 @@ begin
 	intensity(ρ) = m * ρ + b
 end
 
-# ╔═╡ e50baf62-0a02-47ee-8440-551f68baee0d
-md"""
-We can see from above that the linear regression returns a best fit line with the formula:
-
-```math
-y = mx + b
-```
-
-Which can be solved for ``x`` and then used to calculate the density (``x``) given some measured intensity (``y``)
-
-```math
-x = \frac{y - b}{m}
-```
-
-"""
-
-# ╔═╡ b03c711f-9e0e-4089-add1-5abbde81cce1
-let
-    f = Figure()
-    ax1 = Axis(f[1, 1])
-
-    scatter!([0, density_array...], intensity_array)
-    lines!([0, density_array...], linearFit; color=:red)
-    ax1.title = "Calibration Line (Intensity vs Density)"
-    ax1.ylabel = "Intensity (HU)"
-    ax1.xlabel = "Density (mg/cm^3)"
-
-    f
-end
-
-# ╔═╡ 1e68e0e8-a605-4557-925a-501ba8b9a1e1
-md"""
-# Score Background
-"""
-
-# ╔═╡ cd5770d8-6e31-4842-a350-e506d23ee77d
+# ╔═╡ fc20bc4c-beb6-4979-be77-00bc6f481021
 begin
-	background_mask = zeros(size(arr)...)
-	background_mask[
-		(center_insert[1]-5):(center_insert[1]+5),
-		(center_insert[2]-5):(center_insert[2]+5),
-		2,
-	] .= 1
-	background_mask = Bool.(background_mask)
-	background_mask_dil = dilate(dilate(background_mask))
-
+	# Score background
 	S_Obj = intensity(ρ_calcium)
 	ρ = ρ_calcium # mg/mm^3
-	
-	ring_background = Bool.(background_mask_dil - background_mask)
-	s_bkg = mean(arr[ring_background])
-	alg_bkg = Integrated(arr[background_mask])
-	
-	mass_bkg = score(s_bkg, S_Obj, pixel_size, ρ, alg_bkg)
-end
 
-# ╔═╡ fc20bc4c-beb6-4979-be77-00bc6f481021
-s_bkg
+	S_bkg_large = mean(arr[ring_mask_L_bkg])
+	alg_bkg_large = Integrated(arr[dilated_mask_L_bkg])
+	mass_large_bkg = score(S_bkg_large, S_Obj, pixel_size, ρ, alg_bkg_large)
+
+	S_bkg_medium = mean(arr[ring_mask_M_bkg])
+	alg_bkg_medium = Integrated(arr[dilated_mask_M_bkg])
+	mass_medium_bkg = score(S_bkg_medium, S_Obj, pixel_size, ρ, alg_bkg_medium)
+
+	S_bkg_small = mean(arr[ring_mask_S_bkg])
+	alg_bkg_small = Integrated(arr[dilated_mask_S_bkg])
+	mass_small_bkg = score(S_bkg_small, S_Obj, pixel_size, ρ, alg_bkg_small)
+
+	mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
+end
 
 # ╔═╡ 3b30e707-02b0-49c2-a0b3-25b7fcbf79ee
 md"""
@@ -892,6 +927,9 @@ df = DataFrame(;
 # ╟─6dfd0583-21c2-400a-9ab5-3a09a95e5adc
 # ╟─6d306954-6c37-4138-924d-151f0b2dd068
 # ╟─8678df23-ef1c-42b0-8102-84ca44f4f7d8
+# ╟─e4d10b8b-93fb-415e-bd35-aca8fee7510e
+# ╟─d6a34d2d-937f-4f59-9e77-c8d484bbe75b
+# ╟─2985cf19-4a56-478f-9eda-5387b9fbec08
 # ╟─b3bae2ad-16ed-4381-b6a4-448cb5f0c6c1
 # ╠═4ff19af0-7f53-4f24-b315-08bd54a488e3
 # ╟─b74941c4-12d4-4be1-81f7-ef1f4d288984
@@ -915,6 +953,7 @@ df = DataFrame(;
 # ╠═f3f73d41-0d98-461b-8673-7207857253ad
 # ╠═da3c96b9-efdb-40f4-a959-747c097e16b2
 # ╠═5fec186d-82bb-4b37-b0c6-c3781f2a166d
+# ╠═9bafed48-5d63-4512-9ea7-bd17dc2e0737
 # ╠═6c3f0dc5-9db2-4db8-abb0-64e4cda6d6fe
 # ╟─e50baf62-0a02-47ee-8440-551f68baee0d
 # ╟─b03c711f-9e0e-4089-add1-5abbde81cce1

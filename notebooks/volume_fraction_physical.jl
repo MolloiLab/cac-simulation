@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.18
 
 using Markdown
 using InteractiveUtils
@@ -39,7 +39,7 @@ begin
 	SAVE_DF = "physical.csv"
 	VENDORS = ["Canon_Aquilion_One_Vision"]
 	# SCANS = [1, 2, 6, 8]
-	SCANS = [6]
+	SCANS = [1]
 
 	VENDOR = VENDORS[1]
 	SCAN = SCANS[1]
@@ -141,6 +141,21 @@ end
 # ╔═╡ 94200cb0-0c4e-4fa8-8ed9-418a9aa25469
 function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ 4ca6e397-14f5-4d5f-9f88-84362fa04217
+function dilate_mask_large_bkg(mask)
+    return dilate(dilate(mask))
+end
+
+# ╔═╡ 4d44253d-04e4-4f86-9b7f-1bf8eff9ecb3
+function dilate_mask_medium_bkg(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ 9d4bd0a0-7c55-4c91-90be-c5df815994ee
+function dilate_mask_small_bkg(mask)
+    return (mask)
 end
 
 # ╔═╡ 509af748-95e8-4122-9f81-aecc42c33901
@@ -272,6 +287,26 @@ begin
 	voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
 end;
 
+# ╔═╡ c7cf2e0a-0e82-4d27-a29f-a6a4426a7619
+begin
+	## Background
+	background_mask = zeros(size(arr)...)
+	background_mask[
+		(center_insert[1]-5):(center_insert[1]+5),
+		(center_insert[2]-5):(center_insert[2]+5),
+		2,
+	] .= 1
+	
+	dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
+	ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
+	
+	dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
+	ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
+	
+	dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+	ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
+end;
+
 # ╔═╡ 0a78b66a-a545-409e-bc0b-5f575e6dea36
 begin
 	## Large
@@ -378,43 +413,75 @@ md"""
 # Background
 """
 
+# ╔═╡ af6f0829-45f6-432f-b89c-eae7ea81248a
+md"""
+#### Integrated
+"""
+
 # ╔═╡ 072167d0-65e9-427f-991c-6e3aa23c172c
 begin
-	background_mask = zeros(size(arr)...)
-	background_mask[
-		(center_insert[1]-5):(center_insert[1]+5),
-		(center_insert[2]-5):(center_insert[2]+5),
-		2,
-	] .= 1
-	background_mask = Bool.(dilate(dilate(background_mask)))
-	background_ring = ring_mask_large(background_mask)
-	hu_heart_tissue_bkg = mean(arr[background_ring])
-	mass_bkg = score(arr[background_mask], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
+	# Background
+	hu_heart_tissue_large_bkg = mean(arr[ring_mask_L_bkg])
+	mass_large_bkg = score(arr[dilated_mask_L_bkg], hu_calcium, hu_heart_tissue_large_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+	hu_heart_tissue_medium_bkg = mean(arr[ring_mask_M_bkg])
+	mass_medium_bkg = score(arr[dilated_mask_M_bkg], hu_calcium, hu_heart_tissue_medium_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+	hu_heart_tissue_small_bkg = mean(arr[ring_mask_S_bkg])
+	mass_small_bkg = score(arr[dilated_mask_S_bkg], hu_calcium, hu_heart_tissue_small_bkg, voxel_size, ρ_calcium, VolumeFraction())
+
+	mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
+end
+
+# ╔═╡ 8312fbc4-103c-458a-880c-04463c7cd310
+begin
+	intensity_array = [hu_heart_tissue_medium_bkg, hu_calcium]
+	# df_cal = DataFrame(:density => [0, 0.200], :intensity => intensity_array)
+	df_cal = DataFrame(:density => [0, 0.2, 0.4, 0.8], :intensity => [20, 58.1, 296.9, 1072.1])
+	
+	linearRegressor = lm(@formula(intensity ~ density), df_cal)
+	linearFit = GLM.predict(linearRegressor)
+	m = linearRegressor.model.pp.beta0[2]
+	b = linearRegressor.model.rr.mu[1]
+	density(intensity) = (intensity - b) / m
+	intensity(ρ) = m * ρ + b
+end
+
+# ╔═╡ 6ffc0d8f-5547-44d5-b591-099ec76d6806
+begin
+	# Score background
+	S_Obj = intensity(ρ_calcium)
+	ρ = ρ_calcium # mg/mm^3
+	
+	S_bkg_large = mean(arr[ring_mask_L_bkg])
+	alg_bkg_large = Integrated(arr[dilated_mask_L_bkg])
+	mass_large_bkgi = score(S_bkg_large, S_Obj, pixel_size, ρ, alg_bkg_large)
+
+	S_bkg_medium = mean(arr[ring_mask_M_bkg])
+	alg_bkg_medium = Integrated(arr[dilated_mask_M_bkg])
+	mass_medium_bkgi = score(S_bkg_medium, S_Obj, pixel_size, ρ, alg_bkg_medium)
+
+	S_bkg_small = mean(arr[ring_mask_S_bkg])
+	alg_bkg_small = Integrated(arr[dilated_mask_S_bkg])
+	mass_small_bkgi = score(S_bkg_small, S_Obj, pixel_size, ρ, alg_bkg_small)
+
+	mass_bkgi = [mass_large_bkgi, mass_medium_bkgi, mass_small_bkgi]
 end
 
 # ╔═╡ 2f4d99e4-b3b1-4ebe-88ae-4ac1bff0d1f4
 mass_bkg
 
-# ╔═╡ 97dbd4e9-ac4a-4f4e-aa2b-de123102bec1
-hu_heart_tissue_bkg
-
-# ╔═╡ ced6ef7c-8819-43e1-a9a9-65ba3f5b8cc4
-noise_bkg = std(arr[background_ring])
-
-# ╔═╡ 6a01dbc6-d8ca-4cad-a83c-995442c0b6e5
-size(background_mask)
+# ╔═╡ f45a2796-cbff-44ac-835e-84932296dab8
+mass_bkgi
 
 # ╔═╡ e80a1e90-a89c-4530-88c0-dd2b80c7bd3f
 @bind q1 overlay_mask_bind(background_mask)
 
 # ╔═╡ c095470d-c1a8-46eb-99c9-65cb3dfffd34
-overlay_mask_plot(arr, background_mask, q1, "dilated mask")
+overlay_mask_plot(arr, dilated_mask_L_bkg, q1, "dilated mask")
 
 # ╔═╡ ff0b1b99-ec2d-4610-97f2-ccb68a854460
-overlay_mask_plot(arr, background_ring, q1, "dilated mask")
-
-# ╔═╡ 5249f4d4-22af-4d9e-a309-e391ed51c0d7
-# mass_bkg = score(arr[background_ring], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
+overlay_mask_plot(arr, ring_mask_L_bkg, q1, "dilated mask")
 
 # ╔═╡ 5aaabb67-d87b-4761-a927-2f53448ee697
 md"""
@@ -452,7 +519,7 @@ overlay_mask_plot(arr, ring_mask_L_HD, g4, "ring mask")
 hu_heart_tissue_large_hd = mean(arr[ring_mask_L_HD])
 
 # ╔═╡ cecb93a2-d6fc-4b0d-acb7-c3e816d52498
-mass_large_hd = score(arr[dilated_mask_L_HD], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
+mass_large_hd = score(arr[dilated_mask_L_HD], hu_calcium, hu_heart_tissue_large_hd, voxel_size, ρ_calcium, VolumeFraction())
 
 # ╔═╡ 6e93a14b-7c0a-4555-bd81-bbd002aaef50
 md"""
@@ -835,6 +902,9 @@ push!(dfs, df)
 # ╟─8a68d139-8712-40ef-a2c5-ee33ba278174
 # ╟─593b9d85-dcf7-4db4-9e78-ca284007d30e
 # ╟─94200cb0-0c4e-4fa8-8ed9-418a9aa25469
+# ╠═4ca6e397-14f5-4d5f-9f88-84362fa04217
+# ╠═4d44253d-04e4-4f86-9b7f-1bf8eff9ecb3
+# ╠═9d4bd0a0-7c55-4c91-90be-c5df815994ee
 # ╟─509af748-95e8-4122-9f81-aecc42c33901
 # ╠═9a93a6b5-9ec6-4667-b9b0-ad0f6a58709f
 # ╟─cd4c2e05-c305-4da4-a411-054bc64a810c
@@ -853,19 +923,20 @@ push!(dfs, df)
 # ╠═5aa9dd7b-82a5-40e0-a8ce-4c4079369c8f
 # ╟─bdf43911-b1f3-4567-bb84-6781dbc320cc
 # ╠═8a978945-b378-4ed4-8aab-3e6e5451a298
+# ╠═c7cf2e0a-0e82-4d27-a29f-a6a4426a7619
 # ╠═0a78b66a-a545-409e-bc0b-5f575e6dea36
 # ╟─2346e495-e1d4-4955-8ff0-cdff7fb07032
 # ╠═6173c719-886d-4142-b2e3-cee8f9babdc6
 # ╟─1cd4003d-02bb-4c6b-8bf0-0b5e1299d148
+# ╟─af6f0829-45f6-432f-b89c-eae7ea81248a
+# ╠═8312fbc4-103c-458a-880c-04463c7cd310
 # ╠═072167d0-65e9-427f-991c-6e3aa23c172c
+# ╠═6ffc0d8f-5547-44d5-b591-099ec76d6806
 # ╠═2f4d99e4-b3b1-4ebe-88ae-4ac1bff0d1f4
-# ╠═97dbd4e9-ac4a-4f4e-aa2b-de123102bec1
-# ╠═ced6ef7c-8819-43e1-a9a9-65ba3f5b8cc4
-# ╠═6a01dbc6-d8ca-4cad-a83c-995442c0b6e5
+# ╠═f45a2796-cbff-44ac-835e-84932296dab8
 # ╟─e80a1e90-a89c-4530-88c0-dd2b80c7bd3f
-# ╟─c095470d-c1a8-46eb-99c9-65cb3dfffd34
-# ╟─ff0b1b99-ec2d-4610-97f2-ccb68a854460
-# ╠═5249f4d4-22af-4d9e-a309-e391ed51c0d7
+# ╠═c095470d-c1a8-46eb-99c9-65cb3dfffd34
+# ╠═ff0b1b99-ec2d-4610-97f2-ccb68a854460
 # ╟─5aaabb67-d87b-4761-a927-2f53448ee697
 # ╟─7d06e368-c46c-451a-84c8-424fbf12f06b
 # ╟─24d9ad56-8c07-4af9-b216-de9bdcd16fb3

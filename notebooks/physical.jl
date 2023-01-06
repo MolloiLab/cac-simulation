@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.18
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,7 @@ VENDORS = ["Canon_Aquilion_One_Vision"]
 
 # ╔═╡ 1298f72b-6c46-494c-91bf-34a3f7b4ca80
 SCANS = [1, 3, 6, 8]
+# SCANS = [1]
 
 # ╔═╡ ad8d9fcb-ca8c-40e8-a331-469b5b68890c
 function create_mask(array, mask)
@@ -68,6 +69,21 @@ end
 # ╔═╡ bb619fa9-37a9-492a-9088-ba211833266d
 function ring_mask_small(dilated_mask)
     return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ eba008b8-c288-4af5-b78d-48cf3d64e959
+function dilate_mask_large_bkg(mask)
+    return dilate(dilate(mask))
+end
+
+# ╔═╡ fde4f7f4-3abd-498f-92b9-867292c6d726
+function dilate_mask_medium_bkg(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ 83e6b776-2a80-4e3b-9bba-045bd0ebab59
+function dilate_mask_small_bkg(mask)
+    return (mask)
 end
 
 # ╔═╡ ca28ecc0-0324-43e7-8126-ccde7ef5f05b
@@ -117,6 +133,23 @@ begin
 			arr = masked_array[:, :, slice_CCI-2:slice_CCI+2]
 			pixel_size = DICOMUtils.get_pixel_size(header)
 			voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
+
+			## Background
+			background_mask = zeros(size(arr)...)
+			background_mask[
+				(center_insert[1]-5):(center_insert[1]+5),
+				(center_insert[2]-5):(center_insert[2]+5),
+				2,
+			] .= 1
+			
+			dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
+			ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
+		
+			dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
+			ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
+		
+			dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+			ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
 			
 			## Large
 			### High Density
@@ -203,26 +236,25 @@ begin
 			bool_arr_erode = (erode(erode(erode(erode(bool_arr)))))
 			c_img = calcium_image[:, :, cal_rod_slice-1:cal_rod_slice+2]
 			mask_cal_3D = zeros(size(c_img))
-			for z in 1:size(c_img, 3)
+			for z in axes(c_img, 3)
 				mask_cal_3D[:, :, z] = Bool.(erode(bool_arr_erode))
 			end
 		
 			hu_calcium = mean(c_img[Bool.(mask_cal_3D)])
-			# hu_calcium = 296.9
+			hu_heart_tissue = mean(arr[dilated_mask_L_bkg])
 			ρ_calcium = 0.2
-	
-	
+
 			# Background
-			background_mask = zeros(size(arr)...)
-			background_mask[
-				(center_insert[1]-5):(center_insert[1]+5),
-				(center_insert[2]-5):(center_insert[2]+5),
-				2,
-			] .= 1
-			background_mask = Bool.(background_mask)
-			background_ring = ring_mask_large(background_mask)
-			hu_heart_tissue_bkg = mean(arr[background_ring])
-			mass_bkg = score(arr[background_mask], hu_calcium, hu_heart_tissue_bkg, voxel_size, ρ_calcium, VolumeFraction())
+			hu_heart_tissue_large_bkg = mean(arr[ring_mask_L_bkg])
+			mass_large_bkg = score(arr[dilated_mask_L_bkg], hu_calcium, hu_heart_tissue_large_bkg, voxel_size, ρ_calcium, VolumeFraction())
+		
+			hu_heart_tissue_medium_bkg = mean(arr[ring_mask_M_bkg])
+			mass_medium_bkg = score(arr[dilated_mask_M_bkg], hu_calcium, hu_heart_tissue_medium_bkg, voxel_size, ρ_calcium, VolumeFraction())
+			
+			hu_heart_tissue_small_bkg = mean(arr[ring_mask_S_bkg])
+			mass_small_bkg = score(arr[dilated_mask_S_bkg], hu_calcium, hu_heart_tissue_small_bkg, voxel_size, ρ_calcium, VolumeFraction())
+	
+			mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
 	
 			# Score Large Inserts
 			## High Density
@@ -303,7 +335,7 @@ begin
 	
 			#---------------- Integrated ----------------#
 	
-			intensity_array = [hu_heart_tissue_bkg, hu_calcium]
+			intensity_array = [hu_heart_tissue, hu_calcium]
 			df_cal = DataFrame(:density => [0, 0.200], :intensity => intensity_array)
 	
 			linearRegressor = lm(@formula(intensity ~ density), df_cal)
@@ -312,73 +344,71 @@ begin
 			b = linearRegressor.model.rr.mu[1]
 			density(intensity) = (intensity - b) / m
 			intensity(ρ) = m * ρ + b
-	
+			
+			ρ = 0.1 # mg/mm^3
+			S_Obj = intensity(ρ)
+
 			# Score background
-			background_mask = zeros(size(arr)...)
-			background_mask[
-				(center_insert[1]-5):(center_insert[1]+5),
-				(center_insert[2]-5):(center_insert[2]+5),
-				2,
-			] .= 1
-			background_mask = Bool.(background_mask)
-			background_mask_dil = dilate(dilate(background_mask))
-	
-			single_bkg_center = Bool.(background_mask[:, :, 2])
-			S_Obj = intensity(ρ_calcium)
-			ρ = ρ_calcium # mg/mm^3
-			
-			ring_background = Bool.(background_mask_dil - background_mask)
-			s_bkg = mean(arr[ring_background])
-			alg_bkg = Integrated(arr[background_mask])
-			
-			mass_bkg = score(s_bkg, S_Obj, pixel_size, ρ, alg_bkg)
+			S_bkg_large = mean(arr[ring_mask_L_bkg])
+			alg_bkg_large = Integrated(arr[dilated_mask_L_bkg])
+			mass_large_bkg = score(S_bkg_large, S_Obj, pixel_size, ρ, alg_bkg_large)
+
+			S_bkg_medium = mean(arr[ring_mask_M_bkg])
+			alg_bkg_medium = Integrated(arr[dilated_mask_M_bkg])
+			mass_medium_bkg = score(S_bkg_medium, S_Obj, pixel_size, ρ, alg_bkg_medium)
+
+			S_bkg_small = mean(arr[ring_mask_S_bkg])
+			alg_bkg_small = Integrated(arr[dilated_mask_S_bkg])
+			mass_small_bkg = score(S_bkg_small, S_Obj, pixel_size, ρ, alg_bkg_small)
+
+			mass_bkg = [mass_large_bkg, mass_medium_bkg, mass_small_bkg]
 	
 			# Score Large Insert
 			## High Density
 			s_bkg_L_HD = mean(arr[ring_mask_L_HD])
-			alg_L_HD = Integrated(arr[mask_L_HD_3D])
+			alg_L_HD = Integrated(arr[dilated_mask_L_HD])
 			mass_l_hd = score(s_bkg_L_HD, S_Obj, pixel_size, ρ, alg_L_HD)
 	
 			## Medium Density
 			s_bkg_L_MD = mean(arr[ring_mask_L_MD])
-			alg_L_MD = Integrated(arr[mask_L_MD_3D])
+			alg_L_MD = Integrated(arr[dilated_mask_L_MD])
 			mass_l_md = score(s_bkg_L_MD, S_Obj, pixel_size, ρ, alg_L_MD)
 	
 			## Low Density
 			s_bkg_L_LD = mean(arr[ring_mask_L_LD])
-			alg_L_LD = Integrated(arr[mask_L_LD_3D])
+			alg_L_LD = Integrated(arr[dilated_mask_L_LD])
 			mass_l_ld = score(s_bkg_L_LD, S_Obj, pixel_size, ρ, alg_L_LD)
 	
 			# Score Medium Inserts
 			## High Density
 			s_bkg_M_HD = mean(arr[ring_mask_M_HD])
-			alg_M_HD = Integrated(arr[mask_M_HD_3D])
+			alg_M_HD = Integrated(arr[dilated_mask_M_HD])
 			mass_m_hd = score(s_bkg_M_HD, S_Obj, pixel_size, ρ, alg_M_HD)
 	
 			## Medium Density
 			s_bkg_M_MD = mean(arr[ring_mask_M_MD])
-			alg_M_MD = Integrated(arr[mask_M_MD_3D])
+			alg_M_MD = Integrated(arr[dilated_mask_M_MD])
 			mass_m_md = score(s_bkg_M_MD, S_Obj, pixel_size, ρ, alg_M_MD)
 	
 			## Low Density
 			s_bkg_M_LD = mean(arr[ring_mask_M_LD])
-			alg_M_LD = Integrated(arr[mask_M_LD_3D])
+			alg_M_LD = Integrated(arr[dilated_mask_M_LD])
 			mass_m_ld = score(s_bkg_M_LD, S_Obj, pixel_size, ρ, alg_M_LD)
 	
 			# Score Small Inserts
 			## High Density
 			s_bkg_S_HD = mean(arr[ring_mask_S_HD])
-			alg_S_HD = Integrated(arr[mask_S_HD_3D])
+			alg_S_HD = Integrated(arr[dilated_mask_S_HD])
 			mass_s_hd = score(s_bkg_S_HD, S_Obj, pixel_size, ρ, alg_S_HD)
 	
 			## Medium Density
 			s_bkg_S_MD = mean(arr[ring_mask_S_MD])
-			alg_S_MD = Integrated(arr[mask_S_MD_3D])
+			alg_S_MD = Integrated(arr[dilated_mask_S_MD])
 			mass_s_md = score(s_bkg_S_MD, S_Obj, pixel_size, ρ, alg_S_MD)
 	
 			## Low Density
 			s_bkg_S_LD = mean(arr[ring_mask_S_LD])
-			alg_S_LD = Integrated(arr[mask_S_LD_3D])
+			alg_S_LD = Integrated(arr[dilated_mask_S_LD])
 			mass_s_ld = score(s_bkg_S_LD, S_Obj, pixel_size, ρ, alg_S_LD)
 	
 			# Results
@@ -402,7 +432,10 @@ begin
 			push!(dfs_i, df)
 	
 			#---------------- SWCS ----------------#
-			μ, σ = 160, 40
+			# μ, σ = 160, 40
+			# μ, σ = 175, 20
+			μ, σ = 175, 25
+			# μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
 	
 			# Mask Calibration Factor
 			output = calc_output(masked_array, header, slice_CCI, thresh, trues(3, 3))
@@ -412,17 +445,13 @@ begin
             mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, cal_rod_slice, rows, cols, pixel_size)
 	
 			# Background
-			background_mask = zeros(size(arr)...)
-			background_mask[
-				(center_insert[1]-5):(center_insert[1]+5),
-				(center_insert[2]-5):(center_insert[2]+5),
-				2,
-			] .= 1
-			background_mask = Bool.(background_mask)
-			overlayed_bkg_mask = create_mask(arr, background_mask)
 			alg2 = SpatiallyWeighted()
-			swcs_bkg = score(overlayed_bkg_mask, μ, σ, alg2)
-			@info swcs_bkg
+
+			swcs_bkg_large = score(dilated_mask_L_bkg, μ, σ, alg2)
+			swcs_bkg_medium = score(dilated_mask_M_bkg, μ, σ, alg2)
+			swcs_bkg_small = score(dilated_mask_S_bkg, μ, σ, alg2)
+
+			swcs_bkg = [swcs_bkg_large, swcs_bkg_medium, swcs_bkg_small]
 	
 			# Score Large Inserts
 			## High Density
@@ -495,23 +524,37 @@ begin
 			local agat_thresh
 			agat_thresh = 130
 	
-			background_mask = zeros(size(arr)...)
-			background_mask[
-				(center_insert[1]-5):(center_insert[1]+5),
-				(center_insert[2]-5):(center_insert[2]+5),
-				2,
-			] .= 1
-			background_mask = Bool.(background_mask)
+			# Background
+
 			alg = Agatston()
-			overlayed_bkg_mask = create_mask(arr, background_mask)
-			agat_bkg, mass_bkg = score(
-				overlayed_bkg_mask,
+			overlayed_bkg_mask_L = create_mask(arr, dilated_mask_L_bkg)
+			overlayed_bkg_mask_M = create_mask(arr, dilated_mask_M_bkg)
+			overlayed_bkg_mask_S = create_mask(arr, dilated_mask_S_bkg)
+
+			agat_bkg, mass_bkg_large = score(
+				overlayed_bkg_mask_L,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+			agat_bkg, mass_bkg_medium = score(
+				overlayed_bkg_mask_M,
+				pixel_size,
+				mass_cal_factor,
+				alg;
+				kV=kV
+			)
+			agat_bkg, mass_bkg_small = score(
+				overlayed_bkg_mask_S,
+				pixel_size,
+				mass_cal_factor,
+				alg;
+				kV=kV
+			)
+
+			mass_bkg = [mass_bkg_large, mass_bkg_medium, mass_bkg_small]
+			
 			# Score Large Inserts
 			## High Density
 			alg = Agatston()
@@ -622,6 +665,9 @@ begin
 				VENDOR=VENDOR,
 				scan=scan,
 				inserts=inserts,
+				calculated_agat_large = calculated_agat_large,
+				calculated_agat_medium = calculated_agat_medium,
+				calculated_agat_small = calculated_agat_small,
 				ground_truth_mass_large=ground_truth_mass_large,
 				calculated_mass_large=calculated_mass_large,
 				ground_truth_mass_medium=ground_truth_mass_medium,
@@ -708,6 +754,9 @@ end
 # ╟─261851fd-aa68-475d-9552-91e94c242164
 # ╟─0dc125bf-1447-4628-82dd-621afed62469
 # ╟─bb619fa9-37a9-492a-9088-ba211833266d
+# ╟─eba008b8-c288-4af5-b78d-48cf3d64e959
+# ╟─fde4f7f4-3abd-498f-92b9-867292c6d726
+# ╟─83e6b776-2a80-4e3b-9bba-045bd0ebab59
 # ╠═ca28ecc0-0324-43e7-8126-ccde7ef5f05b
 # ╟─d5f169dd-54a5-4829-a451-9be4c9ac2597
 # ╠═5aea6935-1a10-4040-8108-1dc8904462ea
