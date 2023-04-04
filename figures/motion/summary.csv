@@ -11,5 +11,5 @@ Reproducibility,r^2,0.999,0.999,0.998,0.987
 Reproducibility,RMSE,0.994,1.019,1.948,13.687
 Reproducibility,RMSD,0.992,1.004,1.938,13.499
 Reproducibility,Best Fit Line,y = 0.998x + 0.075,y = 1.004x + 0.009,y = 1.004x + -0.228,y = 1.013x + -0.396
-Specificity,False Negatives,21 / 216,21 / 216,91 / 216,95 / 216
-Sensitivity,False Positives,10 / 72,10 / 72,2 / 72,12 / 72
+Specificity,False Negatives,18 / 216,18 / 216,91 / 216,0 / 216
+Sensitivity,False Positives,0 / 72,0 / 72,2 / 72,0 / 72

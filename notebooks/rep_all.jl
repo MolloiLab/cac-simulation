@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.18
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -107,7 +107,7 @@ begin
         for SIZE in SIZES
             for DENSITY in DENSITIES
                 #---------------- Reusable Pieces ----------------#
-                BASE_PATH = joinpath("/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation", IMAGES, SIZE, DENSITY)
+                BASE_PATH = joinpath(dirname(pwd()), IMAGES, SIZE, DENSITY)
                 root_path = joinpath(BASE_PATH, VENDOR)
                 dcm_path_list = dcm_list_builder(root_path)
                 pth = dcm_path_list[1]
@@ -135,7 +135,7 @@ begin
                 )
 
                 # Load Masks
-                root_new = joinpath("/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays", SIZE)
+                root_new = joinpath(dirname(pwd()), "julia_arrays", SIZE)
                 mask_L_HD = Array(CSV.read(joinpath(root_new, "mask_L_HD.csv"), DataFrame; header=false))
                 mask_M_HD = Array(CSV.read(joinpath(root_new, "mask_M_HD.csv"), DataFrame; header=false))
                 mask_S_HD = Array(CSV.read(joinpath(root_new, "mask_S_HD.csv"), DataFrame; header=false))
@@ -257,20 +257,6 @@ begin
                 bool_arr = array_filtered .> 0
                 bool_arr_erode = (((erode(erode(bool_arr)))))
                 c_img = calcium_image[:, :, 1:3]
-                # mask_cal_3D = Array{Bool}(undef, size(c_img))
-                # for z in 1:size(c_img, 3)
-                #     mask_cal_3D[:, :, z] = bool_arr_erode
-                # end
-
-                # if VENDOR == "80"
-                #     hu_calcium = 377.3
-                # elseif VENDOR == "100"
-                #     hu_calcium = 326.0
-                # elseif VENDOR == "120"
-                #     hu_calcium = 296.9
-                # else
-                #     hu_calcium = 282.7
-                # end
                 mask_cal_3D = zeros(size(c_img))
                 for z in 1:size(c_img, 3)
                     mask_cal_3D[:, :, z] = Bool.(erode(bool_arr_erode))
@@ -373,18 +359,16 @@ begin
 
                 #---------------- Integrated ----------------#
 
-                local intensity_array
-                if VENDOR == "80"
-                    intensity_array = [23, 69.7, 377.3, 1375.3]
-                elseif VENDOR == "100"
-                    intensity_array = [23, 63.3, 326.0, 1179.4]
-                elseif VENDOR == "120"
-                    intensity_array = [20, 58.1, 296.9, 1072.1]
-                else
-                    intensity_array = [20, 55.5, 282.7, 1019.7]
-                end
-
-                # df_cal = DataFrame(:density => [0, 0.025, 0.200, 0.800], :intensity => intensity_array)
+                # local intensity_array
+                # if VENDOR == "80"
+                #     intensity_array = [23, 69.7, 377.3, 1375.3]
+                # elseif VENDOR == "100"
+                #     intensity_array = [23, 63.3, 326.0, 1179.4]
+                # elseif VENDOR == "120"
+                #     intensity_array = [20, 58.1, 296.9, 1072.1]
+                # else
+                #     intensity_array = [20, 55.5, 282.7, 1019.7]
+                # end
                 df_cal = DataFrame(:density => [0, 0.2], :intensity => [hu_heart_tissue_large_bkg, hu_calcium])
 
 
@@ -484,18 +468,19 @@ begin
                 push!(dfs_i, df)
 
                 #---------------- SWCS ----------------#
-                local μ, σ
-                if VENDOR == "80"
-                    μ, σ = 170, 40
-                elseif VENDOR == "100"
-                    μ, σ = 165, 40
-                elseif VENDOR == "120"
-                    μ, σ = 160, 40
-                else
-                    VENDOR == "135"
-                    μ, σ = 155, 40
-                end
-                # μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
+                # local μ, σ
+                # if VENDOR == "80"
+                #     μ, σ = 170, 40
+                # elseif VENDOR == "100"
+                #     μ, σ = 165, 40
+                # elseif VENDOR == "120"
+                #     μ, σ = 160, 40
+                # else
+                #     VENDOR == "135"
+                #     μ, σ = 155, 40
+                # end
+				# μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
+				μ, σ = mean(c_img[Bool.(mask_cal_3D)]) / 2, std(c_img[Bool.(mask_cal_3D)])
 
 
                 # Mask Calibration Factor
@@ -608,9 +593,6 @@ begin
                     pixel_size,
                 )
 
-                local agat_thresh
-                agat_thresh = 130
-
                 # Background
 
                 alg = Agatston()
@@ -618,21 +600,21 @@ begin
                 overlayed_bkg_mask_M = create_mask(arr, dilated_mask_M_bkg)
                 overlayed_bkg_mask_S = create_mask(arr, dilated_mask_S_bkg)
 
-                agat_bkg, mass_bkg_large = score(
+                agat_bkg, vol_bkg_large, mass_bkg_large = score(
                     overlayed_bkg_mask_L,
                     pixel_size,
                     mass_cal_factor,
                     alg;
                     kV=kV
                 )
-                agat_bkg, mass_bkg_medium = score(
+                agat_bkg, vol_bkg_medium, mass_bkg_medium = score(
                     overlayed_bkg_mask_M,
                     pixel_size,
                     mass_cal_factor,
                     alg;
                     kV=kV
                 )
-                agat_bkg, mass_bkg_small = score(
+                agat_bkg, vol_bkg_small, mass_bkg_small = score(
                     overlayed_bkg_mask_S,
                     pixel_size,
                     mass_cal_factor,
@@ -646,7 +628,7 @@ begin
                 ## High Density
                 alg = Agatston()
                 overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
-                agat_l_hd, mass_l_hd = score(
+                agat_l_hd, vol_l_hd, mass_l_hd = score(
                     overlayed_mask_l_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -656,7 +638,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
-                agat_l_md, mass_l_md = score(
+                agat_l_md, vol_l_md, mass_l_md = score(
                     overlayed_mask_l_md,
                     pixel_size,
                     mass_cal_factor,
@@ -666,7 +648,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
-                agat_l_ld, mass_l_ld = score(
+                agat_l_ld, vol_l_ld, mass_l_ld = score(
                     overlayed_mask_l_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -677,7 +659,7 @@ begin
                 # Score Medium Inserts
                 ## High Density
                 overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
-                agat_m_hd, mass_m_hd = score(
+                agat_m_hd, vol_m_hd, mass_m_hd = score(
                     overlayed_mask_m_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -687,7 +669,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
-                agat_m_md, mass_m_md = score(
+                agat_m_md, vol_m_md, mass_m_md = score(
                     overlayed_mask_m_md,
                     pixel_size,
                     mass_cal_factor,
@@ -697,7 +679,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
-                agat_m_ld, mass_m_ld = score(
+                agat_m_ld, vol_m_ld, mass_m_ld = score(
                     overlayed_mask_m_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -708,7 +690,7 @@ begin
                 # Score Small Inserts
                 ## High Density
                 overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
-                agat_s_hd, mass_s_hd = score(
+                agat_s_hd, vol_s_hd, mass_s_hd = score(
                     overlayed_mask_s_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -718,7 +700,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
-                agat_s_md, mass_s_md = score(
+                agat_s_md, vol_s_md, mass_s_md = score(
                     overlayed_mask_s_md,
                     pixel_size,
                     mass_cal_factor,
@@ -728,7 +710,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
-                agat_s_ld, mass_s_ld = score(
+                agat_s_ld, vol_s_ld, mass_s_ld = score(
                     overlayed_mask_s_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -843,9 +825,9 @@ end
 # ╟─7c0c6116-1675-4d43-befb-dd6a18e3454b
 # ╟─e1f68840-1eae-4939-9985-68cd2c8b680a
 # ╟─72677ba6-2004-4c56-8c66-563155256da3
-# ╠═a4bfdd6c-7398-4410-9114-043b97d4f493
-# ╠═cd010671-9d2e-464f-bdcd-8505060b1a07
-# ╠═ae8706ae-ca51-4fc7-b21c-115b97ce4a95
+# ╟─a4bfdd6c-7398-4410-9114-043b97d4f493
+# ╟─cd010671-9d2e-464f-bdcd-8505060b1a07
+# ╟─ae8706ae-ca51-4fc7-b21c-115b97ce4a95
 # ╠═fc543228-f307-4aa5-b805-da855c62b609
 # ╟─0f7901f9-cab9-434a-ac18-fe57148f810b
 # ╠═f5b3fbf7-2e82-4055-80ab-3a63c476e4bb

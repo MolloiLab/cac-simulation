@@ -185,6 +185,16 @@ md"""
 ## Accuracy
 """
 
+# ╔═╡ a4bc0a8a-4904-4217-97a9-44158f99ae70
+# with_theme(medphys_theme) do
+    
+# end
+
+# ╔═╡ 98c3eaef-502e-4a20-b5b6-46a3d6b394d3
+# with_theme(medphys_theme) do
+    
+# end
+
 # ╔═╡ cabe7e9a-e932-406b-95dd-2c9128decdc7
 function prepare_linear_regression(df)
     gt_array = vec(
@@ -332,7 +342,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 
     xlims!(ax1; low=0, high=200)
@@ -390,7 +400,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 
     xlims!(ax2; low=0, high=200)
@@ -449,7 +459,7 @@ function lin_reg_norm()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 
     xlims!(ax2; low=0, high=200)
@@ -472,7 +482,7 @@ function lin_reg_norm()
         Label(
             layout[1, 1, TopLeft()],
             label;
-            textsize=25,
+            fontsize=25,
             padding=(0, 90, 25, 0),
             halign=:right,
         )
@@ -482,10 +492,8 @@ function lin_reg_norm()
     return f
 end
 
-# ╔═╡ a4bc0a8a-4904-4217-97a9-44158f99ae70
-with_theme(medphys_theme) do
-    lin_reg_norm()
-end
+# ╔═╡ c4e9c560-7316-4103-86b4-376d4adc1326
+lin_reg_norm()
 
 # ╔═╡ cf59cd3f-026c-4321-a1ac-de217177b52e
 md"""
@@ -566,7 +574,7 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 
     xlims!(ax1; low=0, high=25)
@@ -625,7 +633,7 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 	
     xlims!(ax2; low=0, high=25)
@@ -684,7 +692,7 @@ function lin_reg_low()
         boxcolor=:white,
         halign=:left,
         valign=:top,
-        textsize=12,
+        fontsize=12,
     )
 
     xlims!(ax2; low=0, high=25)
@@ -709,7 +717,7 @@ function lin_reg_low()
         Label(
             layout[1, 1, TopLeft()],
             label;
-            textsize=25,
+            fontsize=25,
             padding=(0, 90, 25, 0),
             halign=:right,
         )
@@ -719,15 +727,17 @@ function lin_reg_low()
     return f
 end
 
-# ╔═╡ 98c3eaef-502e-4a20-b5b6-46a3d6b394d3
-with_theme(medphys_theme) do
-    lin_reg_low()
-end
+# ╔═╡ f9470d36-15d1-470a-b34f-09dad98eb0f8
+lin_reg_low()
 
 # ╔═╡ 7ec78f71-6b20-4c8c-a9da-a216404bee72
 md"""
 ## Reproducibility
 """
+
+# ╔═╡ d2b90d91-4e63-45b0-8273-5231dbf2778e
+with_theme(medphys_theme) do
+end
 
 # ╔═╡ 88df8b9d-ff41-41d3-99fe-8ab9a050a803
 md"""
@@ -757,6 +767,9 @@ array_i_r = hcat(
     df_i_r[!, :calculated_mass_medium],
     df_i_r[!, :calculated_mass_small],
 )
+
+# ╔═╡ b02fe68d-78c7-46fc-b858-4db5b12ef729
+array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
 
 # ╔═╡ 14cdef5f-c9ba-4810-93fe-0f0915b803a2
 # r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small);
@@ -903,63 +916,26 @@ function remove_false_negatives(df, array, df_reprod, array_reprod, swcs::Bool)
 	end
 end
 
-# ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
-# r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
+# ╔═╡ 4b79a10e-d861-44ee-8b07-877e51145d5d
+df_i_large, df_i_r_large, df_i_medium, df_i_r_medium, df_i_small, df_i_r_small = remove_false_negatives(df_i, array_i, df_i_r, array_i_r);
 
-# ╔═╡ 86472f5a-0d0a-4c2e-9c01-dac3e8e57885
-md"""
-## Sensitivity and Specificity
-"""
+# ╔═╡ 9aa2cd67-dd4e-476f-9f5c-8927d59cf06b
+begin
+	r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small)
+	
+	r_squared_reprod_i = round.(r_squared_reprod_i; digits=3)
+	rms_values_reprod_i = round.(rms_values_reprod_i; digits=3)
+	coefficient_reprod_i = round.(coefficient_reprod_i; digits=3)
+end
 
-# ╔═╡ 1f07a46b-76a0-47f5-a02a-a0c6dc0fa12f
-std_level = 1
-
-# ╔═╡ d7393fcd-aced-4c6b-8196-218e0f78e286
-md"""
-#### False Negative
-"""
-
-# ╔═╡ dd4a85f5-8825-4af1-9be3-783d7c126e3e
-# function false_negative()
-#     f = Figure()
-#     colors = Makie.wong_colors()
-
-#     ##-- TOP --##
-#     axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
-
-#     table = [1, 2, 3, 4]
-#     heights1 = [
-# 		(total_zero_i / total_cac) * 100,
-# 		(total_zero_vf / total_cac) * 100,
-#         (total_zero_s / total_cac) * 100,
-#         (num_zero_a / total_cac) * 100,
-#     ]
-#     barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
-
-#     axtop.title = "False-Negative Scores (CAC=0)"
-#     axtop.ylabel = "% False-Negative Zero CAC Scores"
-#     ylims!(axtop; low=0, high=100)
-#     axtop.yticks = [0, 25, 50, 75, 100]
-
-#     save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_negative.png"), f)
-#     return f
-# end
-
-# ╔═╡ 98b99cc0-c22c-488e-a98d-002e042c6c01
-# with_theme(medphys_theme) do
-#     false_negative()
-# end
-
-# ╔═╡ 7384e7ae-6283-4656-8a46-722105daf20e
-md"""
-#### SWCS
-"""
-
-# ╔═╡ 01fdb9d2-6d65-4b24-b0c7-3b48c3bedcb6
-array_s = Array(hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]));
+# ╔═╡ c960b23e-3ef5-4719-a3e6-1016e9c223c2
+array_s = hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium], df_s[!, :calculated_swcs_small]);
 
 # ╔═╡ 97f07af4-a4af-4a26-9f81-5acb836c9f2c
 df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small = remove_false_negatives(df_s, array_s, df_s_r, array_s_r, true);
+
+# ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
+# r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
 
 # ╔═╡ 1e646f11-dd9b-40e1-988d-5d9e37eee777
 begin
@@ -970,21 +946,48 @@ begin
 	coefficient_reprod_s = round.(coefficient_reprod_s; digits=3)
 end
 
-# ╔═╡ cad984e3-4243-45c5-a8c7-b498a7d9fcca
-total_cac = length(array_s)
+# ╔═╡ 86472f5a-0d0a-4c2e-9c01-dac3e8e57885
+md"""
+## Sensitivity and Specificity
+"""
 
-# ╔═╡ 40823ab6-49fc-468c-803b-a30877a651df
-mean_s, std_s = mean(df_s[!, :swcs_bkg]), std(df_s[!, :swcs_bkg]) * std_level
+# ╔═╡ 5e2dafd8-5853-4215-be35-9a6fcf47cec1
+with_theme(medphys_theme) do
+end
 
-# ╔═╡ 6cefb906-028d-4d22-b8cb-aa35f47faed9
-total_zero_s = length(findall(x -> x <= mean_s + std_s, array_s))
+# ╔═╡ 2e764227-1967-40b2-8409-35f47094dd00
+std_level = 1.5
 
-# ╔═╡ 11815da6-0128-483c-8b99-a7c2d930a066
+# ╔═╡ 7beb1ddb-4958-4927-ba90-02af8900ef51
+md"""
+#### False Negative
+"""
+
+# ╔═╡ ded62b73-4d7b-44d2-93b5-3e1a002f4703
+md"""
+#### SWCS
+"""
+
+# ╔═╡ 3f4cf3dc-e6e4-4a57-9c13-6791cca9fbc6
+begin
+	false_negative_s = []
+	for i in 1:3:nrow(df_s)-2
+		mean_s, std_s = mean(df_s[i:i+2, :swcs_bkg]), std(df_s[i:i+2, :swcs_bkg])*std_level 
+		array_s = hcat(df_s[i:i+2, :calculated_swcs_large], df_s[i:i+2, :calculated_swcs_medium], df_s[i:i+2, :calculated_swcs_small]);
+		neg = length(findall(x -> x <= mean_s + std_s, array_s))
+		push!(false_negative_s, neg)
+	end
+end
+
+# ╔═╡ 634e4a9d-5871-471b-a66f-a5fef26fef0a
+total_zero_s = sum(false_negative_s)
+
+# ╔═╡ 7e6e50c3-facc-4975-975d-99052636311f
 md"""
 #### Agatston
 """
 
-# ╔═╡ 94e0969e-ef78-4a30-ba7e-d35a8f932bac
+# ╔═╡ 2d84b295-43e7-4e21-a4ca-0fa971b140f5
 array_a = hcat(df_a[!, :calculated_mass_large], df_a[!, :calculated_mass_medium], df_a[!, :calculated_mass_small]);
 
 # ╔═╡ ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
@@ -999,41 +1002,46 @@ begin
 	coefficient_reprod_a = round.(coefficient_reprod_a; digits=3)
 end
 
-# ╔═╡ 12f90c32-20da-4a1a-90ff-e451fcf1f029
+# ╔═╡ a06aa285-dc17-4089-8c68-897f07458a4d
 num_zero_a = length(findall(x -> x <= 0, array_a))
 
-# ╔═╡ 1372524e-508f-472d-b46d-3e00812d74b8
+# ╔═╡ 2421aa7a-9043-41a9-8ded-a752c4d74f35
+total_cac = length(array_a)
+
+# ╔═╡ 35eba70f-1853-48d2-962e-d3df68c5fd26
+length(findall(x -> x <= 0, df_a[!, :calculated_mass_large])), length(findall(x -> x <= 0, df_a[!, :calculated_mass_medium])), length(findall(x -> x <= 0, df_a[!, :calculated_mass_small]))
+
+# ╔═╡ 21b536fc-ac93-40c4-8b95-2bded8ef8838
+df_a_ld, df_a_md, df_a_hd = groupby(df_a, :inserts);
+
+# ╔═╡ 2c65534b-a6a7-4eca-8ce5-fbe794bb61c4
+length(findall(x -> x <= 0, hcat(df_a_ld[!, :calculated_mass_large], df_a_ld[!, :calculated_mass_medium], df_a_ld[!, :calculated_mass_small]))), length(findall(x -> x <= 0, hcat(df_a_md[!, :calculated_mass_large], df_a_md[!, :calculated_mass_medium], df_a_md[!, :calculated_mass_small]))), length(findall(x -> x <= 0, hcat(df_a_hd[!, :calculated_mass_large], df_a_hd[!, :calculated_mass_medium], df_a_hd[!, :calculated_mass_small])))
+
+# ╔═╡ 9dbeb30c-8478-4574-8f4a-a19768238c91
 md"""
 #### Integrated
 """
 
-# ╔═╡ 11ebd9be-cd44-4656-9793-fb9127ef880a
-array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
-
-# ╔═╡ 4b79a10e-d861-44ee-8b07-877e51145d5d
-df_i_large, df_i_r_large, df_i_medium, df_i_r_medium, df_i_small, df_i_r_small = remove_false_negatives(df_i, array_i, df_i_r, array_i_r);
-
-# ╔═╡ 9aa2cd67-dd4e-476f-9f5c-8927d59cf06b
+# ╔═╡ 7ca0e85c-2052-4d2a-a300-661d30aee454
 begin
-	r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small)
-	
-	r_squared_reprod_i = round.(r_squared_reprod_i; digits=3)
-	rms_values_reprod_i = round.(rms_values_reprod_i; digits=3)
-	coefficient_reprod_i = round.(coefficient_reprod_i; digits=3)
+	false_negative_i = []
+	for i in 1:3:nrow(df_i)-2
+		mean_i, std_i = mean(df_i[i:i+2, :mass_bkg]), std(df_i[i:i+2, :mass_bkg])*std_level 
+		array_i = hcat(df_i[i:i+2, :calculated_mass_large], df_i[i:i+2, :calculated_mass_medium], df_i[i:i+2, :calculated_mass_small]);
+		neg = length(findall(x -> x <= mean_i + std_i, array_i))
+		push!(false_negative_i, neg)
+	end
 end
 
-# ╔═╡ 03d2d117-57f2-4fd4-835f-f4833841fff7
-mean_i, std_i = mean(df_i[!, :mass_bkg]), std(df_i[!, :mass_bkg]) * std_level
+# ╔═╡ 869e7f54-3ec6-4a8f-a4e7-11a22f88873f
+total_zero_i = sum(false_negative_i)
 
-# ╔═╡ d7e39197-4428-4559-a323-cde583406e1c
-total_zero_i = length(findall(x -> x <= mean_i + std_i, array_i))
-
-# ╔═╡ 98514ba4-72f0-4606-b92d-784c15fc94ce
+# ╔═╡ fdefea0a-c546-4864-8b5b-ee8c74be05cd
 md"""
 #### Volume Fraction
 """
 
-# ╔═╡ 6fcc6d43-dde1-4bec-a783-3cf4d2e59911
+# ╔═╡ d77c36da-1fa2-4116-b08c-6b19c31b0a1d
 array_vf = hcat(df_vf[!, :calculated_mass_large], df_vf[!, :calculated_mass_medium], df_vf[!, :calculated_mass_small]);
 
 # ╔═╡ e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
@@ -1097,7 +1105,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     else
         Textbox(
@@ -1108,7 +1116,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     end
 
@@ -1176,7 +1184,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     else
         Textbox(
@@ -1187,7 +1195,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     end
 
@@ -1255,7 +1263,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     else
         Textbox(
@@ -1266,7 +1274,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     end
 
@@ -1334,7 +1342,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     else
         Textbox(
@@ -1345,7 +1353,7 @@ function reprod()
             boxcolor=:white,
             halign=:left,
             valign=:top,
-            textsize=12,
+            fontsize=12,
         )
     end
 
@@ -1363,7 +1371,7 @@ function reprod()
         Label(
             layout[1, 1, TopLeft()],
             label;
-            textsize=25,
+            fontsize=25,
             padding=(0, 0, 40, 0),
             halign=:right,
         )
@@ -1373,102 +1381,104 @@ function reprod()
     return f
 end
 
-# ╔═╡ d2b90d91-4e63-45b0-8273-5231dbf2778e
-with_theme(medphys_theme) do
-    reprod()
-end
+# ╔═╡ e8dd497d-cfff-47f9-a9d5-11bed7174d24
+reprod()
 
-# ╔═╡ 3c2261a8-c99c-4810-b978-dfd8cde386b1
+# ╔═╡ e39e9879-a587-4b52-b07d-5145e72495e8
 mean_vf, std_vf = mean(df_vf[!, :mass_bkg]), std(df_vf[!, :mass_bkg]) * std_level
 
-# ╔═╡ d0ea1838-e52a-4229-91b3-62500fb70ed0
-total_zero_vf = length(findall(x -> x <= mean_i + std_i, array_i))
+# ╔═╡ a5554d22-e6f0-48a8-a6c7-cac54acb73ca
+begin
+	false_negative_vf = []
+	for i in 1:3:nrow(df_i)-2
+		mean_vf, std_vf = mean(df_vf[i:i+2, :mass_bkg]), std(df_vf[i:i+2, :mass_bkg])*std_level 
+		array_vf = hcat(df_vf[i:i+2, :calculated_mass_large], df_vf[i:i+2, :calculated_mass_medium], df_vf[i:i+2, :calculated_mass_small]);
+		neg = length(findall(x -> x <= mean_vf + std_vf, array_vf))
+		push!(false_negative_vf, neg)
+	end
+end
 
-# ╔═╡ 52d90be9-6c07-4289-82c5-0d19f7c7db5b
-total_zero_i, total_zero_vf, total_zero_s, num_zero_a
+# ╔═╡ c3e00893-3806-4533-beb1-292f7b0a8bfd
+total_zero_vf = sum(false_negative_vf)
 
-# ╔═╡ 92d37f45-02b2-415c-a5cf-a0654b3bf778
+# ╔═╡ 7fe5cc53-1b18-4f6f-b0ff-e8d1eaa85163
+total_zero_i, total_zero_vf, total_zero_s, num_zero_a, total_cac
+
+# ╔═╡ 526fd6a7-5503-4025-977b-378fdd63ab82
 md"""
 #### False Positive
 """
 
-# ╔═╡ c019d057-b19b-4e77-b59d-bff4f9de5c79
-# function false_positive()
-#     f = Figure()
-#     colors = Makie.wong_colors()
-
-#     ##-- TOP --##
-#     axtop = Axis(f[1, 1]; xticks=(1:4, ["Integrated", "Volume Fraction", "Spatially Weighted", "Agatston"]))
-
-#     table = [1, 2, 3, 4]
-#     heights1 = [
-# 		(total_zero_i_pos / total_cac_pos) * 100,
-# 		(total_zero_vf_pos / total_cac_pos) * 100,
-#         (total_zero_s_pos / total_cac_pos) * 100,
-#         (total_zero_a_pos / total_cac_pos) * 100,
-#     ]
-#     barplot!(axtop, table, heights1; color=colors[1:4], bar_labels=:y)
-
-#     axtop.title = "False-Positive Scores (CAC>0)"
-#     axtop.ylabel = "% False-Positive CAC Scores"
-#     ylims!(axtop; low=0, high=100)
-#     axtop.yticks = [0, 25, 50, 75, 100]
-
-#     save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "false_positive.png"), f)
-#     return f
-# end
-
-# ╔═╡ 2b539e29-ee73-4ae1-9917-50b9887919dd
-# with_theme(medphys_theme) do
-#     false_positive()
-# end
-
-# ╔═╡ 01060359-facb-4f3d-8096-f8a0ad60afc3
+# ╔═╡ 20506d51-1e74-4454-95c0-69512fcc8058
 md"""
 #### SWCS
 """
 
-# ╔═╡ e9930852-95cf-4750-8287-d2da21f071bd
-array_s_pos = df_s[!, :swcs_bkg]
+# ╔═╡ 62abf877-7f72-42c5-9547-a7d189d24a89
+begin
+	false_positive_s = []
+	for i in 1:3:nrow(df_s)-2
+		mean_s, std_s = mean(df_s[i:i+2, :swcs_bkg]), std(df_s[i:i+2, :swcs_bkg])*std_level
+		array_s_pos = df_s[i:i+2, :swcs_bkg]
+		pos = length(findall(x -> x > (mean_s + std_s), array_s_pos))
+		push!(false_positive_s, pos)
+	end
+end
 
-# ╔═╡ 3b92b783-7cc3-46d5-a479-d5c4b2673bf2
-total_cac_pos = length(array_s_pos)
+# ╔═╡ 1ecde207-4f4d-4300-b433-eee549eec7cf
+total_zero_s_pos = sum(false_positive_s)
 
-# ╔═╡ 4fccc2b4-25b0-43ee-bc6b-9d27af54a745
-total_zero_s_pos = length(findall(x -> x >= mean_s + std_s, array_s_pos))
-
-# ╔═╡ 25b17523-054b-40a8-a5ae-c2d0eebe95b0
+# ╔═╡ 56be65e4-5a4d-4515-8c20-770a5d9cc41e
 md"""
 #### Agatston
 """
 
-# ╔═╡ df26a723-cb82-4f97-93c4-385c9a68ad93
+# ╔═╡ 3d3368ab-7cd6-45e8-9cad-34c6db295060
 array_a_pos = df_a[!, :mass_bkg]
 
-# ╔═╡ 71525bbb-36f0-4c45-aeb0-d25a5e65c81f
+# ╔═╡ 2e5ccea4-becd-497c-ae25-43e5c01d1f45
+total_cac_pos = length(array_a_pos)
+
+# ╔═╡ e012375e-c4a5-45b3-a5bf-a3312b1b859f
 total_zero_a_pos = length(findall(x -> x > 0, array_a_pos))
 
-# ╔═╡ 7e1aaca3-4eae-45a1-ae7c-d52a4c3b0ad6
+# ╔═╡ 69a50289-5054-43b0-873d-fdfd1b3d09cc
 md"""
 #### Integrated
 """
 
-# ╔═╡ 6cb4a96d-f4a9-443a-980d-0ed5aa86217b
-array_i_pos = df_i[!, :mass_bkg]
+# ╔═╡ 285671ab-3efd-4e69-8605-c798fcf476b3
+begin
+	false_positive_i = []
+	for i in 1:3:nrow(df_i)-2
+		mean_i, std_i = mean(df_i[i:i+2, :mass_bkg]), std(df_i[i:i+2, :mass_bkg])*std_level
+		array_i_pos = df_i[i:i+2, :mass_bkg]
+		pos = length(findall(x -> x > (mean_i + std_level), array_i_pos))
+		push!(false_positive_i, pos)
+	end
+end
 
-# ╔═╡ 9a33c08b-9018-4b16-904c-351c7f164c96
-total_zero_i_pos = length(findall(x -> x >= mean_i + std_i, array_i_pos))
+# ╔═╡ 9492ad92-76bc-40d8-a903-b6bdd1d6fea7
+total_zero_i_pos = sum(false_positive_i)
 
-# ╔═╡ f0ea9553-e678-43ed-ae5a-9956c2223411
+# ╔═╡ dd7cd3aa-d85a-44e2-828c-4e5b30c58cd8
 md"""
 #### Volume Fraction
 """
 
-# ╔═╡ cfe900b1-c11d-43e7-8859-8088b06ef4ce
-array_vf_pos = df_vf[!, :mass_bkg]
+# ╔═╡ 132a632f-14f6-45b6-8c7b-9bc2609f6e21
+begin
+	false_positive_vf = []
+	for i in 1:3:nrow(df_vf)-2
+		mean_vf, std_vf = mean(df_vf[i:i+2, :mass_bkg]), std(df_vf[i:i+2, :mass_bkg])*std_level
+		array_vf_pos = df_vf[i:i+2, :mass_bkg]
+		pos = length(findall(x -> x > (mean_vf + std_vf), array_vf_pos))
+		push!(false_positive_vf, pos)
+	end
+end
 
-# ╔═╡ 47800d50-2e56-4ec3-ba12-13aae206d694
-total_zero_vf_pos = length(findall(x -> x >= mean_vf + std_vf, array_vf_pos))
+# ╔═╡ f711e977-f238-454a-a317-164314e137ff
+total_zero_vf_pos = sum(false_positive_vf)
 
 # ╔═╡ d6cd9cf6-4571-4dad-bda6-56fd783e4b8d
 function sensitivity_specificity()
@@ -1515,10 +1525,11 @@ function sensitivity_specificity()
     return f
 end
 
-# ╔═╡ 5e2dafd8-5853-4215-be35-9a6fcf47cec1
-with_theme(medphys_theme) do
-    sensitivity_specificity()
-end
+# ╔═╡ aaa68009-64c7-4ba1-b921-53ab87296f68
+sensitivity_specificity()
+
+# ╔═╡ 2e9fb1ff-3542-4ed2-a6e0-f98980695e60
+total_zero_i_pos, total_zero_vf_pos, total_zero_s_pos, total_zero_a_pos, total_cac_pos
 
 # ╔═╡ a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 md"""
@@ -1741,10 +1752,12 @@ means_stds = DataFrame(
 # ╟─310c1999-77a6-432e-850c-4111411cceb0
 # ╠═3c40ca1d-4111-4bf1-941e-30b59cd1a264
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
+# ╠═a4bc0a8a-4904-4217-97a9-44158f99ae70
 # ╟─c93ba92a-ccc7-4ae0-9207-300715821fc5
-# ╟─a4bc0a8a-4904-4217-97a9-44158f99ae70
+# ╟─c4e9c560-7316-4103-86b4-376d4adc1326
+# ╠═98c3eaef-502e-4a20-b5b6-46a3d6b394d3
 # ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
-# ╟─98c3eaef-502e-4a20-b5b6-46a3d6b394d3
+# ╟─f9470d36-15d1-470a-b34f-09dad98eb0f8
 # ╟─cabe7e9a-e932-406b-95dd-2c9128decdc7
 # ╟─4a255a58-b9a0-4175-a750-b2562361631d
 # ╟─79a09453-d375-4f1d-9318-887d806dbb14
@@ -1758,6 +1771,7 @@ means_stds = DataFrame(
 # ╟─7ec78f71-6b20-4c8c-a9da-a216404bee72
 # ╟─a85f777a-76f2-4c64-9973-ea9dec245600
 # ╟─d2b90d91-4e63-45b0-8273-5231dbf2778e
+# ╠═e8dd497d-cfff-47f9-a9d5-11bed7174d24
 # ╟─88df8b9d-ff41-41d3-99fe-8ab9a050a803
 # ╠═53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
 # ╠═89b28ac5-dd69-4812-84fd-64b54606d146
@@ -1765,6 +1779,7 @@ means_stds = DataFrame(
 # ╠═6e515ee8-2836-4285-a0a9-131e1e7b4b7f
 # ╠═9ae3b4cb-fac5-4168-868d-724de9b0c9d2
 # ╠═d9e26f65-6d40-48e5-b567-4cce5a2c530b
+# ╠═b02fe68d-78c7-46fc-b858-4db5b12ef729
 # ╠═4b79a10e-d861-44ee-8b07-877e51145d5d
 # ╠═14cdef5f-c9ba-4810-93fe-0f0915b803a2
 # ╠═9aa2cd67-dd4e-476f-9f5c-8927d59cf06b
@@ -1796,49 +1811,50 @@ means_stds = DataFrame(
 # ╠═35bc90e2-9d70-4daf-a825-b462831c5bf6
 # ╠═624074ec-572a-45ab-932a-aed7edb1f846
 # ╠═e8b56e73-f22b-4587-9141-558f5f545a5e
+# ╠═c960b23e-3ef5-4719-a3e6-1016e9c223c2
 # ╠═97f07af4-a4af-4a26-9f81-5acb836c9f2c
 # ╠═a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
 # ╠═1e646f11-dd9b-40e1-988d-5d9e37eee777
 # ╟─86472f5a-0d0a-4c2e-9c01-dac3e8e57885
 # ╟─d6cd9cf6-4571-4dad-bda6-56fd783e4b8d
 # ╟─5e2dafd8-5853-4215-be35-9a6fcf47cec1
-# ╠═1f07a46b-76a0-47f5-a02a-a0c6dc0fa12f
-# ╟─d7393fcd-aced-4c6b-8196-218e0f78e286
-# ╟─dd4a85f5-8825-4af1-9be3-783d7c126e3e
-# ╟─98b99cc0-c22c-488e-a98d-002e042c6c01
-# ╠═52d90be9-6c07-4289-82c5-0d19f7c7db5b
-# ╟─7384e7ae-6283-4656-8a46-722105daf20e
-# ╠═01fdb9d2-6d65-4b24-b0c7-3b48c3bedcb6
-# ╠═cad984e3-4243-45c5-a8c7-b498a7d9fcca
-# ╠═40823ab6-49fc-468c-803b-a30877a651df
-# ╠═6cefb906-028d-4d22-b8cb-aa35f47faed9
-# ╟─11815da6-0128-483c-8b99-a7c2d930a066
-# ╠═94e0969e-ef78-4a30-ba7e-d35a8f932bac
-# ╠═12f90c32-20da-4a1a-90ff-e451fcf1f029
-# ╟─1372524e-508f-472d-b46d-3e00812d74b8
-# ╠═11ebd9be-cd44-4656-9793-fb9127ef880a
-# ╠═03d2d117-57f2-4fd4-835f-f4833841fff7
-# ╠═d7e39197-4428-4559-a323-cde583406e1c
-# ╟─98514ba4-72f0-4606-b92d-784c15fc94ce
-# ╠═6fcc6d43-dde1-4bec-a783-3cf4d2e59911
-# ╠═3c2261a8-c99c-4810-b978-dfd8cde386b1
-# ╠═d0ea1838-e52a-4229-91b3-62500fb70ed0
-# ╟─92d37f45-02b2-415c-a5cf-a0654b3bf778
-# ╟─c019d057-b19b-4e77-b59d-bff4f9de5c79
-# ╟─2b539e29-ee73-4ae1-9917-50b9887919dd
-# ╟─01060359-facb-4f3d-8096-f8a0ad60afc3
-# ╠═e9930852-95cf-4750-8287-d2da21f071bd
-# ╠═3b92b783-7cc3-46d5-a479-d5c4b2673bf2
-# ╠═4fccc2b4-25b0-43ee-bc6b-9d27af54a745
-# ╟─25b17523-054b-40a8-a5ae-c2d0eebe95b0
-# ╠═df26a723-cb82-4f97-93c4-385c9a68ad93
-# ╠═71525bbb-36f0-4c45-aeb0-d25a5e65c81f
-# ╟─7e1aaca3-4eae-45a1-ae7c-d52a4c3b0ad6
-# ╠═6cb4a96d-f4a9-443a-980d-0ed5aa86217b
-# ╠═9a33c08b-9018-4b16-904c-351c7f164c96
-# ╟─f0ea9553-e678-43ed-ae5a-9956c2223411
-# ╠═cfe900b1-c11d-43e7-8859-8088b06ef4ce
-# ╠═47800d50-2e56-4ec3-ba12-13aae206d694
+# ╟─aaa68009-64c7-4ba1-b921-53ab87296f68
+# ╠═2e764227-1967-40b2-8409-35f47094dd00
+# ╟─7beb1ddb-4958-4927-ba90-02af8900ef51
+# ╠═7fe5cc53-1b18-4f6f-b0ff-e8d1eaa85163
+# ╠═2e9fb1ff-3542-4ed2-a6e0-f98980695e60
+# ╟─ded62b73-4d7b-44d2-93b5-3e1a002f4703
+# ╠═3f4cf3dc-e6e4-4a57-9c13-6791cca9fbc6
+# ╠═634e4a9d-5871-471b-a66f-a5fef26fef0a
+# ╟─7e6e50c3-facc-4975-975d-99052636311f
+# ╠═2d84b295-43e7-4e21-a4ca-0fa971b140f5
+# ╠═a06aa285-dc17-4089-8c68-897f07458a4d
+# ╠═2421aa7a-9043-41a9-8ded-a752c4d74f35
+# ╠═35eba70f-1853-48d2-962e-d3df68c5fd26
+# ╠═21b536fc-ac93-40c4-8b95-2bded8ef8838
+# ╠═2c65534b-a6a7-4eca-8ce5-fbe794bb61c4
+# ╟─9dbeb30c-8478-4574-8f4a-a19768238c91
+# ╠═7ca0e85c-2052-4d2a-a300-661d30aee454
+# ╠═869e7f54-3ec6-4a8f-a4e7-11a22f88873f
+# ╟─fdefea0a-c546-4864-8b5b-ee8c74be05cd
+# ╠═d77c36da-1fa2-4116-b08c-6b19c31b0a1d
+# ╠═e39e9879-a587-4b52-b07d-5145e72495e8
+# ╠═a5554d22-e6f0-48a8-a6c7-cac54acb73ca
+# ╠═c3e00893-3806-4533-beb1-292f7b0a8bfd
+# ╟─526fd6a7-5503-4025-977b-378fdd63ab82
+# ╟─20506d51-1e74-4454-95c0-69512fcc8058
+# ╠═62abf877-7f72-42c5-9547-a7d189d24a89
+# ╠═1ecde207-4f4d-4300-b433-eee549eec7cf
+# ╟─56be65e4-5a4d-4515-8c20-770a5d9cc41e
+# ╠═3d3368ab-7cd6-45e8-9cad-34c6db295060
+# ╠═2e5ccea4-becd-497c-ae25-43e5c01d1f45
+# ╠═e012375e-c4a5-45b3-a5bf-a3312b1b859f
+# ╟─69a50289-5054-43b0-873d-fdfd1b3d09cc
+# ╠═285671ab-3efd-4e69-8605-c798fcf476b3
+# ╠═9492ad92-76bc-40d8-a903-b6bdd1d6fea7
+# ╟─dd7cd3aa-d85a-44e2-828c-4e5b30c58cd8
+# ╠═132a632f-14f6-45b6-8c7b-9bc2609f6e21
+# ╠═f711e977-f238-454a-a317-164314e137ff
 # ╟─a6f0d36e-823d-4198-b4ea-d95ce16ac65c
 # ╟─0f98c4b9-c5da-4176-83b7-2643663b497d
 # ╠═eb26dbee-fad0-4655-b9d4-1839c48150f6
