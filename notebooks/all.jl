@@ -485,18 +485,6 @@ begin
                 push!(dfs_i, df)
 
                 #---------------- SWCS ----------------#
-                # local μ, σ
-                # if VENDOR == "80"
-                #     μ, σ = 170, 40
-                # elseif VENDOR == "100"
-                #     μ, σ = 165, 40
-                # elseif VENDOR == "120"
-                #     μ, σ = 160, 40
-                # else
-                #     VENDOR == "135"
-                #     μ, σ = 155, 40
-                # end
-				# μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
 				μ, σ = mean(c_img[Bool.(mask_cal_3D)]) / 2, std(c_img[Bool.(mask_cal_3D)])
 
 
@@ -756,6 +744,9 @@ begin
                     ground_truth_mass_large=ground_truth_mass_large,
                     calculated_mass_large=calculated_mass_large,
                     ground_truth_mass_medium=ground_truth_mass_medium,
+					calculated_agat_large=calculated_agat_large,
+					calculated_agat_medium=calculated_agat_medium,
+					calculated_agat_small=calculated_agat_small,
                     calculated_mass_medium=calculated_mass_medium,
                     ground_truth_mass_small=ground_truth_mass_small,
                     calculated_mass_small=calculated_mass_small,

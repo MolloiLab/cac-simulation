@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.18
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -107,7 +107,7 @@ begin
         for SIZE in SIZES
             for DENSITY in DENSITIES
                 #---------------- Reusable Pieces ----------------#
-                BASE_PATH = joinpath("/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation", IMAGES, SIZE, DENSITY)
+				BASE_PATH = joinpath(dirname(pwd()), IMAGES, SIZE, DENSITY)
                 root_path = joinpath(BASE_PATH, VENDOR * "-motion")
                 dcm_path_list = dcm_list_builder(root_path)
                 pth = dcm_path_list[1]
@@ -135,7 +135,7 @@ begin
                 )
 
                 # Load Masks
-                root_new = joinpath("/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays", SIZE)
+				root_new = joinpath(dirname(pwd()), "julia_arrays", SIZE)
                 mask_L_HD = Array(CSV.read(joinpath(root_new, "mask_L_HD.csv"), DataFrame; header=false))
                 mask_M_HD = Array(CSV.read(joinpath(root_new, "mask_M_HD.csv"), DataFrame; header=false))
                 mask_S_HD = Array(CSV.read(joinpath(root_new, "mask_S_HD.csv"), DataFrame; header=false))
@@ -152,20 +152,35 @@ begin
                 voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
 
                 ## Background
-                background_mask = zeros(size(arr)...)
-                background_mask[
-                    (center_insert[1]-5):(center_insert[1]+5),
-                    (center_insert[2]-5):(center_insert[2]+5),
+                background_mask1 = zeros(size(arr)...)
+                background_mask2 = zeros(size(arr)...)
+                background_mask3 = zeros(size(arr)...)
+
+				offs = 10
+				rnge = 10
+                background_mask1[
+                    (center_insert[1]-rnge+offs):(center_insert[1]+rnge+offs),
+                    (center_insert[2]-rnge):(center_insert[2]+rnge),
+                    2,
+                ] .= 1
+				background_mask2[
+                    (center_insert[1]-rnge-offs):(center_insert[1]+rnge-offs),
+                    (center_insert[2]-rnge):(center_insert[2]+rnge),
+                    2,
+                ] .= 1
+				background_mask3[
+                    (center_insert[1]-rnge):(center_insert[1]+rnge),
+                    (center_insert[2]-rnge+offs):(center_insert[2]+rnge+offs),
                     2,
                 ] .= 1
 
-                dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
-                ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
+                dilated_mask_L_bkg = dilate_mask_small_bkg(Bool.(background_mask1))
+                ring_mask_L_bkg = ring_mask_small(dilated_mask_L_bkg)
 
-                dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
-                ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
+                dilated_mask_M_bkg = dilate_mask_small_bkg(Bool.(background_mask2))
+                ring_mask_M_bkg = ring_mask_small(dilated_mask_M_bkg)
 
-                dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+                dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask3))
                 ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
 
                 ## Large
@@ -257,20 +272,6 @@ begin
                 bool_arr = array_filtered .> 0
                 bool_arr_erode = (((erode(erode(bool_arr)))))
                 c_img = calcium_image[:, :, 1:3]
-                # mask_cal_3D = Array{Bool}(undef, size(c_img))
-                # for z in 1:size(c_img, 3)
-                #     mask_cal_3D[:, :, z] = bool_arr_erode
-                # end
-
-                # if VENDOR == "80"
-                #     hu_calcium = 377.3
-                # elseif VENDOR == "100"
-                #     hu_calcium = 326.0
-                # elseif VENDOR == "120"
-                #     hu_calcium = 296.9
-                # else
-                #     hu_calcium = 282.7
-                # end
                 mask_cal_3D = zeros(size(c_img))
                 for z in 1:size(c_img, 3)
                     mask_cal_3D[:, :, z] = Bool.(erode(bool_arr_erode))
@@ -496,6 +497,7 @@ begin
                     μ, σ = 155, 40
                 end
                 # μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
+				μ, σ = mean(c_img[Bool.(mask_cal_3D)]) / 2, std(c_img[Bool.(mask_cal_3D)])
 
 
                 # Mask Calibration Factor
@@ -588,7 +590,7 @@ begin
 
 
 
-                #---------------- Agatston ----------------#
+               	#---------------- Agatston ----------------#
                 # Mask Calibration Factor
                 output = calc_output(
                     masked_array, header, slice_CCI, thresh, trues(3, 3)
@@ -608,9 +610,6 @@ begin
                     pixel_size,
                 )
 
-                local agat_thresh
-                agat_thresh = 130
-
                 # Background
 
                 alg = Agatston()
@@ -618,21 +617,21 @@ begin
                 overlayed_bkg_mask_M = create_mask(arr, dilated_mask_M_bkg)
                 overlayed_bkg_mask_S = create_mask(arr, dilated_mask_S_bkg)
 
-                agat_bkg, mass_bkg_large = score(
+                agat_bkg, vol_bkg_large, mass_bkg_large = score(
                     overlayed_bkg_mask_L,
                     pixel_size,
                     mass_cal_factor,
                     alg;
                     kV=kV
                 )
-                agat_bkg, mass_bkg_medium = score(
+                agat_bkg, vol_bkg_medium, mass_bkg_medium = score(
                     overlayed_bkg_mask_M,
                     pixel_size,
                     mass_cal_factor,
                     alg;
                     kV=kV
                 )
-                agat_bkg, mass_bkg_small = score(
+                agat_bkg, vol_bkg_small, mass_bkg_small = score(
                     overlayed_bkg_mask_S,
                     pixel_size,
                     mass_cal_factor,
@@ -646,7 +645,7 @@ begin
                 ## High Density
                 alg = Agatston()
                 overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
-                agat_l_hd, mass_l_hd = score(
+                agat_l_hd, vol_l_hd, mass_l_hd = score(
                     overlayed_mask_l_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -656,7 +655,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
-                agat_l_md, mass_l_md = score(
+                agat_l_md, vol_l_md, mass_l_md = score(
                     overlayed_mask_l_md,
                     pixel_size,
                     mass_cal_factor,
@@ -666,7 +665,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
-                agat_l_ld, mass_l_ld = score(
+                agat_l_ld, vol_l_ld, mass_l_ld = score(
                     overlayed_mask_l_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -677,7 +676,7 @@ begin
                 # Score Medium Inserts
                 ## High Density
                 overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
-                agat_m_hd, mass_m_hd = score(
+                agat_m_hd, vol_m_hd, mass_m_hd = score(
                     overlayed_mask_m_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -687,7 +686,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
-                agat_m_md, mass_m_md = score(
+                agat_m_md, vol_m_md, mass_m_md = score(
                     overlayed_mask_m_md,
                     pixel_size,
                     mass_cal_factor,
@@ -697,7 +696,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
-                agat_m_ld, mass_m_ld = score(
+                agat_m_ld, vol_m_ld, mass_m_ld = score(
                     overlayed_mask_m_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -708,7 +707,7 @@ begin
                 # Score Small Inserts
                 ## High Density
                 overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
-                agat_s_hd, mass_s_hd = score(
+                agat_s_hd, vol_s_hd, mass_s_hd = score(
                     overlayed_mask_s_hd,
                     pixel_size,
                     mass_cal_factor,
@@ -718,7 +717,7 @@ begin
 
                 ## Medium Density
                 overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
-                agat_s_md, mass_s_md = score(
+                agat_s_md, vol_s_md, mass_s_md = score(
                     overlayed_mask_s_md,
                     pixel_size,
                     mass_cal_factor,
@@ -728,7 +727,7 @@ begin
 
                 ## Low Density
                 overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
-                agat_s_ld, mass_s_ld = score(
+                agat_s_ld, vol_s_ld, mass_s_ld = score(
                     overlayed_mask_s_ld,
                     pixel_size,
                     mass_cal_factor,
@@ -757,6 +756,9 @@ begin
                     ground_truth_mass_large=ground_truth_mass_large,
                     calculated_mass_large=calculated_mass_large,
                     ground_truth_mass_medium=ground_truth_mass_medium,
+					calculated_agat_large=calculated_agat_large,
+					calculated_agat_medium=calculated_agat_medium,
+					calculated_agat_small=calculated_agat_small,
                     calculated_mass_medium=calculated_mass_medium,
                     ground_truth_mass_small=ground_truth_mass_small,
                     calculated_mass_small=calculated_mass_small,
@@ -843,9 +845,9 @@ end
 # ╟─facd5777-30ae-4869-9ccc-5e4128cc2de7
 # ╟─e7626765-d2ca-4129-8b47-f5925a2c0eb1
 # ╟─e6387a3a-2377-4761-a6c4-77e375afb372
-# ╠═80e09647-ac1b-45a0-8a22-ab292309e4fc
-# ╠═52e33876-3661-450a-b850-f064e3d9a2b5
-# ╠═7ee1489a-92aa-4f5d-93ac-457b65c2930e
+# ╟─80e09647-ac1b-45a0-8a22-ab292309e4fc
+# ╟─52e33876-3661-450a-b850-f064e3d9a2b5
+# ╟─7ee1489a-92aa-4f5d-93ac-457b65c2930e
 # ╠═b26eab05-14e1-40ad-980b-eb8f5206542b
 # ╟─8e234939-154a-486d-a5ed-9fc9f2749965
 # ╠═1e6799f1-985c-46c0-adb3-089e40d19f0d

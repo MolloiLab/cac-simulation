@@ -1,15 +1,15 @@
 Results,Metrics,Integrated,Volume Fraction,Agatston,SWCS
 Accuracy (Normal Density),r^2,1.0,1.0,0.999,
-Accuracy (Normal Density),RMSE,0.974,0.911,2.897,
-Accuracy (Normal Density),RMSD,0.926,0.843,1.266,
-Accuracy (Normal Density),Best Fit Line,y = 0.994x + 0.096,y = 1.006x + 0.003,y = 1.053x + -0.722,
-Accuracy (Low Density),r^2,0.992,0.989,0.748,
-Accuracy (Low Density),RMSE,0.51,0.629,3.822,
-Accuracy (Low Density),RMSD,0.499,0.575,2.44,
-Accuracy (Low Density),Best Fit Line,y = 1.016x + -0.023,y = 1.042x + -0.08,y = 0.789x + -1.706,
-Reproducibility,r^2,0.999,0.999,0.998,0.987
-Reproducibility,RMSE,0.994,1.019,1.948,13.687
-Reproducibility,RMSD,0.992,1.004,1.938,13.499
-Reproducibility,Best Fit Line,y = 0.998x + 0.075,y = 1.004x + 0.009,y = 1.004x + -0.228,y = 1.013x + -0.396
-Specificity,False Negatives,18 / 216,18 / 216,91 / 216,0 / 216
+Accuracy (Normal Density),RMSE,0.974,0.609,2.835,
+Accuracy (Normal Density),RMSD,0.926,0.599,1.315,
+Accuracy (Normal Density),Best Fit Line,y = 0.994x + 0.096,y = 0.997x + 0.109,y = 1.052x + -0.79,
+Accuracy (Low Density),r^2,0.992,0.989,0.749,
+Accuracy (Low Density),RMSE,0.51,0.585,3.936,
+Accuracy (Low Density),RMSD,0.499,0.575,2.24,
+Accuracy (Low Density),Best Fit Line,y = 1.016x + -0.023,y = 1.017x + -0.031,y = 0.726x + -1.572,
+Reproducibility,r^2,0.999,0.999,0.998,0.958
+Reproducibility,RMSE,0.994,1.031,1.735,25.97
+Reproducibility,RMSD,0.992,0.905,1.729,25.272
+Reproducibility,Best Fit Line,y = 0.998x + 0.075,y = 1.012x + -0.023,y = 1.003x + -0.101,y = 0.977x + -1.763
+Specificity,False Negatives,20 / 216,22 / 216,91 / 216,0 / 216
 Sensitivity,False Positives,0 / 72,0 / 72,2 / 72,0 / 72

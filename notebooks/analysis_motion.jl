@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.18
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -10,7 +10,7 @@ begin
 	using Pkg
 	Pkg.activate(".")
 
-    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, Printf
 	using StatsBase: quantile!, rmsd
 end
 
@@ -62,6 +62,39 @@ function remove_false_negatives(df, array, df_reprod, array_reprod)
 	return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
 end
 
+# ╔═╡ cc014af4-e26c-4410-bab9-99e6fefdb36c
+function create_textbox(loc, coef, r, rms; p=5)
+    local tb
+    if coef[1] > 0
+        tb = Label(
+            loc;
+            # text="y = $(@sprintf "%.2f" coef[2])x+$(@sprintf "%.2f" coef[1]) \nr = $(@sprintf "%.2f" r) \nRMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+			text="RMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+            padding=(p, p, p, p),
+            tellheight=false,
+            tellwidth=false,
+            halign=:left,
+            justification=:left,
+            valign=:top,
+            fontsize=12
+        )
+    else
+        tb = Label(
+            loc,
+            # text="y = $(@sprintf "%.2f" coef[2])x$(@sprintf "%.2f" coef[1]) \nr = $(@sprintf "%.2f" r) \nRMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+			text="RMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+            padding=(p, p, p, p),
+            tellheight=false,
+            tellwidth=false,
+            halign=:left,
+            justification=:left,
+            valign=:top,
+            fontsize=12
+        )
+    end
+    return tb
+end
+
 # ╔═╡ 043dec5f-07a8-472d-8082-c7a771f93270
 FIGURE_PATH = "motion"
 
@@ -75,8 +108,11 @@ md"""
 ## Integrated
 """
 
+# ╔═╡ 03d68388-5785-45a5-87a6-daa307cdbf76
+root_dir = joinpath(dirname(pwd()), "output_new")
+
 # ╔═╡ 57d46998-368a-4916-8380-ee49d5473a49
-path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated";
+path_integrated = joinpath(root_dir, "integrated")
 
 # ╔═╡ 2c960bd8-ae64-453f-b29f-275bf5263774
 df_i = CSV.read(string(path_integrated, "/motion.csv"), DataFrame);
@@ -96,7 +132,7 @@ md"""
 """
 
 # ╔═╡ 4fd5b649-cea1-4d1f-95ac-35aa12f8fbff
-path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/agatston";
+path_agat = joinpath(root_dir, "agatston")
 
 # ╔═╡ 3fa3748a-22d6-49d8-9888-a749dca99ce2
 df_a = CSV.read(string(path_agat, "/motion.csv"), DataFrame);
@@ -116,7 +152,7 @@ md"""
 """
 
 # ╔═╡ 32623778-9a19-4318-81c6-1fc7aa0157fe
-path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/swcs";
+path_swcs = joinpath(root_dir, "swcs")
 
 # ╔═╡ 317f8c26-7b39-45c3-b9d3-02925d4b0514
 df_s = CSV.read(string(path_swcs, "/motion.csv"), DataFrame);
@@ -136,10 +172,10 @@ md"""
 """
 
 # ╔═╡ 993c899f-d741-40d5-81e0-ea7fd2871146
-path_vf = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/volume_fraction";
+path_vf = joinpath(root_dir, "volume_fraction")
 
 # ╔═╡ 5e803aad-9d82-4801-aff6-3c1c2f748b02
-df_vf = CSV.read(string(path_vf, "/motion.csv"), DataFrame);
+df_vf = CSV.read(string(path_vf, "/full2.csv"), DataFrame);
 
 # ╔═╡ 5c76c3c7-bb56-4d90-8f0f-7f7d0e271d3c
 df_vf_low, df_vf_normal = groupby(df_vf, :DENSITY);
@@ -156,44 +192,27 @@ md"""
 """
 
 # ╔═╡ 3c40ca1d-4111-4bf1-941e-30b59cd1a264
-medphys_theme = Theme(;
-    Axis=(
-        backgroundcolor=:white,
-        xgridcolor=:gray,
-        xgridwidth=0.5,
-        xlabelfont=:Helvetica,
-        xticklabelfont=:Helvetica,
-        xlabelsize=16,
-        xticklabelsize=20,
-        # xminorticksvisible = true,
-        ygridcolor=:gray,
-        ygridwidth=0.5,
-        ylabelfont=:Helvetica,
-        yticklabelfont=:Helvetica,
-        ylabelsize=16,
-        yticklabelsize=20,
-        # yminortickvisible = true,
-        bottomsplinecolor=:black,
-        leftspinecolor=:black,
-        titlefont=:Helvetica,
-        titlesize=30,
-    ),
-)
+medphys_theme = Theme(
+    Axis = (
+        backgroundcolor = :white,
+		xgridcolor = :gray,
+		xgridwidth = 0.1,
+		xlabelsize = 15,
+		xticklabelsize = 20,
+		ygridcolor = :gray,
+		ygridwidth = 0.1,
+		ylabelsize = 15,
+		yticklabelsize = 20,
+		bottomsplinecolor = :black,
+		leftspinecolor = :black,
+		titlesize = 20
+	)
+);
 
 # ╔═╡ 7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
 md"""
 ## Accuracy
 """
-
-# ╔═╡ a4bc0a8a-4904-4217-97a9-44158f99ae70
-# with_theme(medphys_theme) do
-    
-# end
-
-# ╔═╡ 98c3eaef-502e-4a20-b5b6-46a3d6b394d3
-# with_theme(medphys_theme) do
-    
-# end
 
 # ╔═╡ cabe7e9a-e932-406b-95dd-2c9128decdc7
 function prepare_linear_regression(df)
@@ -296,179 +315,134 @@ function lin_reg_norm()
     f = Figure()
 
     ##-- A --##
-    ax1 = Axis(f[1, 1])
+    ax = Axis(
+		f[1, 1],
+		xticks = [0, 50, 100, 150, 200],
+    	yticks = [0, 50, 100, 150, 200],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Integrated (Normal-Density)",
+	)
 
     df = df_i_normal
-    scatter!(ax1, df[!, :ground_truth_mass_large], df[!, :calculated_mass_large])
+    scatter!(
+		df[!, :ground_truth_mass_large], df[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax1,
         df[!, :ground_truth_mass_large],
         df[!, :calculated_mass_large],
         rms(df[!, :ground_truth_mass_large], df[!, :calculated_mass_large]),
     )
-    scatter!(ax1, df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium])
+    scatter!(
+		df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax1,
         df[!, :ground_truth_mass_medium],
         df[!, :calculated_mass_medium],
         rms(df[!, :ground_truth_mass_medium], df[!, :calculated_mass_medium]),
     )
     scatter!(
-        ax1, df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]; color=:red
+		df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax1,
         df[!, :ground_truth_mass_small],
         df[!, :calculated_mass_small],
         rms(df[!, :ground_truth_mass_small], df[!, :calculated_mass_small]),
     )
-    lines!(ax1, [-1000, 1000], [-1000, 1000])
-    lines!(ax1, collect(1:1000), fitted_line_normal_i; linestyle=:dashdot)
-    # Textbox(
-    #     f[1, 1];
-    #     placeholder="y = $(trunc(co1[2]; digits=3))x + $(trunc(co1[1]; digits=3)) \nr = $(trunc(r2_1; digits=3)) \nRMSE: $(trunc(rms_values1[1]; digits=3)) \nRMSD: $(trunc(rms_values1[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[1, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    lines!([-1000, 1000], [-1000, 1000])
+    lines!(collect(1:1000), fitted_line_normal_i; linestyle=:dashdot)
+	create_textbox(f[1, 1], coefficient_normal_i, r_squared_normal_i, rms_values_normal_i)
 
-    xlims!(ax1; low=0, high=200)
-    ylims!(ax1; low=0, high=200)
-    ax1.xticks = [0, 50, 100, 150, 200]
-    ax1.yticks = [0, 50, 100, 150, 200]
-    ax1.xlabel = "Known Mass (mg)"
-    ax1.ylabel = "Calculated Mass (mg)"
-    ax1.title = "Integrated (Normal-Density)"
+    xlims!(ax; low=0, high=200)
+    ylims!(ax; low=0, high=200)
+
 	
     ##-- B --##
-    ax2 = Axis(f[2, 1])
+    ax = Axis(
+		f[2, 1],
+		xticks = [0, 50, 100, 150, 200],
+    	yticks = [0, 50, 100, 150, 200],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Volume Fraction (Normal-Density)",
+	)
 
     df3 = df_vf_normal
-    sc1 = scatter!(ax2, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large])
+    sc1 = scatter!(
+		df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_large],
         df3[!, :calculated_mass_large],
         rms(df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]),
     )
-    sc2 = scatter!(ax2, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium])
+    sc2 = scatter!(
+		df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_medium],
         df3[!, :calculated_mass_medium],
         rms(df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]),
     )
     sc3 = scatter!(
-        ax2, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]; color=:red
+        df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_small],
         df3[!, :calculated_mass_small],
         rms(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]),
     )
-    ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
-    ln2 = lines!(ax2, collect(1:1000), fitted_line_normal_vf; linestyle=:dashdot)
-    # Textbox(
-    #     f[2, 1];
-    #     placeholder="y = $(trunc(co1_vf[2]; digits=3))x + $(trunc(co1_vf[1]; digits=3)) \nr = $(trunc(r2_1_vf; digits=3)) \nRMSE: $(trunc(rms_values1vf[1]; digits=3)) \nRMSD: $(trunc(rms_values1vf[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[2, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_vf[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_normal_vf; linestyle=:dashdot)
+	create_textbox(f[2, 1], coefficient_normal_vf, r_squared_normal_vf, rms_values_normal_vf)
 
-    xlims!(ax2; low=0, high=200)
-    ylims!(ax2; low=0, high=200)
-    ax2.xticks = [0, 50, 100, 150, 200]
-    ax2.yticks = [0, 50, 100, 150, 200]
-    ax2.xlabel = "Known Mass (mg)"
-    ax2.ylabel = "Calculated Mass (mg)"
-    ax2.title = "Volume Fraction (Normal-Density)"
+    xlims!(ax; low=0, high=200)
+    ylims!(ax; low=0, high=200)
+
 
 
     ##-- C --##
-    ax2 = Axis(f[3, 1])
+    ax = Axis(
+		f[3, 1],
+		xticks = [0, 50, 100, 150, 200],
+    	yticks = [0, 50, 100, 150, 200],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Agatston (Normal-Density)"
+	)
 
     df3 = df_a_normal
-    sc1 = scatter!(ax2, df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large])
+    sc1 = scatter!(
+		df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_large],
         df3[!, :calculated_mass_large],
         rms(df3[!, :ground_truth_mass_large], df3[!, :calculated_mass_large]),
     )
-    sc2 = scatter!(ax2, df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium])
+    sc2 = scatter!(
+		df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_medium],
         df3[!, :calculated_mass_medium],
         rms(df3[!, :ground_truth_mass_medium], df3[!, :calculated_mass_medium]),
     )
     sc3 = scatter!(
-        ax2, df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]; color=:red
+        df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax2,
         df3[!, :ground_truth_mass_small],
         df3[!, :calculated_mass_small],
         rms(df3[!, :ground_truth_mass_small], df3[!, :calculated_mass_small]),
     )
-    ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
-    ln2 = lines!(ax2, collect(1:1000), fitted_line_normal_a; linestyle=:dashdot)
-    # Textbox(
-    #     f[3, 1];
-    #     placeholder="y = $(trunc(co3[2]; digits=3))x + $(trunc(co3[1]; digits=3)) \nr = $(trunc(r2_3; digits=3)) \nRMSE: $(trunc(rms_values3[1]; digits=3)) \nRMSD: $(trunc(rms_values3[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[3, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_normal_a; linestyle=:dashdot)
+	create_textbox(f[3, 1], coefficient_normal_a, r_squared_normal_a, rms_values_normal_a)
 
-    xlims!(ax2; low=0, high=200)
-    ylims!(ax2; low=0, high=200)
-    ax2.xticks = [0, 50, 100, 150, 200]
-    ax2.yticks = [0, 50, 100, 150, 200]
-    ax2.xlabel = "Known Mass (mg)"
-    ax2.ylabel = "Calculated Mass (mg)"
-    ax2.title = "Agatston (Normal-Density)"
+    xlims!(ax; low=0, high=200)
+    ylims!(ax; low=0, high=200)
+
 
     ##-- LABELS --##
     f[2, 2] = Legend(
@@ -493,7 +467,7 @@ function lin_reg_norm()
 end
 
 # ╔═╡ c4e9c560-7316-4103-86b4-376d4adc1326
-lin_reg_norm()
+with_theme(lin_reg_norm, medphys_theme)
 
 # ╔═╡ cf59cd3f-026c-4321-a1ac-de217177b52e
 md"""
@@ -528,181 +502,130 @@ end
 function lin_reg_low()
     f = Figure()
     ##-- A --##
-    ax1 = Axis(f[1, 1])
+    ax = Axis(
+		f[1, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+    	yticks = [-10, 0, 10, 20, 30],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Integrated (Low-Density)"
+	)
 
     df2 = df_i_low
-    sc1 = scatter!(ax1, df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large])
+    sc1 = scatter!(
+		df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax1,
         df2[!, :ground_truth_mass_large],
         df2[!, :calculated_mass_large],
         rms(df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large]),
     )
-    sc2 = scatter!(ax1, df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium])
+    sc2 = scatter!(
+		df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax1,
         df2[!, :ground_truth_mass_medium],
         df2[!, :calculated_mass_medium],
         rms(df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium]),
     )
     sc3 = scatter!(
-        ax1, df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]; color=:red
+        df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax1,
         df2[!, :ground_truth_mass_small],
         df2[!, :calculated_mass_small],
         rms(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]),
     )
-    ln1 = lines!(ax1, [-1000, 1000], [-1000, 1000])
-    ln2 = lines!(ax1, collect(1:1000), fitted_line_low_i; linestyle=:dashdot)
-    # Textbox(
-    #     f[1, 1];
-    #     placeholder="y = $(trunc(co2[2]; digits=3))x + $(trunc(co2[1]; digits=3)) \nr = $(trunc(r2_2; digits=3)) \nRMSE: $(trunc(rms_values2[1]; digits=3)) \nRMSD: $(trunc(rms_values2[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[1, 1];
-        placeholder="RMSE: $(trunc(rms_values_low_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_i; linestyle=:dashdot)
+	create_textbox(f[1, 1], coefficient_low_i, r_squared_low_i, rms_values_low_i)
 
-    xlims!(ax1; low=0, high=25)
-    ylims!(ax1; low=-10, high=30)
-    ax1.xticks = [0, 5, 10, 15, 20, 25]
-    ax1.yticks = [-10, 0, 10, 20, 30]
-    ax1.xlabel = "Known Mass (mg)"
-    ax1.ylabel = "Calculated Mass (mg)"
-    ax1.title = "Integrated (Low-Density)"
-    # hidedecorations!(ax1, ticklabels=false, ticks=false, label=false)
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-10, high=30)
 
 	##-- B --##
-    ax2 = Axis(f[2, 1])
+    ax = Axis(
+		f[2, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+    	yticks = [-10, 0, 10, 20, 30],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Volume Fraction (Low-Density)"
+	)
 
     df4 = df_vf_low
-    sc1 = scatter!(ax2, df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large])
+    sc1 = scatter!(
+		df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_large],
         df4[!, :calculated_mass_large],
         rms(df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]),
     )
-    sc2 = scatter!(ax2, df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium])
+    sc2 = scatter!(
+		df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_medium],
         df4[!, :calculated_mass_medium],
         rms(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]),
     )
     sc3 = scatter!(
-        ax2, df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
+		df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_small],
         df4[!, :calculated_mass_small],
         rms(df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]),
     )
-    ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
-    ln2 = lines!(ax2, collect(1:1000), fitted_line_low_vf; linestyle=:dashdot)
-    # Textbox(
-    #     f[2, 1];
-    #     placeholder="y = $(trunc(co2_vf[2]; digits=3))x + $(trunc(co2_vf[1]; digits=3)) \nr = $(trunc(r2_2_vf; digits=3)) \nRMSE: $(trunc(rms_values2_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values2_vf[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[2, 1];
-        placeholder="RMSE: $(trunc(rms_values_low_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_vf[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_vf; linestyle=:dashdot)
+	create_textbox(f[2, 1], coefficient_low_vf, r_squared_low_vf, rms_values_low_vf)
 	
-    xlims!(ax2; low=0, high=25)
-    ylims!(ax2; low=-10, high=30)
-    ax2.xticks = [0, 5, 10, 15, 20, 25]
-    ax2.yticks = [-10, 0, 10, 20, 30]
-    ax2.xlabel = "Known Mass (mg)"
-    ax2.ylabel = "Calculated Mass (mg)"
-    ax2.title = "Volume Fraction (Low-Density)"
-    # hidedecorations!(ax2, ticklabels=false, ticks=false, label=false)
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-10, high=30)
 
     ##-- C --##
-    ax2 = Axis(f[3, 1])
+    ax = Axis(
+		f[3, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+    	yticks = [-10, 0, 10, 20, 30],
+    	xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Agatston (Low-Density)",
+	)
 
     df4 = df_a_low
-    sc1 = scatter!(ax2, df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large])
+    sc1 = scatter!(
+		df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]
+	)
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_large],
         df4[!, :calculated_mass_large],
         rms(df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]),
     )
-    sc2 = scatter!(ax2, df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium])
+    sc2 = scatter!(
+		df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]
+	)
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_medium],
         df4[!, :calculated_mass_medium],
         rms(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]),
     )
     sc3 = scatter!(
-        ax2, df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
+        df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
     )
     errorbars!(
-        ax2,
         df4[!, :ground_truth_mass_small],
         df4[!, :calculated_mass_small],
         rms(df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]),
     )
-    ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
-    ln2 = lines!(ax2, collect(1:1000), fitted_line_low_a; linestyle=:dashdot)
-    # Textbox(
-    #     f[3, 1];
-    #     placeholder="y = $(trunc(co4[2]; digits=3))x + $(trunc(co4[1]; digits=3)) \nr = $(trunc(r2_4; digits=3)) \nRMSE: $(trunc(rms_values4[1]; digits=3)) \nRMSD: $(trunc(rms_values4[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[3, 1];
-        placeholder="RMSE: $(trunc(rms_values_low_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_low_a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        fontsize=12,
-    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_a; linestyle=:dashdot)
+	create_textbox(f[3, 1], coefficient_low_a, r_squared_low_a, rms_values_low_a)
 
-    xlims!(ax2; low=0, high=25)
-    ylims!(ax2; low=-10, high=30)
-    ax2.xticks = [0, 5, 10, 15, 20, 25]
-    ax2.yticks = [-10, 0, 10, 20, 30]
-    ax2.xlabel = "Known Mass (mg)"
-    ax2.ylabel = "Calculated Mass (mg)"
-    ax2.title = "Agatston (Low-Density)"
-    # hidedecorations!(ax2, ticklabels=false, ticks=false, label=false)
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-10, high=30)
 
     ##-- LABELS --##
 
@@ -735,17 +658,16 @@ md"""
 ## Reproducibility
 """
 
-# ╔═╡ d2b90d91-4e63-45b0-8273-5231dbf2778e
-with_theme(medphys_theme) do
-end
-
 # ╔═╡ 88df8b9d-ff41-41d3-99fe-8ab9a050a803
 md"""
 #### Integrated
 """
 
+# ╔═╡ ece4bd0d-a36f-4662-be64-7d9f0609d6bc
+root_dir_r = joinpath(dirname(pwd()), "output_repeated")
+
 # ╔═╡ 53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
-path_integrated_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/integrated";
+path_integrated_r = joinpath(root_dir_r, "integrated")
 
 # ╔═╡ 89b28ac5-dd69-4812-84fd-64b54606d146
 df_i_r = CSV.read(string(path_integrated_r, "/motion.csv"), DataFrame);
@@ -771,16 +693,13 @@ array_i_r = hcat(
 # ╔═╡ b02fe68d-78c7-46fc-b858-4db5b12ef729
 array_i = hcat(df_i[!, :calculated_mass_large], df_i[!, :calculated_mass_medium], df_i[!, :calculated_mass_small]);
 
-# ╔═╡ 14cdef5f-c9ba-4810-93fe-0f0915b803a2
-# r_squared_reprod_i, rms_values_reprod_i, fitted_line_reprod_i, coefficient_reprod_i = prepare_linear_regression(df_i_r_large, df_i_r_medium, df_i_r_small, df_i_large, df_i_medium, df_i_small);
-
 # ╔═╡ 4c9feda4-9fc1-42c7-8cac-a17d51627c6d
 md"""
 #### Volume Fraction
 """
 
 # ╔═╡ e261c635-98d7-4357-a429-a34b73b47bb5
-path_volume_fraction_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/volume_fraction";
+path_volume_fraction_r = joinpath(root_dir_r, "volume_fraction")
 
 # ╔═╡ d2e4fa84-1f12-4924-823a-6ea7ab0d3d8e
 df_vf_r = CSV.read(string(path_volume_fraction_r, "/motion.csv"), DataFrame);
@@ -803,16 +722,13 @@ array_vf_r = hcat(
     df_vf_r[!, :calculated_mass_small],
 )
 
-# ╔═╡ 54e384c2-ac35-4679-8be5-ac96fa778c81
-# r_squared_reprod_vf, rms_values_reprod_vf, fitted_line_reprod_vf, coefficient_reprod_vf = prepare_linear_regression(df_vf_r_large, df_vf_r_medium, df_vf_r_small, df_vf_large, df_vf_medium, df_vf_small);
-
 # ╔═╡ 8eaec985-641a-498f-9cd9-c2c85d877142
 md"""
 #### Agatston
 """
 
 # ╔═╡ fcd83805-06e2-4cda-aa56-0c13c69424d8
-path_agat_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/agatston";
+path_agat_r = joinpath(root_dir_r, "agatston")
 
 # ╔═╡ 5f2eb2d2-84c4-4160-a92a-f181b4126450
 df_a_r = CSV.read(string(path_agat_r, "/motion.csv"), DataFrame);
@@ -835,16 +751,13 @@ array_a_r = hcat(
     df_a_r[!, :calculated_mass_large],
 );
 
-# ╔═╡ 3d987e71-9742-4b70-be10-2ed82a6df5f4
-# r_squared_reprod_a, rms_values_reprod_a, fitted_line_reprod_a, coefficient_reprod_a = prepare_linear_regression(df_a_r_large, df_a_r_medium, df_a_r_small, df_a_large, df_a_medium, df_a_small)
-
 # ╔═╡ 5bc912d4-be86-4cca-9e8b-8af31d269edf
 md"""
 #### SWCS
 """
 
 # ╔═╡ 594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
-path_swcs_r = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_repeated/swcs";
+path_swcs_r = joinpath(root_dir_r, "swcs")
 
 # ╔═╡ 1d208fd8-b847-4afe-84b5-3a553f50a858
 df_s_r = CSV.read(string(path_swcs_r, "/motion.csv"), DataFrame);
@@ -933,9 +846,6 @@ array_s = hcat(df_s[!, :calculated_swcs_large], df_s[!, :calculated_swcs_medium]
 
 # ╔═╡ 97f07af4-a4af-4a26-9f81-5acb836c9f2c
 df_s_large, df_s_r_large, df_s_medium, df_s_r_medium, df_s_small, df_s_r_small = remove_false_negatives(df_s, array_s, df_s_r, array_s_r, true);
-
-# ╔═╡ a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
-# r_squared_reprod_s, rms_values_reprod_s, fitted_line_reprod_s, coefficient_reprod_s = prepare_linear_regression(df_s_r_large, df_s_r_medium, df_s_r_small, df_s_large, df_s_medium, df_s_small)
 
 # ╔═╡ 1e646f11-dd9b-40e1-988d-5d9e37eee777
 begin
@@ -1072,53 +982,7 @@ function reprod()
     )
     lines!(ax1, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax1, collect(1:1000), fitted_line_reprod_i; linestyle=:dashdot)
-    # if co1r[1] > 0
-    #     Textbox(
-    #         f[1, 1];
-    #         placeholder="y = $(trunc(co1r[2]; digits=3))x+$(trunc(co1r[1]; digits=3)) \nr = $(trunc(r2_1r; digits=3)) \nRMSE: $(trunc(rms_values1r[1]; digits=3)) \nRMSD: $(trunc(rms_values1r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # else
-    #     Textbox(
-    #         f[1, 1];
-    #         placeholder="y = $(trunc(co1r[2]; digits=3))x$(trunc(co1r[1]; digits=3)) \nr = $(trunc(r2_1r; digits=3)) \nRMSE: $(trunc(rms_values1r[1]; digits=3)) \nRMSD: $(trunc(rms_values1r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # end
-
-	if coefficient_reprod_i[1] > 0
-        Textbox(
-            f[1, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_i[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    else
-        Textbox(
-            f[1, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_i[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    end
+	create_textbox(f[1, 1], coefficient_reprod_i, r_squared_reprod_i, rms_values_reprod_i)
 
     xlims!(ax1; low=0, high=200)
     ylims!(ax1; low=0, high=200)
@@ -1151,53 +1015,8 @@ function reprod()
     )
     lines!(ax2, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax2, collect(1:1000), fitted_line_reprod_vf; linestyle=:dashdot)
-    # if co2r[1] > 0
-    #     Textbox(
-    #         f[2, 1];
-    #         placeholder="y = $(trunc(co2r[2]; digits=3))x+$(trunc(co2r[1]; digits=3)) \nr = $(trunc(r2_2r; digits=3)) \nRMSE: $(trunc(rms_values2r[1]; digits=3)) \nRMSD: $(trunc(rms_values2r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # else
-    #     Textbox(
-    #         f[2, 1];
-    #         placeholder="y = $(trunc(co2r[2]; digits=3))x$(trunc(co2r[1]; digits=3)) \nr = $(trunc(r2_2r; digits=3)) \nRMSE: $(trunc(rms_values2r[1]; digits=3)) \nRMSD: $(trunc(rms_values2r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # end
-
-	if coefficient_reprod_vf[1] > 0
-        Textbox(
-            f[2, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_vf[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    else
-        Textbox(
-            f[2, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_vf[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    end
+	create_textbox(f[2, 1], coefficient_reprod_vf, r_squared_reprod_vf, rms_values_reprod_vf)
+	
 
     xlims!(ax2; low=0, high=200)
     ylims!(ax2; low=0, high=200)
@@ -1230,53 +1049,7 @@ function reprod()
     )
     lines!(ax3, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax3, collect(1:1000), fitted_line_reprod_a; linestyle=:dashdot)
-    # if co2r[1] > 0
-    #     Textbox(
-    #         f[2, 1];
-    #         placeholder="y = $(trunc(co2r[2]; digits=3))x+$(trunc(co2r[1]; digits=3)) \nr = $(trunc(r2_2r; digits=3)) \nRMSE: $(trunc(rms_values2r[1]; digits=3)) \nRMSD: $(trunc(rms_values2r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # else
-    #     Textbox(
-    #         f[2, 1];
-    #         placeholder="y = $(trunc(co2r[2]; digits=3))x$(trunc(co2r[1]; digits=3)) \nr = $(trunc(r2_2r; digits=3)) \nRMSE: $(trunc(rms_values2r[1]; digits=3)) \nRMSD: $(trunc(rms_values2r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # end
-
-	if coefficient_reprod_a[1] > 0
-        Textbox(
-            f[1, 2];
-            placeholder="RMSE: $(trunc(rms_values_reprod_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_a[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    else
-        Textbox(
-            f[1, 2];
-            placeholder="RMSE: $(trunc(rms_values_reprod_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_a[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    end
+	create_textbox(f[1, 2], coefficient_reprod_a, r_squared_reprod_a, rms_values_reprod_a)
 
     xlims!(ax3; low=0, high=200)
     ylims!(ax3; low=0, high=200)
@@ -1309,53 +1082,7 @@ function reprod()
     )
     lines!(ax4, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax4, collect(1:1000), fitted_line_reprod_s; linestyle=:dashdot, label="Fitted Line")
-    # if co3r[1] > 0
-    #     Textbox(
-    #         f[3, 1];
-    #         placeholder="y = $(trunc(co3r[2]; digits=3))x+$(trunc(co3r[1]; digits=3)) \nr = $(trunc(r2_3r; digits=3)) \nRMSE: $(trunc(rms_values3r[1]; digits=3)) \nRMSD: $(trunc(rms_values3r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # else
-    #     Textbox(
-    #         f[3, 1];
-    #         placeholder="y = $(trunc(co3r[2]; digits=3))x$(trunc(co3r[1]; digits=3)) \nr = $(trunc(r2_3r; digits=3)) \nRMSE: $(trunc(rms_values3r[1]; digits=3)) \nRMSD: $(trunc(rms_values3r[2]; digits=3))",
-    #         tellheight=false,
-    #         tellwidth=false,
-    #         boxcolor=:white,
-    #         halign=:left,
-    #         valign=:top,
-    #         textsize=12,
-    #     )
-    # end
-
-	if coefficient_reprod_s[1] > 0
-        Textbox(
-            f[2, 2];
-            placeholder="RMSE: $(trunc(rms_values_reprod_s[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_s[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    else
-        Textbox(
-            f[2, 2];
-            placeholder="RMSE: $(trunc(rms_values_reprod_s[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_s[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            fontsize=12,
-        )
-    end
+	create_textbox(f[2, 2], coefficient_reprod_s, r_squared_reprod_s, rms_values_reprod_s)
 
     xlims!(ax4; low=0, high=500)
     ylims!(ax4; low=0, high=500)
@@ -1381,8 +1108,8 @@ function reprod()
     return f
 end
 
-# ╔═╡ e8dd497d-cfff-47f9-a9d5-11bed7174d24
-reprod()
+# ╔═╡ d2b90d91-4e63-45b0-8273-5231dbf2778e
+with_theme(reprod, medphys_theme)
 
 # ╔═╡ e39e9879-a587-4b52-b07d-5145e72495e8
 mean_vf, std_vf = mean(df_vf[!, :mass_bkg]), std(df_vf[!, :mass_bkg]) * std_level
@@ -1723,9 +1450,11 @@ means_stds = DataFrame(
 # ╟─d72c94c2-a208-430c-9d76-85d8cfb33a22
 # ╟─7fc65de7-7514-4532-803e-1120150fd2fb
 # ╟─1ecb8fd3-a36b-4b06-8daf-e598e297ecf8
+# ╟─cc014af4-e26c-4410-bab9-99e6fefdb36c
 # ╠═043dec5f-07a8-472d-8082-c7a771f93270
 # ╟─e79c34d0-bf06-4a7a-93b7-e49f09ce3f4e
 # ╟─4cf61487-3913-4e11-970e-4ca31a5ffc8d
+# ╠═03d68388-5785-45a5-87a6-daa307cdbf76
 # ╠═57d46998-368a-4916-8380-ee49d5473a49
 # ╠═2c960bd8-ae64-453f-b29f-275bf5263774
 # ╠═7f4fae09-7916-4a98-a102-7f861900c457
@@ -1752,10 +1481,8 @@ means_stds = DataFrame(
 # ╟─310c1999-77a6-432e-850c-4111411cceb0
 # ╠═3c40ca1d-4111-4bf1-941e-30b59cd1a264
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
-# ╠═a4bc0a8a-4904-4217-97a9-44158f99ae70
 # ╟─c93ba92a-ccc7-4ae0-9207-300715821fc5
-# ╟─c4e9c560-7316-4103-86b4-376d4adc1326
-# ╠═98c3eaef-502e-4a20-b5b6-46a3d6b394d3
+# ╠═c4e9c560-7316-4103-86b4-376d4adc1326
 # ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 # ╟─f9470d36-15d1-470a-b34f-09dad98eb0f8
 # ╟─cabe7e9a-e932-406b-95dd-2c9128decdc7
@@ -1771,8 +1498,8 @@ means_stds = DataFrame(
 # ╟─7ec78f71-6b20-4c8c-a9da-a216404bee72
 # ╟─a85f777a-76f2-4c64-9973-ea9dec245600
 # ╟─d2b90d91-4e63-45b0-8273-5231dbf2778e
-# ╠═e8dd497d-cfff-47f9-a9d5-11bed7174d24
 # ╟─88df8b9d-ff41-41d3-99fe-8ab9a050a803
+# ╠═ece4bd0d-a36f-4662-be64-7d9f0609d6bc
 # ╠═53c1b176-e2f7-4cb9-baa9-26d61ab8c18f
 # ╠═89b28ac5-dd69-4812-84fd-64b54606d146
 # ╠═4f5328e7-66dd-433c-a7f6-5dc461c83a4c
@@ -1781,7 +1508,6 @@ means_stds = DataFrame(
 # ╠═d9e26f65-6d40-48e5-b567-4cce5a2c530b
 # ╠═b02fe68d-78c7-46fc-b858-4db5b12ef729
 # ╠═4b79a10e-d861-44ee-8b07-877e51145d5d
-# ╠═14cdef5f-c9ba-4810-93fe-0f0915b803a2
 # ╠═9aa2cd67-dd4e-476f-9f5c-8927d59cf06b
 # ╟─4c9feda4-9fc1-42c7-8cac-a17d51627c6d
 # ╠═e261c635-98d7-4357-a429-a34b73b47bb5
@@ -1791,7 +1517,6 @@ means_stds = DataFrame(
 # ╠═8babe305-6bf0-43e3-9fe7-ded195d2addf
 # ╠═ea17e8f9-c06e-439e-82f9-dbfdef759998
 # ╠═e095f5ff-0687-4cb8-8075-5f98d1f4dd0e
-# ╠═54e384c2-ac35-4679-8be5-ac96fa778c81
 # ╠═50bd6309-fe32-4be9-a776-df85d1a4a580
 # ╟─8eaec985-641a-498f-9cd9-c2c85d877142
 # ╠═fcd83805-06e2-4cda-aa56-0c13c69424d8
@@ -1801,7 +1526,6 @@ means_stds = DataFrame(
 # ╠═b16090b5-a232-4e71-9148-b71296efa999
 # ╠═24034fa9-f9d4-4bd0-a736-488b06403adc
 # ╠═ef060aa5-860a-471d-a7d2-9a6d72e0c3fe
-# ╠═3d987e71-9742-4b70-be10-2ed82a6df5f4
 # ╠═b564f89f-b8c1-4a2d-97ae-abed7932f9b4
 # ╟─5bc912d4-be86-4cca-9e8b-8af31d269edf
 # ╠═594b8d0e-f65c-4fe3-b571-e2ee68a9ab5f
@@ -1813,7 +1537,6 @@ means_stds = DataFrame(
 # ╠═e8b56e73-f22b-4587-9141-558f5f545a5e
 # ╠═c960b23e-3ef5-4719-a3e6-1016e9c223c2
 # ╠═97f07af4-a4af-4a26-9f81-5acb836c9f2c
-# ╠═a5dbb0ed-f3d9-4a7d-b830-6b6acf2d685b
 # ╠═1e646f11-dd9b-40e1-988d-5d9e37eee777
 # ╟─86472f5a-0d0a-4c2e-9c01-dac3e8e57885
 # ╟─d6cd9cf6-4571-4dad-bda6-56fd783e4b8d

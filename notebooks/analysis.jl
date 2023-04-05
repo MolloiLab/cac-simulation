@@ -281,6 +281,76 @@ md"""
 ## Accuracy
 """
 
+# ╔═╡ bb807d83-339b-4553-a293-4344058bc148
+
+
+# ╔═╡ c73b03de-2652-4986-8e32-53040bc43af7
+
+
+# ╔═╡ e3c5f720-adec-4b59-b8a7-a26385c002ff
+function lin_reg_agat_swcs()
+    f = Figure()
+
+    ##-- A --##
+    ax = Axis(
+		f[1, 1],
+    	xlabel = "SWCS Score",
+    	ylabel = "Agatston Score",
+    	title = "Agatston vs SWCS (Normal Density)"
+	)
+    sc1 = scatter!(
+		df_s_normal[!, :calculated_swcs_large], df_a_normal[!, :calculated_agat_large]
+	)
+    sc1 = scatter!(
+		df_s_normal[!, :calculated_swcs_medium], df_a_normal[!, :calculated_agat_medium]
+	)
+    sc1 = scatter!(
+		df_s_normal[!, :calculated_swcs_small], df_a_normal[!, :calculated_agat_small]; color=:red
+	)
+
+	
+    ##-- B --##
+    ax = Axis(
+		f[2, 1],
+    	xlabel = "SWCS Score",
+    	ylabel = "Agatston Score",
+    	title = "Agatston vs SWCS (Low Density)"
+	)
+    sc1 = scatter!(
+		df_s_low[!, :calculated_swcs_large], df_a_low[!, :calculated_agat_large]
+	)
+    sc2 = scatter!(
+		df_s_low[!, :calculated_swcs_medium], df_a_low[!, :calculated_agat_medium]
+	)
+    sc3 = scatter!(
+		df_s_low[!, :calculated_swcs_small], df_a_low[!, :calculated_agat_small]; color=:red
+	)
+
+    ##-- LABELS --##
+    f[2, 2] = Legend(
+        f,
+        [sc1, sc2, sc3],
+        ["Large Inserts", "Medium Inserts", "Small Inserts"];
+        framevisible=false,
+		padding=(10, 10, 8, 8)
+    )
+
+    for (label, layout) in zip(["A", "B"], [f[1, 1], f[2, 1]])
+        Label(
+            layout[1, 1, TopLeft()],
+            label;
+            fontsize=25,
+            padding=(0, 90, 25, 0),
+            halign=:right,
+        )
+    end
+
+	f
+end
+
+# ╔═╡ 0822b8d6-6285-4b69-80e1-23538044e6cc
+with_theme(lin_reg_agat_swcs, medphys_theme)
+
 # ╔═╡ 9b3c6bda-5c21-4c07-be6f-939a1ac0496a
 md"""
 #### Normal Density
@@ -309,6 +379,12 @@ begin
 	rms_values_normal_a = round.(rms_values_normal_a; digits=3)
 	coefficient_normal_a = round.(coefficient_normal_a; digits=3)
 end
+
+# ╔═╡ f8e0735d-7854-48d0-85a9-ccfb3f8fc898
+r_squared_normal_i, r_squared_normal_vf, r_squared_normal_a 
+
+# ╔═╡ 44341e09-1593-4d24-8c77-1e3fceb219ee
+coefficient_normal_i, coefficient_normal_vf, coefficient_normal_a
 
 # ╔═╡ decd4320-112a-4c4c-9ed5-680a721b81c1
 function lin_reg_norm()
@@ -486,6 +562,12 @@ begin
 	rms_values_low_a = round.(rms_values_low_a; digits=3)
 	coefficient_low_a = round.(coefficient_low_a; digits=3)
 end
+
+# ╔═╡ 766474b7-8158-48b5-a4fb-6ed4ab055338
+round.((r_squared_low_i, r_squared_low_vf, r_squared_low_a), digits=2)
+
+# ╔═╡ 3cf4a3a1-0997-425c-9f4f-0785a45eea1c
+coefficient_low_i, coefficient_low_vf, coefficient_low_a
 
 # ╔═╡ bc9939d7-f3a8-48e5-ada4-8fcf0fc1137a
 function lin_reg_low()
@@ -863,23 +945,28 @@ md"""
 #### SWCS
 """
 
-# ╔═╡ eb4c455f-120b-4c2b-95d6-3022aef521d8
-rand() * 10
-
 # ╔═╡ 02dd53b4-3f0f-437f-885b-1c7f4c78d8e5
 begin
 	false_negative_s = []
 	for i in 1:3:nrow(df_s)-2
-		mean_s, std_s = mean(df_s[i:i+2, :swcs_bkg]), std(df_s[i:i+2, :swcs_bkg])*std_level 
-		# @info mean_s, 10
+		mean_s, std_s = mean(df_s[i:i+2, :swcs_bkg]), std(df_s[i:i+2, :swcs_bkg])*std_level
 		array_s = hcat(df_s[i:i+2, :calculated_swcs_large], df_s[i:i+2, :calculated_swcs_medium], df_s[i:i+2, :calculated_swcs_small]);
 		neg = length(findall(x -> x <= (mean_s + std_s), array_s))
 		push!(false_negative_s, neg)
 	end
 end
 
+# ╔═╡ a7d2007d-cd85-489f-b0ba-b94c5b76c6bf
+mean_s2, std_s2 = mean(df_s[:, :swcs_bkg]), std(df_s[:, :swcs_bkg])*std_level
+
+# ╔═╡ d91d9b79-4323-492a-bb19-146dc7475967
+total_zero_s2 = length(findall(x -> x <= (mean_s2 + std_s2), array_s))
+
 # ╔═╡ 608e3046-5df2-4491-992c-46233e93f4c8
 total_zero_s = sum(false_negative_s)
+
+# ╔═╡ e96d2cea-7f3e-436b-9a98-ec1eed951041
+df_s
 
 # ╔═╡ 65dc9755-c46f-49ea-8ecf-d68bcb42a628
 md"""
@@ -926,7 +1013,6 @@ begin
 	false_negative_i = []
 	for i in 1:3:nrow(df_i)-2
 		mean_i, std_i = mean(df_i[i:i+2, :mass_bkg]), std(df_i[i:i+2, :mass_bkg])*std_level 
-		@info mean_i
 		array_i = hcat(df_i[i:i+2, :calculated_mass_large], df_i[i:i+2, :calculated_mass_medium], df_i[i:i+2, :calculated_mass_small]);
 		neg = length(findall(x -> x <= mean_i + std_i, array_i))
 		push!(false_negative_i, neg)
@@ -955,6 +1041,12 @@ begin
 	rms_values_reprod_vf = round.(rms_values_reprod_vf; digits=3)
 	coefficient_reprod_vf = round.(coefficient_reprod_vf; digits=3)
 end
+
+# ╔═╡ 0e5b9d7d-aa2f-44fa-9ca9-1d8b7f373f7b
+r_squared_reprod_i, r_squared_reprod_vf, r_squared_reprod_a, r_squared_reprod_s
+
+# ╔═╡ dfcd85cd-586c-49aa-96e2-2e265fb5f33d
+coefficient_reprod_i, coefficient_reprod_vf, coefficient_reprod_a, coefficient_reprod_s
 
 # ╔═╡ b6fe3edc-205b-46a2-8cf3-e309bcaec383
 function reprod()
@@ -1145,6 +1237,12 @@ end
 
 # ╔═╡ 045cb9a5-12ac-4016-a39c-10b2b15e90f9
 total_zero_s_pos = sum(false_positive_s)
+
+# ╔═╡ 45487591-6520-48d4-b137-e43f0d3ed7fc
+array_s_pos = df_s[:, :swcs_bkg]
+
+# ╔═╡ b9d08b21-d9e7-4e58-9faa-c34adc4827a7
+total_zero_s_pos2 = length(findall(x -> x > (mean_s2 + std_s2), array_s_pos))
 
 # ╔═╡ 1f0df2eb-a434-41fa-b690-4fcdae434a30
 md"""
@@ -1498,10 +1596,18 @@ means_stds = DataFrame(
 # ╟─593d7b00-94c4-49c2-87a7-723dbef64667
 # ╠═63f97b37-dc0e-456d-811f-409f8360b2da
 # ╟─ac937ee5-e820-4960-836f-50df8c7ae3ee
+# ╠═f8e0735d-7854-48d0-85a9-ccfb3f8fc898
+# ╠═44341e09-1593-4d24-8c77-1e3fceb219ee
+# ╠═bb807d83-339b-4553-a293-4344058bc148
+# ╠═c73b03de-2652-4986-8e32-53040bc43af7
+# ╠═766474b7-8158-48b5-a4fb-6ed4ab055338
+# ╠═3cf4a3a1-0997-425c-9f4f-0785a45eea1c
 # ╟─decd4320-112a-4c4c-9ed5-680a721b81c1
 # ╟─0fa91a0b-c205-4b10-9876-9a9e163f3d7e
 # ╟─bc9939d7-f3a8-48e5-ada4-8fcf0fc1137a
 # ╟─3f02194d-9c69-45d1-80fc-4cc50b1f3d8f
+# ╟─e3c5f720-adec-4b59-b8a7-a26385c002ff
+# ╟─0822b8d6-6285-4b69-80e1-23538044e6cc
 # ╟─9b3c6bda-5c21-4c07-be6f-939a1ac0496a
 # ╠═b4e25c03-ac59-4104-acf5-2f049497d460
 # ╠═074a6437-9745-4680-b9b5-baf9d767afc9
@@ -1512,6 +1618,8 @@ means_stds = DataFrame(
 # ╠═ad784be1-5252-4914-bdd2-085edf5a95e0
 # ╟─d4753644-29fb-41a9-b8d1-5f46bb87a613
 # ╠═aef525b3-be1a-4a80-ba18-7ade91baea2d
+# ╠═0e5b9d7d-aa2f-44fa-9ca9-1d8b7f373f7b
+# ╠═dfcd85cd-586c-49aa-96e2-2e265fb5f33d
 # ╟─b6fe3edc-205b-46a2-8cf3-e309bcaec383
 # ╟─e401dc35-3e36-4e69-803d-457b3212db21
 # ╟─f8a69b2e-1cab-4281-9eb5-22bed0046c49
@@ -1554,16 +1662,18 @@ means_stds = DataFrame(
 # ╠═7dcd6c10-9206-4f3d-8c85-11faacf63084
 # ╠═51649ae7-9035-493f-a7a8-64ce35c0fafd
 # ╟─c50117bb-bbb7-4347-b4bb-d446677f4509
-# ╠═34991466-181f-4036-8f47-12e20f2144bc
+# ╟─34991466-181f-4036-8f47-12e20f2144bc
 # ╠═bf35fb67-20b9-4b74-bd15-3315d5e37855
 # ╠═75e0f9d7-ef66-42bd-bf06-cebecb09a526
 # ╟─9ed516b4-232b-45c5-af90-2964ed2e6a36
 # ╠═5e32f34c-2f32-457e-a9cf-59184170b6ed
 # ╠═819c99a9-5a22-447b-9136-0fb3372af1e4
 # ╟─10725f84-8ce4-454a-8c6e-41cdaa25dd1a
-# ╠═eb4c455f-120b-4c2b-95d6-3022aef521d8
 # ╠═02dd53b4-3f0f-437f-885b-1c7f4c78d8e5
+# ╠═a7d2007d-cd85-489f-b0ba-b94c5b76c6bf
+# ╠═d91d9b79-4323-492a-bb19-146dc7475967
 # ╠═608e3046-5df2-4491-992c-46233e93f4c8
+# ╠═e96d2cea-7f3e-436b-9a98-ec1eed951041
 # ╟─65dc9755-c46f-49ea-8ecf-d68bcb42a628
 # ╠═8508a5ed-2646-4b2b-9a3b-42300aa1f4ed
 # ╠═f59e8199-6291-4825-8741-a5c83bca77d5
@@ -1583,6 +1693,8 @@ means_stds = DataFrame(
 # ╟─559f77d3-69c0-4155-8cc0-1f669f929bc3
 # ╠═b540e5f0-d271-4d42-a167-bf79766a53ac
 # ╠═045cb9a5-12ac-4016-a39c-10b2b15e90f9
+# ╠═45487591-6520-48d4-b137-e43f0d3ed7fc
+# ╠═b9d08b21-d9e7-4e58-9faa-c34adc4827a7
 # ╟─1f0df2eb-a434-41fa-b690-4fcdae434a30
 # ╠═4a0c4183-3ccc-468a-aa04-75719c21750d
 # ╠═9d8911ab-05e3-4a07-8f2e-d9e1540447a5
