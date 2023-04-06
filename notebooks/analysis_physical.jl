@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.18
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -10,7 +10,7 @@ begin
 	using Pkg
 	Pkg.activate(".")
 
-    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, PrettyTables, LinearAlgebra
+    using PlutoUI, Statistics, CSV, DataFrames, GLM, CairoMakie, HypothesisTests, Colors, MLJBase, PrettyTables, LinearAlgebra, Printf
 	using StatsBase: quantile!, rmsd, zscore
 end
 
@@ -129,6 +129,39 @@ function remove_false_negatives(df, array, df_reprod, array_reprod)
 	return df_large, df_r_large, df_med, df_r_med, df_small, df_r_small
 end
 
+# ╔═╡ 2e862b70-3c59-4572-8e71-f3233b4363fa
+function create_textbox(loc, coef, r, rms; p=5)
+    local tb
+    if coef[1] > 0
+        tb = Label(
+            loc;
+            # text="y = $(@sprintf "%.2f" coef[2])x+$(@sprintf "%.2f" coef[1]) \nr = $(@sprintf "%.2f" r) \nRMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+			text="RMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+            padding=(p, p, p, p),
+            tellheight=false,
+            tellwidth=false,
+            halign=:left,
+            justification=:left,
+            valign=:top,
+            fontsize=12
+        )
+    else
+        tb = Label(
+            loc,
+            # text="y = $(@sprintf "%.2f" coef[2])x$(@sprintf "%.2f" coef[1]) \nr = $(@sprintf "%.2f" r) \nRMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+			text="RMSE: $(@sprintf "%.2f" rms[1]) \nRMSD: $(@sprintf "%.2f" rms[2])",
+            padding=(p, p, p, p),
+            tellheight=false,
+            tellwidth=false,
+            halign=:left,
+            justification=:left,
+            valign=:top,
+            fontsize=12
+        )
+    end
+    return tb
+end
+
 # ╔═╡ 5d6c0929-6608-4a01-877b-b70a3a8dbdfe
 FIGURE_PATH = "physical"
 
@@ -142,8 +175,11 @@ md"""
 ## Integrated
 """
 
+# ╔═╡ bdecc190-cecc-4f4a-b865-742ef553ca6a
+root_dir = joinpath(dirname(pwd()), "output_new")
+
 # ╔═╡ 2e67c175-5dfa-4024-a990-5dfcc85c127b
-path_integrated = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/integrated";
+path_integrated = joinpath(root_dir, "integrated")
 
 # ╔═╡ 96d711cf-d365-405c-98ec-b43f5b329d24
 df_i = CSV.read(string(path_integrated, "/physical.csv"), DataFrame);
@@ -160,7 +196,7 @@ md"""
 """
 
 # ╔═╡ f69fc8e8-0f63-4a45-83cd-538e92c8f838
-path_agat = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/agatston";
+path_agat = joinpath(root_dir, "agatston")
 
 # ╔═╡ 93fbe90d-7c8a-42c7-a184-82b039437e14
 df_a = CSV.read(string(path_agat, "/physical.csv"), DataFrame);
@@ -177,7 +213,7 @@ md"""
 """
 
 # ╔═╡ 4e9a8c62-a80f-4e6a-8da9-b007ccce6fef
-path_swcs = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/swcs";
+path_swcs = joinpath(root_dir, "swcs")
 
 # ╔═╡ 4acec5a7-2ab3-4fb4-9c5e-85e6b36aa31e
 df_s = CSV.read(string(path_swcs, "/physical.csv"), DataFrame);
@@ -194,7 +230,7 @@ md"""
 """
 
 # ╔═╡ c38d5c24-3a96-4310-a682-d969345b647a
-path_vf = "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/output_new/volume_fraction";
+path_vf = joinpath(root_dir, "volume_fraction")
 
 # ╔═╡ 73e6d4e4-c5cd-4d3f-8429-caccc72990af
 df_vf = CSV.read(string(path_vf, "/physical.csv"), DataFrame);
@@ -211,29 +247,22 @@ md"""
 """
 
 # ╔═╡ b8c20e8b-e6a8-45df-9867-b345b330b831
-medphys_theme = Theme(;
-    Axis=(
-        backgroundcolor=:white,
-        xgridcolor=:gray,
-        xgridwidth=0.5,
-        xlabelfont=:Helvetica,
-        xticklabelfont=:Helvetica,
-        xlabelsize=16,
-        xticklabelsize=20,
-        # xminorticksvisible = true,
-        ygridcolor=:gray,
-        ygridwidth=0.5,
-        ylabelfont=:Helvetica,
-        yticklabelfont=:Helvetica,
-        ylabelsize=16,
-        yticklabelsize=20,
-        # yminortickvisible = true,
-        bottomsplinecolor=:black,
-        leftspinecolor=:black,
-        titlefont=:Helvetica,
-        titlesize=30,
-    ),
-)
+medphys_theme = Theme(
+    Axis = (
+        backgroundcolor = :white,
+		xgridcolor = :gray,
+		xgridwidth = 0.1,
+		xlabelsize = 15,
+		xticklabelsize = 20,
+		ygridcolor = :gray,
+		ygridwidth = 0.1,
+		ylabelsize = 15,
+		yticklabelsize = 20,
+		bottomsplinecolor = :black,
+		leftspinecolor = :black,
+		titlesize = 20
+	)
+);
 
 # ╔═╡ b0c5bee4-a399-4415-a8a6-5313cc31e1d4
 md"""
@@ -297,26 +326,7 @@ function lin_reg()
     )
     lines!(ax1, [-1000, 1000], [-1000, 1000])
     lines!(ax1, collect(1:1000), fitted_line_normal_i; linestyle=:dashdot)
-    # Textbox(
-    #     f[1, 1];
-    #     placeholder="y = $(trunc(co1[2]; digits=3))x + $(trunc(co1[1]; digits=3)) \nr = $(trunc(r2_1; digits=3)) \nRMSE: $(trunc(rms_values1[1]; digits=3)) \nRMSD: $(trunc(rms_values1[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[1, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_i[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        textsize=12,
-    )
+	create_textbox(f[1, 1], coefficient_normal_i, r_squared_normal_i, rms_values_normal_i)
 
     xlims!(ax1; low=0, high=200)
     ylims!(ax1; low=0, high=200)
@@ -355,26 +365,8 @@ function lin_reg()
     )
     ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
     ln2 = lines!(ax2, collect(1:1000), fitted_line_normal_vf; linestyle=:dashdot)
-    # Textbox(
-    #     f[2, 1];
-    #     placeholder="y = $(trunc(co1_vf[2]; digits=3))x + $(trunc(co1_vf[1]; digits=3)) \nr = $(trunc(r2_1_vf; digits=3)) \nRMSE: $(trunc(rms_values1vf[1]; digits=3)) \nRMSD: $(trunc(rms_values1vf[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[2, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_vf[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        textsize=12,
-    )
+	create_textbox(f[2, 1], coefficient_normal_vf, r_squared_normal_vf, rms_values_normal_vf)
+	
 
     xlims!(ax2; low=0, high=200)
     ylims!(ax2; low=0, high=200)
@@ -414,26 +406,8 @@ function lin_reg()
     )
     ln1 = lines!(ax2, [-1000, 1000], [-1000, 1000])
     ln2 = lines!(ax2, collect(1:1000), fitted_line_normal_a; linestyle=:dashdot)
-    # Textbox(
-    #     f[3, 1];
-    #     placeholder="y = $(trunc(co3[2]; digits=3))x + $(trunc(co3[1]; digits=3)) \nr = $(trunc(r2_3; digits=3)) \nRMSE: $(trunc(rms_values3[1]; digits=3)) \nRMSD: $(trunc(rms_values3[2]; digits=3))",
-    #     tellheight=false,
-    #     tellwidth=false,
-    #     boxcolor=:white,
-    #     halign=:left,
-    #     valign=:top,
-    #     textsize=12,
-    # )
-	Textbox(
-        f[3, 1];
-        placeholder="RMSE: $(trunc(rms_values_normal_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_normal_a[2]; digits=3))",
-        tellheight=false,
-        tellwidth=false,
-        boxcolor=:white,
-        halign=:left,
-        valign=:top,
-        textsize=12,
-    )
+	create_textbox(f[3, 1], coefficient_normal_a, r_squared_normal_a, rms_values_normal_a)
+	
 
     xlims!(ax2; low=0, high=200)
     ylims!(ax2; low=0, high=200)
@@ -455,7 +429,7 @@ function lin_reg()
         Label(
             layout[1, 1, TopLeft()],
             label;
-            textsize=25,
+            fontsize=25,
             padding=(0, 90, 25, 0),
             halign=:right,
         )
@@ -466,9 +440,7 @@ function lin_reg()
 end
 
 # ╔═╡ e7e38a45-aed8-4e25-8fdc-d08cb1b3f197
-with_theme(medphys_theme) do
-    lin_reg()
-end
+with_theme(lin_reg, medphys_theme)
 
 # ╔═╡ f011edbc-2547-4be8-895b-5ebe611be122
 md"""
@@ -671,30 +643,7 @@ function reprod()
     )
     lines!(ax1, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax1, collect(1:1000), fitted_line_reprod_i; linestyle=:dashdot)
-
-	if coefficient_reprod_i[1] > 0
-        Textbox(
-            f[1, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_i[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    else
-        Textbox(
-            f[1, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_i[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_i[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    end
+	create_textbox(f[1, 1], coefficient_reprod_i, r_squared_reprod_i, rms_values_reprod_i)
 
     xlims!(ax1; low=0, high=200)
     ylims!(ax1; low=0, high=200)
@@ -727,30 +676,7 @@ function reprod()
     )
     lines!(ax2, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax2, collect(1:1000), fitted_line_reprod_vf; linestyle=:dashdot)
-
-	if coefficient_reprod_vf[1] > 0
-        Textbox(
-            f[2, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_vf[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    else
-        Textbox(
-            f[2, 1];
-            placeholder="nRMSE: $(trunc(rms_values_reprod_vf[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_vf[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    end
+	create_textbox(f[2, 1], coefficient_reprod_vf, r_squared_reprod_vf, rms_values_reprod_vf)
 
     xlims!(ax2; low=0, high=200)
     ylims!(ax2; low=0, high=200)
@@ -783,30 +709,7 @@ function reprod()
     )
     lines!(ax3, [-1000, 1000], [-1000, 1000]; label="Unity")
     lines!(ax3, collect(1:1000), fitted_line_reprod_a; linestyle=:dashdot)
-
-	if coefficient_reprod_a[1] > 0
-        Textbox(
-            f[3, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_a[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    else
-        Textbox(
-            f[3, 1];
-            placeholder="RMSE: $(trunc(rms_values_reprod_a[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_a[2]; digits=3))",
-            tellheight=false,
-            tellwidth=false,
-            boxcolor=:white,
-            halign=:left,
-            valign=:top,
-            textsize=12,
-        )
-    end
+	create_textbox(f[3, 1], coefficient_reprod_a, r_squared_reprod_a, rms_values_reprod_a)
 
     xlims!(ax3; low=0, high=200)
     ylims!(ax3; low=0, high=200)
@@ -816,69 +719,13 @@ function reprod()
     ax3.ylabel = "Mass 2 (mg)"
     ax3.title = "Agatston"
 
- #    # ##-- D --##
- #    ax4 = Axis(f[2, 2])
- #    scatter!(
- #        ax4,
- #        df_s_r_large[!, :calculated_swcs_large],
- #        df_s_large[!, :calculated_swcs_large];
- #        label="Large Inserts",
- #    )
- #    scatter!(
- #        ax4,
- #        df_s_r_medium[!, :calculated_swcs_medium],
- #        df_s_medium[!, :calculated_swcs_medium];
- #        label="Medium Inserts",
- #    )
- #    scatter!(
- #        ax4,
- #        df_s_r_small[!, :calculated_swcs_small],
- #        df_s_small[!, :calculated_swcs_small];
- #        label="Small Inserts",
- #        color=:red,
- #    )
- #    lines!(ax4, [-1000, 1000], [-1000, 1000]; label="Unity")
- #    lines!(ax4, collect(1:1000), fitted_line_reprod_s; linestyle=:dashdot, label="Fitted Line")
-
-	# if coefficient_reprod_s[1] > 0
- #        Textbox(
- #            f[2, 2];
- #            placeholder="RMSE: $(trunc(rms_values_reprod_s[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_s[2]; digits=3))",
- #            tellheight=false,
- #            tellwidth=false,
- #            boxcolor=:white,
- #            halign=:left,
- #            valign=:top,
- #            textsize=12,
- #        )
- #    else
- #        Textbox(
- #            f[2, 2];
- #            placeholder="RMSE: $(trunc(rms_values_reprod_s[1]; digits=3)) \nRMSD: $(trunc(rms_values_reprod_s[2]; digits=3))",
- #            tellheight=false,
- #            tellwidth=false,
- #            boxcolor=:white,
- #            halign=:left,
- #            valign=:top,
- #            textsize=12,
- #        )
- #    end
-
- #    xlims!(ax4; low=0, high=500)
- #    ylims!(ax4; low=0, high=500)
- #    ax4.xticks = [0, 125, 250, 375, 500]
- #    ax4.yticks = [0, 125, 250, 375, 500]
- #    ax4.xlabel = "SWCS 1"
- #    ax4.ylabel = "SWCS 2"
- #    ax4.title = "Spatially Weighted"
-
     ##-- LABELS --##
     f[2, 2] = Legend(f, ax3; framevisible=false)
     for (label, layout) in zip(["A", "B", "C"], [f[1, 1], f[2, 1], f[3, 1]])
         Label(
             layout[1, 1, TopLeft()],
             label;
-            textsize=25,
+            fontsize=25,
             padding=(0, 90, 25, 0),
             halign=:right,
         )
@@ -889,9 +736,7 @@ function reprod()
 end
 
 # ╔═╡ 86b5f204-d004-47dd-9709-28965692bc4f
-with_theme(medphys_theme) do
-    reprod()
-end
+with_theme(reprod, medphys_theme)
 
 # ╔═╡ 1bf8321e-b661-45b2-b191-cc83d302422a
 begin
@@ -1275,9 +1120,11 @@ means_stds = DataFrame(
 # ╟─522a9c57-d9b4-4c03-889e-d2a78a21ca5d
 # ╟─b302881f-99cd-4ac6-b22f-6d6d5c098e27
 # ╟─e912ad90-9477-4253-97db-f679d2c9abb3
+# ╟─2e862b70-3c59-4572-8e71-f3233b4363fa
 # ╠═5d6c0929-6608-4a01-877b-b70a3a8dbdfe
 # ╟─2c8d827a-10bc-48a9-8657-c7c8d83fd5df
 # ╟─312b7073-caa1-44eb-9c53-7d2508a24603
+# ╠═bdecc190-cecc-4f4a-b865-742ef553ca6a
 # ╠═2e67c175-5dfa-4024-a990-5dfcc85c127b
 # ╠═96d711cf-d365-405c-98ec-b43f5b329d24
 # ╠═523f9106-0431-45c1-9e6e-f4b8a84c069e

@@ -281,12 +281,6 @@ md"""
 ## Accuracy
 """
 
-# ╔═╡ bb807d83-339b-4553-a293-4344058bc148
-
-
-# ╔═╡ c73b03de-2652-4986-8e32-53040bc43af7
-
-
 # ╔═╡ e3c5f720-adec-4b59-b8a7-a26385c002ff
 function lin_reg_agat_swcs()
     f = Figure()
@@ -1598,8 +1592,6 @@ means_stds = DataFrame(
 # ╟─ac937ee5-e820-4960-836f-50df8c7ae3ee
 # ╠═f8e0735d-7854-48d0-85a9-ccfb3f8fc898
 # ╠═44341e09-1593-4d24-8c77-1e3fceb219ee
-# ╠═bb807d83-339b-4553-a293-4344058bc148
-# ╠═c73b03de-2652-4986-8e32-53040bc43af7
 # ╠═766474b7-8158-48b5-a4fb-6ed4ab055338
 # ╠═3cf4a3a1-0997-425c-9f4f-0785a45eea1c
 # ╟─decd4320-112a-4c4c-9ed5-680a721b81c1

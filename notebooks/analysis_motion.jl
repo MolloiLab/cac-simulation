@@ -214,6 +214,12 @@ md"""
 ## Accuracy
 """
 
+# ╔═╡ 70f080a0-ac21-44bb-bc28-2919483174ae
+
+
+# ╔═╡ 83624847-7ede-4b87-80e2-4f60a342c9f4
+
+
 # ╔═╡ cabe7e9a-e932-406b-95dd-2c9128decdc7
 function prepare_linear_regression(df)
     gt_array = vec(
@@ -309,6 +315,12 @@ begin
 	rms_values_normal_a = round.(rms_values_normal_a; digits=3)
 	coefficient_normal_a = round.(coefficient_normal_a; digits=3)
 end
+
+# ╔═╡ d38b0d5d-e6b0-421b-9dd4-56d249e8e4a1
+r_squared_normal_i, r_squared_normal_vf, r_squared_normal_a
+
+# ╔═╡ cbd2a8a6-715f-4cb0-ab92-5ff88f6e0204
+coefficient_normal_i, coefficient_normal_vf, coefficient_normal_a
 
 # ╔═╡ c93ba92a-ccc7-4ae0-9207-300715821fc5
 function lin_reg_norm()
@@ -497,6 +509,12 @@ begin
 	rms_values_low_a = round.(rms_values_low_a; digits=3)
 	coefficient_low_a = round.(coefficient_low_a; digits=3)
 end
+
+# ╔═╡ 5daa0a18-7ccb-4cef-8b1c-c015cc48685f
+round.((r_squared_low_i, r_squared_low_vf, r_squared_low_a), digits=2)
+
+# ╔═╡ 7812ad71-15d3-4376-a785-0b470f09f773
+coefficient_low_i, coefficient_low_vf, coefficient_low_a
 
 # ╔═╡ 2e04217d-8dfb-48c9-85dc-9fb42cfd3039
 function lin_reg_low()
@@ -965,6 +983,12 @@ begin
 	rms_values_reprod_vf = round.(rms_values_reprod_vf; digits=3)
 	coefficient_reprod_vf = round.(coefficient_reprod_vf; digits=3)
 end
+
+# ╔═╡ a3682b38-32f2-40f4-8254-af936961647b
+r_squared_reprod_i, r_squared_reprod_vf, r_squared_reprod_a, r_squared_reprod_s
+
+# ╔═╡ 00a8f27f-a766-4415-ad4a-b0f761aed54e
+coefficient_reprod_i, coefficient_reprod_vf, coefficient_reprod_a, coefficient_reprod_s
 
 # ╔═╡ a85f777a-76f2-4c64-9973-ea9dec245600
 function reprod()
@@ -1481,6 +1505,12 @@ means_stds = DataFrame(
 # ╟─310c1999-77a6-432e-850c-4111411cceb0
 # ╠═3c40ca1d-4111-4bf1-941e-30b59cd1a264
 # ╟─7dfc24a4-e006-45f4-b5b9-977a7c3c0b7c
+# ╠═d38b0d5d-e6b0-421b-9dd4-56d249e8e4a1
+# ╠═cbd2a8a6-715f-4cb0-ab92-5ff88f6e0204
+# ╠═70f080a0-ac21-44bb-bc28-2919483174ae
+# ╠═83624847-7ede-4b87-80e2-4f60a342c9f4
+# ╠═5daa0a18-7ccb-4cef-8b1c-c015cc48685f
+# ╠═7812ad71-15d3-4376-a785-0b470f09f773
 # ╟─c93ba92a-ccc7-4ae0-9207-300715821fc5
 # ╠═c4e9c560-7316-4103-86b4-376d4adc1326
 # ╟─2e04217d-8dfb-48c9-85dc-9fb42cfd3039
@@ -1496,6 +1526,8 @@ means_stds = DataFrame(
 # ╠═03d97338-8d58-4f55-8d46-49411f4eedf5
 # ╠═a8f12620-9d73-4610-8a95-ebbad750e70c
 # ╟─7ec78f71-6b20-4c8c-a9da-a216404bee72
+# ╠═a3682b38-32f2-40f4-8254-af936961647b
+# ╠═00a8f27f-a766-4415-ad4a-b0f761aed54e
 # ╟─a85f777a-76f2-4c64-9973-ea9dec245600
 # ╟─d2b90d91-4e63-45b0-8273-5231dbf2778e
 # ╟─88df8b9d-ff41-41d3-99fe-8ab9a050a803

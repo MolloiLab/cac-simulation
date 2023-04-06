@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.18
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -86,6 +86,12 @@ function dilate_mask_small_bkg(mask)
     return (mask)
 end
 
+# ╔═╡ 5d49cbd7-9d31-4e6a-98fd-4ef7cb87370e
+joinpath(dirname(dirname(dirname(dirname(pwd())))), "Datasets", "CAC Data")
+
+# ╔═╡ 28539bfd-9837-4ff8-90ff-b93633c5c282
+"/Users/daleblack/Library/CloudStorage/GoogleDrive-djblack@uci.edu/My Drive/Datasets/CAC Data/Canon_Aquilion_One_Vision"
+
 # ╔═╡ ca28ecc0-0324-43e7-8126-ccde7ef5f05b
 begin
     dfs_vf = []
@@ -101,7 +107,7 @@ begin
     for VENDOR in VENDORS
 		for SCAN in SCANS
 			#---------------- Reusable Pieces ----------------#
-			BASE_PATH = "/Users/daleblack/Google Drive/Datasets/"
+			BASE_PATH = joinpath(dirname(dirname(dirname(dirname(pwd())))), "Datasets", "CAC Data")
 			root_path = joinpath(BASE_PATH, VENDOR)
 			dcm_path_list = dcm_list_builder(root_path)
 			pth = dcm_path_list[SCAN]
@@ -757,6 +763,8 @@ end
 # ╟─eba008b8-c288-4af5-b78d-48cf3d64e959
 # ╟─fde4f7f4-3abd-498f-92b9-867292c6d726
 # ╟─83e6b776-2a80-4e3b-9bba-045bd0ebab59
+# ╠═5d49cbd7-9d31-4e6a-98fd-4ef7cb87370e
+# ╠═28539bfd-9837-4ff8-90ff-b93633c5c282
 # ╠═ca28ecc0-0324-43e7-8126-ccde7ef5f05b
 # ╟─d5f169dd-54a5-4829-a451-9be4c9ac2597
 # ╠═5aea6935-1a10-4040-8108-1dc8904462ea
