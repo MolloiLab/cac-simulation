@@ -141,20 +141,35 @@ begin
 			voxel_size = pixel_size[1] * pixel_size[2] * pixel_size[3]
 
 			## Background
-			background_mask = zeros(size(arr)...)
-			background_mask[
-				(center_insert[1]-5):(center_insert[1]+5),
-				(center_insert[2]-5):(center_insert[2]+5),
+			background_mask1 = zeros(size(arr)...)
+			background_mask2 = zeros(size(arr)...)
+			background_mask3 = zeros(size(arr)...)
+
+			offs = 10
+			rnge = 10
+			background_mask1[
+				(center_insert[1]-rnge+offs):(center_insert[1]+rnge+offs),
+				(center_insert[2]-rnge):(center_insert[2]+rnge),
 				2,
 			] .= 1
-			
-			dilated_mask_L_bkg = dilate_mask_large_bkg(Bool.(background_mask))
-			ring_mask_L_bkg = ring_mask_large(dilated_mask_L_bkg)
-		
-			dilated_mask_M_bkg = dilate_mask_medium_bkg(Bool.(background_mask))
-			ring_mask_M_bkg = ring_mask_medium(dilated_mask_M_bkg)
-		
-			dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask))
+			background_mask2[
+				(center_insert[1]-rnge-offs):(center_insert[1]+rnge-offs),
+				(center_insert[2]-rnge):(center_insert[2]+rnge),
+				2,
+			] .= 1
+			background_mask3[
+				(center_insert[1]-rnge):(center_insert[1]+rnge),
+				(center_insert[2]-rnge+offs):(center_insert[2]+rnge+offs),
+				2,
+			] .= 1
+
+			dilated_mask_L_bkg = dilate_mask_small_bkg(Bool.(background_mask1))
+			ring_mask_L_bkg = ring_mask_small(dilated_mask_L_bkg)
+
+			dilated_mask_M_bkg = dilate_mask_small_bkg(Bool.(background_mask2))
+			ring_mask_M_bkg = ring_mask_small(dilated_mask_M_bkg)
+
+			dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask3))
 			ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
 			
 			## Large
@@ -438,10 +453,7 @@ begin
 			push!(dfs_i, df)
 	
 			#---------------- SWCS ----------------#
-			# μ, σ = 160, 40
-			# μ, σ = 175, 20
-			μ, σ = 175, 25
-			# μ, σ = mean(c_img[Bool.(mask_cal_3D)]), std(c_img[Bool.(mask_cal_3D)])
+			μ, σ = mean(c_img[Bool.(mask_cal_3D)]) / 2, std(c_img[Bool.(mask_cal_3D)])
 	
 			# Mask Calibration Factor
 			output = calc_output(masked_array, header, slice_CCI, thresh, trues(3, 3))
@@ -527,9 +539,6 @@ begin
             pixel_size = DICOMUtils.get_pixel_size(header)
             mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(masked_array, insert_centers[:Large_LD], center_insert, cal_rod_slice, rows, cols, pixel_size)
 	
-			local agat_thresh
-			agat_thresh = 130
-	
 			# Background
 
 			alg = Agatston()
@@ -537,21 +546,21 @@ begin
 			overlayed_bkg_mask_M = create_mask(arr, dilated_mask_M_bkg)
 			overlayed_bkg_mask_S = create_mask(arr, dilated_mask_S_bkg)
 
-			agat_bkg, mass_bkg_large = score(
+			agat_bkg, vol_bkg_large, mass_bkg_large = score(
 				overlayed_bkg_mask_L,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-			agat_bkg, mass_bkg_medium = score(
+			agat_bkg, vol_bkg_medium, mass_bkg_medium = score(
 				overlayed_bkg_mask_M,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-			agat_bkg, mass_bkg_small = score(
+			agat_bkg, vol_bkg_small, mass_bkg_small = score(
 				overlayed_bkg_mask_S,
 				pixel_size,
 				mass_cal_factor,
@@ -560,127 +569,127 @@ begin
 			)
 
 			mass_bkg = [mass_bkg_large, mass_bkg_medium, mass_bkg_small]
-			
+
 			# Score Large Inserts
 			## High Density
 			alg = Agatston()
 			overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD)
-			agat_l_hd, mass_l_hd = score(
+			agat_l_hd, vol_l_hd, mass_l_hd = score(
 				overlayed_mask_l_hd,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Medium Density
 			overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD)
-			agat_l_md, mass_l_md = score(
+			agat_l_md, vol_l_md, mass_l_md = score(
 				overlayed_mask_l_md,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Low Density
 			overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD)
-			agat_l_ld, mass_l_ld = score(
+			agat_l_ld, vol_l_ld, mass_l_ld = score(
 				overlayed_mask_l_ld,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			# Score Medium Inserts
 			## High Density
 			overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD)
-			agat_m_hd, mass_m_hd = score(
+			agat_m_hd, vol_m_hd, mass_m_hd = score(
 				overlayed_mask_m_hd,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Medium Density
 			overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD)
-			agat_m_md, mass_m_md = score(
+			agat_m_md, vol_m_md, mass_m_md = score(
 				overlayed_mask_m_md,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Low Density
 			overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD)
-			agat_m_ld, mass_m_ld = score(
+			agat_m_ld, vol_m_ld, mass_m_ld = score(
 				overlayed_mask_m_ld,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			# Score Small Inserts
 			## High Density
 			overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD)
-			agat_s_hd, mass_s_hd = score(
+			agat_s_hd, vol_s_hd, mass_s_hd = score(
 				overlayed_mask_s_hd,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Medium Density
 			overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD)
-			agat_s_md, mass_s_md = score(
+			agat_s_md, vol_s_md, mass_s_md = score(
 				overlayed_mask_s_md,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			## Low Density
 			overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD)
-			agat_s_ld, mass_s_ld = score(
+			agat_s_ld, vol_s_ld, mass_s_ld = score(
 				overlayed_mask_s_ld,
 				pixel_size,
 				mass_cal_factor,
 				alg;
 				kV=kV
 			)
-	
+
 			# Results
-	
+
 			## Agatston
 			calculated_agat_large = [agat_l_ld, agat_l_md, agat_l_hd]
 			calculated_agat_medium = [agat_m_ld, agat_m_md, agat_m_hd]
 			calculated_agat_small = [agat_s_ld, agat_s_md, agat_s_hd]
-	
+
 			## Mass
 			calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
 			calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
 			calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
-	
+
 			df = DataFrame(;
 				VENDOR=VENDOR,
 				scan=scan,
 				inserts=inserts,
-				calculated_agat_large = calculated_agat_large,
-				calculated_agat_medium = calculated_agat_medium,
-				calculated_agat_small = calculated_agat_small,
 				ground_truth_mass_large=ground_truth_mass_large,
 				calculated_mass_large=calculated_mass_large,
 				ground_truth_mass_medium=ground_truth_mass_medium,
+				calculated_agat_large=calculated_agat_large,
+				calculated_agat_medium=calculated_agat_medium,
+				calculated_agat_small=calculated_agat_small,
 				calculated_mass_medium=calculated_mass_medium,
 				ground_truth_mass_small=ground_truth_mass_small,
 				calculated_mass_small=calculated_mass_small,
-				mass_bkg = mass_bkg
+				mass_bkg=mass_bkg
 			)
 			push!(dfs_a, df)
 		end
