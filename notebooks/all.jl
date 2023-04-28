@@ -510,9 +510,13 @@ begin
                 # Background
                 alg2 = SpatiallyWeighted()
 
-                swcs_bkg_large = score(dilated_mask_L_bkg, μ, σ, alg2)
-                swcs_bkg_medium = score(dilated_mask_M_bkg, μ, σ, alg2)
-                swcs_bkg_small = score(dilated_mask_S_bkg, μ, σ, alg2)
+                overlayed_mask_l_bkg = create_mask(arr, dilated_mask_L_bkg)
+                overlayed_mask_m_bkg = create_mask(arr, dilated_mask_M_bkg)
+                overlayed_mask_s_bkg = create_mask(arr, dilated_mask_S_bkg)
+
+                swcs_bkg_large = score(overlayed_mask_l_bkg, μ, σ, alg2)
+                swcs_bkg_medium = score(overlayed_mask_m_bkg, μ, σ, alg2)
+                swcs_bkg_small = score(overlayed_mask_s_bkg, μ, σ, alg2)
 
                 swcs_bkg = [swcs_bkg_large, swcs_bkg_medium, swcs_bkg_small]
 

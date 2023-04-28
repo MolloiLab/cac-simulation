@@ -1324,6 +1324,9 @@ df_vf_low_r, df_vf_normal_r = groupby(df_vf_r, :DENSITY);
 # ╔═╡ 6ea76780-2726-4d61-bff1-fb590f7ba2f5
 df_vf_low_small_r, df_vf_low_medium_r, df_vf_low_large_r = groupby(df_vf_low_r, :SIZE);
 
+# ╔═╡ 598e1797-837f-4bef-8fac-716f0690142a
+array_vf = hcat(df_vf[:, :calculated_mass_large], df_vf[:, :calculated_mass_medium], df_vf[:, :calculated_mass_small]);
+
 # ╔═╡ 288f8d4c-323a-4962-8aff-026ef1bfa77d
 df_vf_normal_small_r, df_vf_normal_medium_r, df_vf_normal_large_r = groupby(
     df_vf_normal_r, :SIZE
@@ -3159,6 +3162,9 @@ begin
 	end
 end
 
+# ╔═╡ 4eef56ad-0ea4-422c-837b-3aa9846a2458
+
+
 # ╔═╡ b708d2c9-f868-4814-b1b7-6908317aa5ba
 total_zero_vf = sum(false_negative_vf)
 
@@ -3185,6 +3191,9 @@ begin
 		push!(false_positive_s, pos)
 	end
 end
+
+# ╔═╡ 802dc604-cd58-40db-ad6c-132ad38d7c3c
+df_s
 
 # ╔═╡ 045cb9a5-12ac-4016-a39c-10b2b15e90f9
 total_zero_s_pos = sum(false_positive_s)
@@ -3753,7 +3762,7 @@ function sensitivity_specificity_ld()
 	        halign = :right)
 	end
 
-    # save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "sensitivity_specificity.png"), f)
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "sensitivity_specificity_ld.png"), f)
 
 
     return f
@@ -4721,6 +4730,7 @@ means_stds = DataFrame(
 # ╠═24e3e4d1-91b4-4ae0-abf8-174118926b6b
 # ╠═fc1e3216-6929-4f8f-b1c9-b700f3e35181
 # ╠═6ea76780-2726-4d61-bff1-fb590f7ba2f5
+# ╠═598e1797-837f-4bef-8fac-716f0690142a
 # ╠═288f8d4c-323a-4962-8aff-026ef1bfa77d
 # ╠═fd9e7b94-03c5-4ea9-8405-2218e07df3b5
 # ╠═4ecaa1c8-ca20-455f-8856-24982ce1f687
@@ -4885,10 +4895,12 @@ means_stds = DataFrame(
 # ╠═f029a8c7-7cc1-49c1-8337-c76ac0d585cd
 # ╟─73852846-3fd1-4246-8bd3-afabd7b8e480
 # ╠═beaa94a0-0de3-40a3-86a1-912cbc018775
+# ╠═4eef56ad-0ea4-422c-837b-3aa9846a2458
 # ╠═b708d2c9-f868-4814-b1b7-6908317aa5ba
 # ╟─1d04d29f-401d-45c4-99ff-3bbdb0fb4f6b
 # ╟─559f77d3-69c0-4155-8cc0-1f669f929bc3
 # ╠═b540e5f0-d271-4d42-a167-bf79766a53ac
+# ╠═802dc604-cd58-40db-ad6c-132ad38d7c3c
 # ╠═045cb9a5-12ac-4016-a39c-10b2b15e90f9
 # ╟─1f0df2eb-a434-41fa-b690-4fcdae434a30
 # ╠═4a0c4183-3ccc-468a-aa04-75719c21750d

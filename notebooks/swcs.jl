@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -34,42 +34,29 @@ md"""
 
 # ╔═╡ c02953cc-0020-452e-938b-694c7f7de44e
 begin
-    SCAN_NUMBER = 1
-    VENDER = "100"
-    # SIZE = "small"
-    # SIZE = "medium"
-    SIZE = "large"
-    # DENSITY = "low"
-    DENSITY = "normal"
-    TYPE = "swcs"
-    BASE_PATH = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/images_new/",
-        SIZE,
-        "/",
-        DENSITY,
-        "/",
-    )
+	VENDORS = ["80", "100", "120", "135"]
+	SIZES = ["small", "medium", "large"]
+	DENSITIES = ["low", "normal"]
+
+	IMAGES = "images_new"
+
+	VENDOR = VENDORS[4]
+	SIZE = SIZES[1]
+	DENSITY = DENSITIES[2]
+	
+    BASE_PATH = joinpath(dirname(pwd()), IMAGES, SIZE, DENSITY)
+	root_path = joinpath(BASE_PATH, VENDOR)
+	dcm_path_list = dcm_list_builder(root_path)
+	pth = dcm_path_list[1]
+	scan = basename(pth)
+	header, dcm_array, slice_thick_ori1 = dcm_reader(pth)
+	kV = parse(Int64, VENDOR)
 end
 
 # ╔═╡ bdc233e2-a17f-42cf-a782-0b040c5b870d
 md"""
 **Everything below should be automatic, just scroll through to visually inspect that things make sense**
 """
-
-# ╔═╡ e0bf7c37-4de9-4bd4-802d-c9df53dfa35c
-root_path = string(BASE_PATH, VENDER, "-motion")
-
-# ╔═╡ d29cfbc0-aa1d-475f-8d5b-6572ae96bb10
-dcm_path_list = dcm_list_builder(root_path)
-
-# ╔═╡ 19220269-909e-4de7-a284-c6bb702922f6
-pth = dcm_path_list[SCAN_NUMBER]
-
-# ╔═╡ f243324f-4275-4466-b492-c51ca0986e49
-scan = basename(pth)
-
-# ╔═╡ 49d5afb9-3d52-418f-8c50-380660872184
-header, dcm_array, slice_thick_ori1 = dcm_reader(pth);
 
 # ╔═╡ b6f33cae-29c6-4d13-9b0c-a2551bd1e08e
 md"""
@@ -146,6 +133,51 @@ function create_mask(array, mask)
     return overlayed_mask
 end
 
+# ╔═╡ 228e339f-ddf0-47b3-821e-5f0e506905ac
+function dilate_mask_large(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ 1a56361a-c5e8-4248-9074-516bf7904466
+function ring_mask_large(dilated_mask)
+    return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ a7f24627-a821-4396-b2aa-9a2472ff6353
+function dilate_mask_medium(mask)
+    return (mask)
+end
+
+# ╔═╡ c5819fb3-1556-404b-a7b1-9088123227f5
+function ring_mask_medium(dilated_mask)
+    return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ 01b7ed1f-7d9f-474d-8631-f62bb68eee1a
+function dilate_mask_small(mask)
+    return (mask)
+end
+
+# ╔═╡ 2f421532-c045-4af9-be30-f3a12f66f24b
+function ring_mask_small(dilated_mask)
+    return Bool.(dilate(dilate(dilate(dilate(dilate(dilate(dilated_mask)))))) - dilated_mask)
+end
+
+# ╔═╡ 24d372ec-3d14-46c4-8319-91c23fd60435
+function dilate_mask_large_bkg(mask)
+    return dilate(dilate(mask))
+end
+
+# ╔═╡ ed442d7f-d151-4b31-8369-0ade86aad81b
+function dilate_mask_medium_bkg(mask)
+    return dilate(mask)
+end
+
+# ╔═╡ 6592a519-4066-4a75-a4e9-4524352a6ec9
+function dilate_mask_small_bkg(mask)
+    return (mask)
+end
+
 # ╔═╡ a4ae678d-a7f1-4bfa-8d22-554583683089
 md"""
 ## Segment Heart
@@ -218,24 +250,16 @@ md"""
 
 # ╔═╡ 47081781-ad0c-4ebb-af72-ee6ea6ccf335
 begin
-    global thresh
-    if DENSITY == "low" && SIZE == "small"
-        thresh = 60
-    elseif DENSITY == "low" && SIZE == "large" && (VENDER == "120" || VENDER == "135")
-        thresh = 75
-    elseif DENSITY == "low" && SIZE == "medium"
-        thresh = 75
-    elseif DENSITY == "low"
-        thresh = 60
-    elseif DENSITY == "normal"
-        thresh = 130
-    end
-end
+	if DENSITY == "low"
+		thresh = 55
+	elseif DENSITY == "normal"
+		thresh = 130
+	end
 
-# ╔═╡ daa65953-ac65-4689-bb28-344e822b2ba2
-calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
-    masked_array, header; calcium_threshold=thresh
-);
+	calcium_image, slice_CCI, quality_slice, cal_rod_slice = mask_rod(
+		masked_array, header; calcium_threshold=thresh
+	)
+end;
 
 # ╔═╡ e1a9f2b8-be8d-4119-9a4a-e1c73e74b33e
 @bind c PlutoUI.Slider(1:size(calcium_image, 3), default=cal_rod_slice, show_value=true)
@@ -269,114 +293,32 @@ begin
     end
 end;
 
-# ╔═╡ 28445fd5-9798-4ace-bc96-ab57a402d56e
-# hist(c_img[mask_cal_3D] .- offset)
-
-# ╔═╡ 0bbac64e-c842-4dc4-8062-8c99cc3f029a
-# calibration = c_img[mask_cal_3D] .- offset
-
-# ╔═╡ 3a7a7501-30ef-4952-a2b7-1628f1af520e
-# quantile!(c_img[mask_cal_3D] .- offset, 0.05:0.95)
-
-# ╔═╡ 13948415-9b64-4ec0-b70a-8dd991bb4e9c
-# mean(calibration), std(calibration)
-
 # ╔═╡ b441160a-84fd-49d0-afae-1b63248cd90f
 md"""
 ## Segment Calcium Inserts
 """
 
-# ╔═╡ 325edc29-0752-432f-a1bc-ecb7976667ad
-# mask_L_HD, mask_M_HD, mask_S_HD, mask_L_MD, mask_M_MD, mask_S_MD, mask_L_LD, mask_M_LD, mask_S_LD = mask_inserts_simulation(
-#             dcm_array, masked_array, header, slice_CCI, center_insert
-# );
-
 # ╔═╡ 7208bc08-acad-44f7-854c-cea5d0190b24
 begin
-    root_new = string(
-        "/Users/daleblack/Google Drive/dev/MolloiLab/cac-simulation/julia_arrays/",
-        SIZE,
-        "/",
-    )
-    mask_L_HD = Array(CSV.read(string(root_new, "mask_L_HD.csv"), DataFrame; header=false))
-    mask_M_HD = Array(CSV.read(string(root_new, "mask_M_HD.csv"), DataFrame; header=false))
-    mask_S_HD = Array(CSV.read(string(root_new, "mask_S_HD.csv"), DataFrame; header=false))
-    mask_L_MD = Array(CSV.read(string(root_new, "mask_L_MD.csv"), DataFrame; header=false))
-    mask_M_MD = Array(CSV.read(string(root_new, "mask_M_MD.csv"), DataFrame; header=false))
-    mask_S_MD = Array(CSV.read(string(root_new, "mask_S_MD.csv"), DataFrame; header=false))
-    mask_L_LD = Array(CSV.read(string(root_new, "mask_L_LD.csv"), DataFrame; header=false))
-    mask_M_LD = Array(CSV.read(string(root_new, "mask_M_LD.csv"), DataFrame; header=false))
-    mask_S_LD = Array(CSV.read(string(root_new, "mask_S_LD.csv"), DataFrame; header=false))
+    root_new = joinpath(dirname(pwd()), "julia_arrays", SIZE)
+	mask_L_HD = Array(CSV.read(joinpath(root_new, "mask_L_HD.csv"), DataFrame; header=false))
+	mask_M_HD = Array(CSV.read(joinpath(root_new, "mask_M_HD.csv"), DataFrame; header=false))
+	mask_S_HD = Array(CSV.read(joinpath(root_new, "mask_S_HD.csv"), DataFrame; header=false))
+	mask_L_MD = Array(CSV.read(joinpath(root_new, "mask_L_MD.csv"), DataFrame; header=false))
+	mask_M_MD = Array(CSV.read(joinpath(root_new, "mask_M_MD.csv"), DataFrame; header=false))
+	mask_S_MD = Array(CSV.read(joinpath(root_new, "mask_S_MD.csv"), DataFrame; header=false))
+	mask_L_LD = Array(CSV.read(joinpath(root_new, "mask_L_LD.csv"), DataFrame; header=false))
+	mask_M_LD = Array(CSV.read(joinpath(root_new, "mask_M_LD.csv"), DataFrame; header=false))
+	mask_S_LD = Array(CSV.read(joinpath(root_new, "mask_S_LD.csv"), DataFrame; header=false))
 end;
 
-# ╔═╡ c3b659fe-b9bc-44d6-8cf1-5ad18c4fa346
+# ╔═╡ 22723c3e-0d5d-4676-b33a-11faa8476d2f
 md"""
-## Mass cal factor
+# Background
 """
 
-# ╔═╡ 84df1941-72a6-4cf5-9e6e-7f79d2534dd6
-output = calc_output(masked_array, header, 5, thresh, trues(3, 3));
+# ╔═╡ 6bb03789-2fdb-4bee-a75a-bb4eb30d9ba9
 
-# ╔═╡ 8b601177-be58-4f32-a32f-2bc675c6364a
-heatmap(output[2])
-
-# ╔═╡ 7ac82afc-58a8-46f3-8027-5504d8157e71
-function center_points_simulation(dcm_array, output, header, tmp_center, CCI_slice)
-	PixelSpacing = PhantomSegmentation.get_pixel_size(header)
-	rows, cols = Int(header[(0x0028, 0x0010)]), Int(header[(0x0028, 0x0011)])
-    sizes = []
-    for row in eachrow(output[3])
-		area = row[:area]
-		append!(sizes, area)
-	end
-
-	centroids = output[4]
-    largest = Dict()
-    for index in 1:length(centroids)
-		x = centroids[index][1]
-		y = centroids[index][2]
-		dist_loc = sqrt((tmp_center[2] - x)^2 + (tmp_center[1] - y)^2)
-        dist_loc *= PixelSpacing[1]
-        if dist_loc > 31
-            largest[index] = [round(y), round(x)]
-        else
-            nothing
-		end
-	end
-
-    max_dict = Dict()
-	radius = round(2.5 / PixelSpacing[1], RoundUp)
-    for key in largest
-        tmp_arr = create_circular_mask(rows, cols, (key[2][2], key[2][1]), radius)
-        tmp_arr = @. abs(tmp_arr * dcm_array[:,:,CCI_slice]) + abs(tmp_arr * dcm_array[:,:,CCI_slice - 1]) + abs(tmp_arr * dcm_array[:,:,CCI_slice + 1])
-        tmp_arr = @. ifelse(tmp_arr == 0, missing, tmp_arr)
-        max_dict[key[1]] = median(skipmissing(tmp_arr))
-	end
-    _, large1_key = maximum(zip(values(max_dict), keys(max_dict)))
-    center1 = largest[large1_key]
-	
-	center = vec(tmp_center')
-	p1 = vec(center1')
-	offset = -2π/180
-	offset2 = -5π/180
-	p2, p3 = find_triangle_points(p1, center; offset=offset, offset2=offset2)
-	cent1, cent2, cent3 = vec(p1'), vec(p2'), vec(p3')
-	
-    center = find_circle(cent1, cent2, cent3)
-	return center, cent1, cent2, cent3
-end
-
-# ╔═╡ bd6a4dee-1055-4c14-bafd-74b64daa0715
-insert_centers = calc_centers_simulation(dcm_array, output, header, center_insert, 5)
-
-# ╔═╡ 78099a0f-93d8-4b72-8101-9ec86ac67762
-slice_CCI
-
-# ╔═╡ d0194709-f4f5-4f7a-acba-76b600dcff92
-center_large_LD = insert_centers[:Large_LD]
-
-# ╔═╡ 72dcf6e7-8fb8-47f7-bfaa-f5529210e8d0
-rows, cols = Int(header[tag"Rows"]), Int(header[tag"Columns"])
 
 # ╔═╡ 65c9df3c-ea01-48fa-b192-52b3f3b76f9b
 md"""
@@ -386,24 +328,57 @@ md"""
 # ╔═╡ 46c2bdd7-f333-41de-9cd5-2ec5d3a21f2c
 arr = masked_array[:, :, 4:6];
 
+# ╔═╡ 61e7055c-01ce-4982-8bf7-6a12c0fad6a5
+begin
+	## Background
+	background_mask1 = zeros(size(arr)...)
+	background_mask2 = zeros(size(arr)...)
+	background_mask3 = zeros(size(arr)...)
+
+	offs = 10
+	rnge = 10
+	background_mask1[
+		(center_insert[1]-rnge+offs):(center_insert[1]+rnge+offs),
+		(center_insert[2]-rnge):(center_insert[2]+rnge),
+		2,
+	] .= 1
+	background_mask2[
+		(center_insert[1]-rnge-offs):(center_insert[1]+rnge-offs),
+		(center_insert[2]-rnge):(center_insert[2]+rnge),
+		2,
+	] .= 1
+	background_mask3[
+		(center_insert[1]-rnge):(center_insert[1]+rnge),
+		(center_insert[2]-rnge+offs):(center_insert[2]+rnge+offs),
+		2,
+	] .= 1
+
+	dilated_mask_L_bkg = dilate_mask_small_bkg(Bool.(background_mask1))
+	ring_mask_L_bkg = ring_mask_small(dilated_mask_L_bkg)
+
+	dilated_mask_M_bkg = dilate_mask_small_bkg(Bool.(background_mask2))
+	ring_mask_M_bkg = ring_mask_small(dilated_mask_M_bkg)
+
+	dilated_mask_S_bkg = dilate_mask_small_bkg(Bool.(background_mask3))
+	ring_mask_S_bkg = ring_mask_small(dilated_mask_S_bkg)
+end;
+
+# ╔═╡ 9d7a0818-c0de-47f0-9c53-381b0ddee674
+let
+	f = Figure()
+	ax = CairoMakie.Axis(f[1, 1])
+	heatmap!(dilated_mask_L_bkg[:, :, 2], colormap=:grays)
+
+	ax = CairoMakie.Axis(f[1, 2])
+	heatmap!(dilated_mask_M_bkg[:, :, 2], colormap=:grays)
+
+	ax = CairoMakie.Axis(f[2, 1])
+	heatmap!(dilated_mask_S_bkg[:, :, 2], colormap=:grays)
+	f
+end
+
 # ╔═╡ 00c43b6b-69ff-48ed-8d6d-fc3e44a6a4f2
 single_arr = masked_array[:, :, slice_CCI];
-
-# ╔═╡ 22723c3e-0d5d-4676-b33a-11faa8476d2f
-md"""
-## Background
-"""
-
-# ╔═╡ c604fc41-00ef-498b-ac8b-b5e5cd438306
-begin
-    background_mask = zeros(size(arr)...)
-    background_mask[
-        (center_insert[1] - 5):(center_insert[1] + 5),
-        (center_insert[2] - 5):(center_insert[2] + 5),
-        2,
-    ] .= 1
-    background_mask = Bool.(background_mask)
-end;
 
 # ╔═╡ 1f353ddd-4e9a-4437-8d2e-97a4c466ee28
 md"""
@@ -426,6 +401,9 @@ md"""
 # ╔═╡ a2c59aa5-6c86-4d4a-aa84-c6675446083d
 dilated_mask_L_HD = dilate(dilate(mask_L_HD_3D));
 
+# ╔═╡ 64fcb0ab-7106-4bf2-b268-cc5e814dc942
+μ, σ = mean(c_img[Bool.(mask_cal_3D)]) / 2, std(c_img[Bool.(mask_cal_3D)])
+
 # ╔═╡ aa851337-3dd3-4521-a402-52a429bec1e6
 @bind g2 overlay_mask_bind(dilated_mask_L_HD)
 
@@ -434,11 +412,6 @@ overlay_mask_plot(arr, dilated_mask_L_HD, g2, "dilated mask")
 
 # ╔═╡ 0373a338-9a93-42b8-98ee-9768a50dda67
 pixel_size = DICOMUtils.get_pixel_size(header)
-
-# ╔═╡ 03e64fbb-49b0-4b68-ae1a-c5d155651146
-mass_cal_factor, angle_0_200HA, water_rod_metrics = mass_calibration(
-    masked_array, center_large_LD, center_insert, 2, cols, rows, pixel_size
-)
 
 # ╔═╡ 268ad486-9907-4aaa-a271-a77664fea675
 overlayed_mask_l_hd = create_mask(arr, dilated_mask_L_HD);
@@ -449,41 +422,33 @@ alg = Agatston()
 # ╔═╡ 19c04849-68a6-4ea3-8a1b-e9183c9b852e
 alg2 = SpatiallyWeighted()
 
-# ╔═╡ b5686627-bfa4-4802-9122-eed55fb7db96
-agat_l_hd, mass_l_hd = score(overlayed_mask_l_hd, pixel_size, mass_cal_factor, alg)
-
-# ╔═╡ 385df0f4-bd29-4702-a699-f70ea0093d06
+# ╔═╡ c604fc41-00ef-498b-ac8b-b5e5cd438306
 begin
-    global μ, σ
-    if VENDER == "80"
-        μ, σ = 170, 30
-    elseif VENDER == "100"
-        μ, σ = 165, 30
-    elseif VENDER == "120"
-        μ, σ = 160, 30
-    else
-        VENDER == "135"
-        μ, σ = 155, 30
-    end
-end
+	overlayed_mask_l_bkg = create_mask(arr, dilated_mask_L_bkg)
+	overlayed_mask_m_bkg = create_mask(arr, dilated_mask_M_bkg)
+	overlayed_mask_s_bkg = create_mask(arr, dilated_mask_S_bkg)
+	
+	swcs_bkg_large = score(overlayed_mask_l_bkg, μ, σ, alg2)
+	swcs_bkg_medium = score(overlayed_mask_m_bkg, μ, σ, alg2)
+	swcs_bkg_small = score(overlayed_mask_s_bkg, μ, σ, alg2)
 
-# ╔═╡ d1905ee6-9f61-408c-8362-7b148045859e
-swcs_bkg = score(background_mask, μ, σ, alg2)
+	swcs_bkg = [swcs_bkg_large, swcs_bkg_medium, swcs_bkg_small]
+end;
+
+# ╔═╡ 38437b4c-e4e4-478d-be0b-3f19d1e4db97
+swcs_bkg[1]
+
+# ╔═╡ 310822fe-5664-4177-9033-6945717fa5b6
+swcs_bkg[2]
+
+# ╔═╡ 3007cc2f-9073-4ba1-8b93-b6005d1daba6
+swcs_bkg[3]
+
+# ╔═╡ 9354aeaa-053b-4601-b83c-0c4270d6dc5d
+agat_l_hd, vol_l_hd = score(overlayed_mask_l_hd, pixel_size, alg)
 
 # ╔═╡ 05cf3e18-950e-427c-91d9-be289da5c5c5
 swcs_l_hd = score(overlayed_mask_l_hd, μ, σ, alg2)
-
-# ╔═╡ 6fa0cf17-0c5a-4285-ab2c-09c55dd2e31b
-md"""
-### Mass cal 2
-"""
-
-# ╔═╡ f6a0b43f-a56a-41d2-a89f-c1f17f0c6154
-begin
-    dens_calicium_rod = 200 # mg/cc
-    mean_calcium_rod = mean(c_img[mask_cal_3D])
-    calibration_factor = dens_calicium_rod / mean_calcium_rod
-end
 
 # ╔═╡ 5a09303d-5360-48c9-9554-c769e63b1ee0
 md"""
@@ -515,8 +480,8 @@ overlay_mask_plot(arr, dilated_mask_L_MD, h2, "dilated mask")
 # ╔═╡ 31708cf8-1d56-4b16-ad4e-df356a8924fc
 overlayed_mask_l_md = create_mask(arr, dilated_mask_L_MD);
 
-# ╔═╡ cafed3ea-9f5a-4549-bc66-1181c1e7c6c8
-agat_l_md, mass_l_md = score(overlayed_mask_l_md, pixel_size, mass_cal_factor, alg)
+# ╔═╡ 69e06cfd-0cd2-485b-9338-014f40f5d4f9
+agat_l_md, vol_l_md = score(overlayed_mask_l_md, pixel_size, alg)
 
 # ╔═╡ 2269beda-ae30-49ca-af6a-65a681dc7405
 swcs_l_md = score(overlayed_mask_l_md, μ, σ, alg2)
@@ -551,8 +516,8 @@ overlay_mask_plot(arr, dilated_mask_L_LD, i2, "dilated mask")
 # ╔═╡ db774a1b-dbda-42a3-abb2-89ae26a2a31c
 overlayed_mask_l_ld = create_mask(arr, dilated_mask_L_LD);
 
-# ╔═╡ a9ec77d3-27bc-4a0c-b74a-555b00e6f29a
-agat_l_ld, mass_l_ld = score(overlayed_mask_l_ld, pixel_size, mass_cal_factor, alg)
+# ╔═╡ 755379df-d43a-42a3-8d2f-56fdd2d85f7e
+agat_l_ld, vol_l_ld = score(overlayed_mask_l_ld, pixel_size, alg)
 
 # ╔═╡ 8b27b710-b790-441d-8541-17fae3a72b32
 swcs_l_ld = score(overlayed_mask_l_ld, μ, σ, alg2)
@@ -593,7 +558,7 @@ overlay_mask_plot(arr, dilated_mask_M_HD, j2, "dilated mask")
 overlayed_mask_m_hd = create_mask(arr, dilated_mask_M_HD);
 
 # ╔═╡ 4c3d0757-f378-46ca-944a-cc19d56dd11b
-agat_m_hd, mass_m_hd = score(overlayed_mask_m_hd, pixel_size, mass_cal_factor, alg)
+agat_m_hd, vol_m_hd = score(overlayed_mask_m_hd, pixel_size, alg)
 
 # ╔═╡ 33b85892-7ce9-4392-a3dc-b0a69592dba9
 swcs_m_hd = score(overlayed_mask_m_hd, μ, σ, alg2)
@@ -629,7 +594,7 @@ overlay_mask_plot(arr, dilated_mask_M_MD, k2, "dilated mask")
 overlayed_mask_m_md = create_mask(arr, dilated_mask_M_MD);
 
 # ╔═╡ 3aaac942-afae-4ffc-b1ea-6c023d6e932b
-agat_m_md, mass_m_md = score(overlayed_mask_m_md, pixel_size, mass_cal_factor, alg)
+agat_m_md, vol_m_md = score(overlayed_mask_m_md, pixel_size, alg)
 
 # ╔═╡ 0011a165-5fb0-4964-8065-de0663249ee2
 swcs_m_md = score(overlayed_mask_m_md, μ, σ, alg2)
@@ -665,7 +630,7 @@ overlay_mask_plot(arr, dilated_mask_M_LD, l2, "dilated mask")
 overlayed_mask_m_ld = create_mask(arr, dilated_mask_M_LD);
 
 # ╔═╡ b02751b0-c28c-4d1b-976b-b15617ddc1f1
-agat_m_ld, mass_m_ld = score(overlayed_mask_m_ld, pixel_size, mass_cal_factor, alg)
+agat_m_ld, vol_m_ld = score(overlayed_mask_m_ld, pixel_size, alg)
 
 # ╔═╡ e5eb2459-faad-43d9-a702-cae081f5ae8f
 swcs_m_ld = score(overlayed_mask_m_ld, μ, σ, alg2)
@@ -706,7 +671,7 @@ overlay_mask_plot(arr, dilated_mask_S_HD, m2, "dilated mask")
 overlayed_mask_s_hd = create_mask(arr, dilated_mask_S_HD);
 
 # ╔═╡ ce3b04f9-1461-4007-825f-7481f5da9312
-agat_s_hd, mass_s_hd = score(overlayed_mask_s_hd, pixel_size, mass_cal_factor, alg)
+agat_s_hd, vol_s_hd = score(overlayed_mask_s_hd, pixel_size, alg)
 
 # ╔═╡ 6cfe8bf9-7869-41e6-9df2-d2c18a159255
 swcs_s_hd = score(overlayed_mask_s_hd, μ, σ, alg2)
@@ -742,7 +707,7 @@ overlay_mask_plot(arr, dilated_mask_S_MD, n2, "dilated mask")
 overlayed_mask_s_md = create_mask(arr, dilated_mask_S_MD);
 
 # ╔═╡ 2ba692fb-7a93-4521-b1a8-d334f8a8d763
-agat_s_md, mass_s_md = score(overlayed_mask_s_md, pixel_size, mass_cal_factor, alg)
+agat_s_md, vol_s_md = score(overlayed_mask_s_md, pixel_size, alg)
 
 # ╔═╡ 78ce4c60-51c7-4c64-a3ce-d71d1529a8c7
 swcs_s_md = score(overlayed_mask_s_md, μ, σ, alg2)
@@ -778,7 +743,7 @@ overlay_mask_plot(arr, dilated_mask_S_LD, o2, "dilated mask")
 overlayed_mask_s_ld = create_mask(arr, dilated_mask_S_LD);
 
 # ╔═╡ 9fafb79b-0706-470d-8a24-f2682621e39c
-agat_s_ld, mass_s_ld = score(overlayed_mask_s_ld, pixel_size, mass_cal_factor, alg)
+agat_s_ld, vol_s_ld = score(overlayed_mask_s_ld, pixel_size, alg)
 
 # ╔═╡ c2116577-2f05-40dc-9094-92c621955f93
 swcs_s_ld = score(overlayed_mask_s_ld, μ, σ, alg2)
@@ -822,271 +787,27 @@ calculated_swcs_medium = [swcs_m_ld, swcs_m_md, swcs_m_hd]
 # ╔═╡ e53a38e7-ba34-45af-bc39-86026763241f
 calculated_swcs_small = [swcs_s_ld, swcs_s_md, swcs_s_hd]
 
-# ╔═╡ bdf7c9e5-765d-40b2-b4ae-19e068348639
-md"""
-## SWCS vs Agatston
-"""
-
-# ╔═╡ 14b79f5f-87c5-4db1-855b-607cec0946b0
-md"""
-## All
-"""
-
-# ╔═╡ 5757d60a-6944-4286-ad55-95ac78acd903
-md"""
-## Mass
-"""
-
-# ╔═╡ d10d9943-948e-4d91-881d-93ac9c8fdf5b
-volume_gt = [7.065, 63.585, 176.625]
-
-# ╔═╡ 9b39f9e2-2080-4ab7-ba84-7e58b0047805
-volume_gt
-
-# ╔═╡ b9ac10ef-1ea5-46ea-8f9a-471b2a25380d
-mass_cal_factor * volume_gt[3] * calibration_factor
-
-# ╔═╡ 5c3f138e-d46e-4a3d-9bc4-e2ade6784907
-ground_truth_mass_large = [
-    volume_gt[3] * density_array[2] * 1e-3,
-    volume_gt[3] * density_array[3] * 1e-3,
-    volume_gt[3] * density_array[4] * 1e-3,
-] # mg
-
-# ╔═╡ c8066892-8ea6-4383-8771-699eb1394a5c
-calculated_mass_large = [mass_l_ld, mass_l_md, mass_l_hd]
-
-# ╔═╡ ee2bd00c-e949-48f9-8e3c-1e05eb749075
-ground_truth_mass_medium = [
-    volume_gt[2] * density_array[2] * 1e-3,
-    volume_gt[2] * density_array[3] * 1e-3,
-    volume_gt[2] * density_array[4] * 1e-3,
-]
-
-# ╔═╡ 455c1094-548f-4983-918e-2a7eaa47ff00
-calculated_mass_medium = [mass_m_ld, mass_m_md, mass_m_hd]
-
-# ╔═╡ acf1c58f-24c3-4b6a-a003-67774960112e
-ground_truth_mass_small = [
-    volume_gt[1] * density_array[2] * 1e-3,
-    volume_gt[1] * density_array[3] * 1e-3,
-    volume_gt[1] * density_array[4] * 1e-3,
-]
-
-# ╔═╡ 5c94eae2-9e45-49c9-a123-fbd46932c95f
-calculated_mass_small = [mass_s_ld, mass_s_md, mass_s_hd]
-
-# ╔═╡ 7ee1efe9-d6ac-4076-a5f0-8e18b5d64702
-df = DataFrame(;
-    scan=scan,
-    inserts=inserts,
-    calculated_agat_large=calculated_agat_large,
-    calculated_agat_medium=calculated_agat_medium,
-    calculated_agat_small=calculated_agat_small,
-    calculated_swcs_large=calculated_swcs_large,
-    calculated_swcs_medium=calculated_swcs_medium,
-    calculated_swcs_small=calculated_swcs_small,
-    ground_truth_mass_large=ground_truth_mass_large,
-    calculated_mass_large=calculated_mass_large,
-    ground_truth_mass_medium=ground_truth_mass_medium,
-    calculated_mass_medium=calculated_mass_medium,
-    ground_truth_mass_small=ground_truth_mass_small,
-    calculated_mass_small=calculated_mass_small,
-    mass_cal_factor=mass_cal_factor,
-)
-
-# ╔═╡ 59a17ced-27c0-415f-a95a-7a8af8aba7e3
-begin
-    fswcs222 = Figure()
-    axswcs222 = Makie.Axis(fswcs222[1, 1])
-
-    scatter!(df[!, :calculated_agat_large], df[!, :calculated_swcs_large]; label="label")
-
-    axswcs222.title = "SWCS vs Agatston(Large)"
-    axswcs222.ylabel = "SWCS"
-    axswcs222.xlabel = "Agatston"
-
-    # xlims!(axswcs222, 0, 400)
-    # ylims!(axswcs222, 0, 400)
-
-    fswcs222[1, 2] = Legend(fswcs222, axswcs222; framevisible=false)
-
-    fswcs222
-end
-
-# ╔═╡ adacf893-01ef-4cd3-bcc5-66b27e77e3be
-begin
-    fswcs223 = Figure()
-    axswcs223 = Makie.Axis(fswcs223[1, 1])
-
-    scatter!(df[!, :calculated_agat_medium], df[!, :calculated_swcs_medium]; label="label")
-
-    axswcs223.title = "SWCS vs Agatston (Medium)"
-    axswcs223.ylabel = "SWCS"
-    axswcs223.xlabel = "Agatston"
-
-    # xlims!(axswcs223, 0, 200)
-    # ylims!(axswcs223, 0, 200)
-
-    fswcs223[1, 2] = Legend(fswcs223, axswcs223; framevisible=false)
-
-    fswcs223
-end
-
-# ╔═╡ b24231d2-aa2e-45ad-80f4-e875fa282cd0
-begin
-    fswcs224 = Figure()
-    axswcs224 = Makie.Axis(fswcs224[1, 1])
-
-    scatter!(df[!, :calculated_agat_small], df[!, :calculated_swcs_small]; label="label")
-
-    axswcs224.title = "SWCS vs Agatston (Small)"
-    axswcs224.ylabel = "SWCS"
-    axswcs224.xlabel = "Agatston"
-
-    # xlims!(axswcs224, 0, 1)
-    # ylims!(axswcs224, 0, 1)
-
-    fswcs224[1, 2] = Legend(fswcs224, axswcs224; framevisible=false)
-
-    fswcs224
-end
-
-# ╔═╡ e9d6989d-93fb-43ee-b18a-582dd637eed4
-begin
-    fmass22 = Figure()
-    axmass22 = Makie.Axis(fmass22[1, 1])
-
-    scatter!(
-        density_array[2:end],
-        df[!, :ground_truth_mass_large];
-        label="ground_truth_mass_large",
-    )
-    scatter!(
-        density_array[2:end], df[!, :calculated_mass_large]; label="calculated_mass_large"
-    )
-
-    axmass22.title = "Mass Measurements (Large)"
-    axmass22.ylabel = "Mass (mg)"
-    axmass22.xlabel = "Density (mg/cm^3)"
-
-    xlims!(axmass22, 0, 850)
-    ylims!(axmass22, 0, 200)
-
-    fmass22[1, 2] = Legend(fmass22, axmass22; framevisible=false)
-
-    fmass22
-end
-
-# ╔═╡ 9e533473-6fd4-4155-9c35-d6901580b45f
-begin
-    fmass32 = Figure()
-    axmass32 = Makie.Axis(fmass32[1, 1])
-
-    scatter!(
-        density_array[2:end],
-        df[!, :ground_truth_mass_medium];
-        label="ground_truth_mass_medium",
-    )
-    scatter!(
-        density_array[2:end], df[!, :calculated_mass_medium]; label="calculated_mass_medium"
-    )
-
-    axmass32.title = "Mass Measurements (Medium)"
-    axmass32.ylabel = "Mass (mg)"
-    axmass32.xlabel = "Density (mg/cm^3)"
-
-    xlims!(axmass32, 0, 850)
-    ylims!(axmass32, 0, 85)
-
-    fmass32[1, 2] = Legend(fmass32, axmass32; framevisible=false)
-
-    fmass32
-end
-
-# ╔═╡ 27be579e-87fc-4b77-833c-01c3361375af
-begin
-    fmass42 = Figure()
-    axmass42 = Makie.Axis(fmass42[1, 1])
-
-    scatter!(
-        density_array[2:end],
-        df[!, :ground_truth_mass_small];
-        label="ground_truth_mass_small",
-    )
-    scatter!(
-        density_array[2:end], df[!, :calculated_mass_small]; label="calculated_mass_small"
-    )
-
-    axmass42.title = "Mass Measurements (Small)"
-    axmass42.ylabel = "Mass (mg)"
-    axmass42.xlabel = "Density (mg/cm^3)"
-
-    xlims!(axmass42, 0, 850)
-    ylims!(axmass42, 0, 10)
-
-    fmass42[1, 2] = Legend(fmass42, axmass42; framevisible=false)
-
-    fmass42
-end
-
-# ╔═╡ ade95452-1c8d-4888-9313-b092409ca609
-md"""
-### Save Results
-"""
-
-# ╔═╡ 844754c6-a0ae-4cc7-9d6d-38204d7b24f5
-# if ~isdir(string(cd(pwd, "..") , "/output/", TYPE))
-# 	mkdir(string(cd(pwd, "..") , "/output/", TYPE))
-# end
-
-# ╔═╡ c7b49892-0079-4c79-92d7-3717460efd0f
-# output_path = string(cd(pwd, "..") , "/output/", TYPE, "/", scan, ".csv")
-
-# ╔═╡ 49275899-e5ec-47f4-b4f7-43401529642f
-md"""
-### Save full df
-"""
-
-# ╔═╡ 6471de28-e427-4152-b778-74c3d208b5b1
-dfs = []
-
-# ╔═╡ b99951e3-6292-42e4-801e-4824bca11720
-push!(dfs, df)
-
-# ╔═╡ 92be24c9-e0a5-4539-9501-93a8d6c52f10
-# if length(dfs) == 12
-#     global new_df = vcat(dfs[1:12]...)
-#     output_path_new = string(cd(pwd, ".."), "/output/", TYPE, "/", "full.csv")
-#     CSV.write(output_path_new, new_df)
-# end
-
-# ╔═╡ 1723c48d-341f-4898-9b57-4202664a9415
-# output_path_new = string(cd(pwd, "..") , "/output/", TYPE, "/", "full.csv")
-
-# ╔═╡ 4d1825ea-b5cd-4445-99d5-a218845e629c
-
-
-# ╔═╡ 3912fb58-7431-40f7-9823-9a4c91487bf6
-
-
 # ╔═╡ Cell order:
 # ╠═98114689-d1cc-4aa9-b88f-c048059e95d3
 # ╠═33bd4068-abd8-45d4-babd-7b397310a645
 # ╟─92ac2129-98f8-4dad-a446-6d3664aa783e
 # ╠═c02953cc-0020-452e-938b-694c7f7de44e
 # ╟─bdc233e2-a17f-42cf-a782-0b040c5b870d
-# ╠═e0bf7c37-4de9-4bd4-802d-c9df53dfa35c
-# ╠═d29cfbc0-aa1d-475f-8d5b-6572ae96bb10
-# ╠═19220269-909e-4de7-a284-c6bb702922f6
-# ╠═f243324f-4275-4466-b492-c51ca0986e49
-# ╠═49d5afb9-3d52-418f-8c50-380660872184
 # ╟─b6f33cae-29c6-4d13-9b0c-a2551bd1e08e
 # ╟─818788f1-fb7b-4adc-9111-1f5cca892f86
 # ╟─78e52610-fae1-44fa-b931-275434a3ba73
 # ╟─e1147d97-3f08-4a2f-ae30-ed3cb82df965
 # ╟─9466ff87-9cef-4f4e-905c-d19070dd6890
 # ╟─1c2fa6f8-201d-40ae-8c03-7e5c5893fc1e
+# ╟─228e339f-ddf0-47b3-821e-5f0e506905ac
+# ╟─1a56361a-c5e8-4248-9074-516bf7904466
+# ╟─a7f24627-a821-4396-b2aa-9a2472ff6353
+# ╟─c5819fb3-1556-404b-a7b1-9088123227f5
+# ╟─01b7ed1f-7d9f-474d-8631-f62bb68eee1a
+# ╟─2f421532-c045-4af9-be30-f3a12f66f24b
+# ╟─24d372ec-3d14-46c4-8319-91c23fd60435
+# ╟─ed442d7f-d151-4b31-8369-0ade86aad81b
+# ╟─6592a519-4066-4a75-a4e9-4524352a6ec9
 # ╟─a4ae678d-a7f1-4bfa-8d22-554583683089
 # ╠═7cde12ee-db55-4030-8d1d-8031cd679674
 # ╠═d8b8d96e-16ac-4412-b049-6287a933730c
@@ -1097,7 +818,6 @@ push!(dfs, df)
 # ╟─7d341908-e452-4975-bed6-d7f1d3e858af
 # ╟─1de1ae0b-5c08-4035-be82-53a9fdf2a7a9
 # ╠═47081781-ad0c-4ebb-af72-ee6ea6ccf335
-# ╠═daa65953-ac65-4689-bb28-344e822b2ba2
 # ╟─e1a9f2b8-be8d-4119-9a4a-e1c73e74b33e
 # ╠═3ef8300d-56a6-4d72-9287-5e4eda72ee24
 # ╠═8351f18e-7fc7-4c3b-8688-cae0a1e6ec3b
@@ -1107,45 +827,32 @@ push!(dfs, df)
 # ╠═6ad451a3-6693-4355-8346-9469f7d94167
 # ╠═67cf1029-ebea-4b48-9168-b0d0b491a277
 # ╠═da901979-3472-48c7-81d5-ff36c1cb0366
-# ╠═28445fd5-9798-4ace-bc96-ab57a402d56e
-# ╠═0bbac64e-c842-4dc4-8062-8c99cc3f029a
-# ╠═3a7a7501-30ef-4952-a2b7-1628f1af520e
-# ╠═13948415-9b64-4ec0-b70a-8dd991bb4e9c
 # ╟─b441160a-84fd-49d0-afae-1b63248cd90f
-# ╠═325edc29-0752-432f-a1bc-ecb7976667ad
 # ╠═7208bc08-acad-44f7-854c-cea5d0190b24
-# ╟─c3b659fe-b9bc-44d6-8cf1-5ad18c4fa346
-# ╠═84df1941-72a6-4cf5-9e6e-7f79d2534dd6
-# ╠═8b601177-be58-4f32-a32f-2bc675c6364a
-# ╠═7ac82afc-58a8-46f3-8027-5504d8157e71
-# ╠═bd6a4dee-1055-4c14-bafd-74b64daa0715
-# ╠═78099a0f-93d8-4b72-8101-9ec86ac67762
-# ╠═d0194709-f4f5-4f7a-acba-76b600dcff92
-# ╠═72dcf6e7-8fb8-47f7-bfaa-f5529210e8d0
+# ╟─22723c3e-0d5d-4676-b33a-11faa8476d2f
+# ╠═61e7055c-01ce-4982-8bf7-6a12c0fad6a5
+# ╟─9d7a0818-c0de-47f0-9c53-381b0ddee674
+# ╠═c604fc41-00ef-498b-ac8b-b5e5cd438306
+# ╠═38437b4c-e4e4-478d-be0b-3f19d1e4db97
+# ╠═310822fe-5664-4177-9033-6945717fa5b6
+# ╠═3007cc2f-9073-4ba1-8b93-b6005d1daba6
+# ╠═6bb03789-2fdb-4bee-a75a-bb4eb30d9ba9
 # ╟─65c9df3c-ea01-48fa-b192-52b3f3b76f9b
 # ╠═46c2bdd7-f333-41de-9cd5-2ec5d3a21f2c
 # ╠═00c43b6b-69ff-48ed-8d6d-fc3e44a6a4f2
-# ╟─22723c3e-0d5d-4676-b33a-11faa8476d2f
-# ╠═c604fc41-00ef-498b-ac8b-b5e5cd438306
-# ╠═d1905ee6-9f61-408c-8362-7b148045859e
 # ╟─1f353ddd-4e9a-4437-8d2e-97a4c466ee28
 # ╠═a228cbf8-4d79-41a4-b419-afe26b981a1c
 # ╟─334e9473-fc4f-466c-a046-6c66bf65b738
 # ╠═a2c59aa5-6c86-4d4a-aa84-c6675446083d
+# ╠═64fcb0ab-7106-4bf2-b268-cc5e814dc942
 # ╟─aa851337-3dd3-4521-a402-52a429bec1e6
 # ╠═e853a3d8-0a18-43b7-949b-c374203d4838
 # ╠═0373a338-9a93-42b8-98ee-9768a50dda67
-# ╠═03e64fbb-49b0-4b68-ae1a-c5d155651146
 # ╠═268ad486-9907-4aaa-a271-a77664fea675
 # ╠═405f2f7e-123a-4ccf-9fc1-9b6eee4dae12
 # ╠═19c04849-68a6-4ea3-8a1b-e9183c9b852e
-# ╠═b5686627-bfa4-4802-9122-eed55fb7db96
+# ╠═9354aeaa-053b-4601-b83c-0c4270d6dc5d
 # ╠═05cf3e18-950e-427c-91d9-be289da5c5c5
-# ╠═385df0f4-bd29-4702-a699-f70ea0093d06
-# ╟─6fa0cf17-0c5a-4285-ab2c-09c55dd2e31b
-# ╠═f6a0b43f-a56a-41d2-a89f-c1f17f0c6154
-# ╠═9b39f9e2-2080-4ab7-ba84-7e58b0047805
-# ╠═b9ac10ef-1ea5-46ea-8f9a-471b2a25380d
 # ╟─5a09303d-5360-48c9-9554-c769e63b1ee0
 # ╠═20a53747-25a1-4642-9043-64109ff28711
 # ╟─5f0f4233-ae8b-432f-93e9-f2b3a54dc890
@@ -1153,7 +860,7 @@ push!(dfs, df)
 # ╟─1d87f244-f6c5-4e12-9d0d-5c2e7c4805e5
 # ╠═8f9e3da4-baab-431d-a4c7-67e753144aef
 # ╠═31708cf8-1d56-4b16-ad4e-df356a8924fc
-# ╠═cafed3ea-9f5a-4549-bc66-1181c1e7c6c8
+# ╠═69e06cfd-0cd2-485b-9338-014f40f5d4f9
 # ╠═2269beda-ae30-49ca-af6a-65a681dc7405
 # ╟─9d8e3d8d-a4e6-418c-a241-b4b1cd119a14
 # ╠═8f125f2e-ec57-40f0-96d6-e04a544db0c3
@@ -1162,7 +869,7 @@ push!(dfs, df)
 # ╟─d3ce01ea-a5d6-41e3-8f98-e0042026da9b
 # ╠═2e85a77c-7bb0-47ba-949e-4fdccea6b8e8
 # ╠═db774a1b-dbda-42a3-abb2-89ae26a2a31c
-# ╠═a9ec77d3-27bc-4a0c-b74a-555b00e6f29a
+# ╠═755379df-d43a-42a3-8d2f-56fdd2d85f7e
 # ╠═8b27b710-b790-441d-8541-17fae3a72b32
 # ╟─341e35e2-f280-47c6-9da5-0d2dc137bce0
 # ╟─2b8e12f7-8504-4c28-8208-fd9afb52d1ae
@@ -1231,30 +938,3 @@ push!(dfs, df)
 # ╠═e89bd455-71ba-41c0-870c-2dad225e129e
 # ╠═36130f3d-8a03-49ce-ab36-f9ff0b452c8d
 # ╠═e53a38e7-ba34-45af-bc39-86026763241f
-# ╟─bdf7c9e5-765d-40b2-b4ae-19e068348639
-# ╟─59a17ced-27c0-415f-a95a-7a8af8aba7e3
-# ╟─adacf893-01ef-4cd3-bcc5-66b27e77e3be
-# ╟─b24231d2-aa2e-45ad-80f4-e875fa282cd0
-# ╠═14b79f5f-87c5-4db1-855b-607cec0946b0
-# ╟─5757d60a-6944-4286-ad55-95ac78acd903
-# ╠═d10d9943-948e-4d91-881d-93ac9c8fdf5b
-# ╠═5c3f138e-d46e-4a3d-9bc4-e2ade6784907
-# ╠═c8066892-8ea6-4383-8771-699eb1394a5c
-# ╠═ee2bd00c-e949-48f9-8e3c-1e05eb749075
-# ╠═455c1094-548f-4983-918e-2a7eaa47ff00
-# ╠═acf1c58f-24c3-4b6a-a003-67774960112e
-# ╠═5c94eae2-9e45-49c9-a123-fbd46932c95f
-# ╠═7ee1efe9-d6ac-4076-a5f0-8e18b5d64702
-# ╟─e9d6989d-93fb-43ee-b18a-582dd637eed4
-# ╟─9e533473-6fd4-4155-9c35-d6901580b45f
-# ╟─27be579e-87fc-4b77-833c-01c3361375af
-# ╟─ade95452-1c8d-4888-9313-b092409ca609
-# ╠═844754c6-a0ae-4cc7-9d6d-38204d7b24f5
-# ╠═c7b49892-0079-4c79-92d7-3717460efd0f
-# ╟─49275899-e5ec-47f4-b4f7-43401529642f
-# ╠═6471de28-e427-4152-b778-74c3d208b5b1
-# ╠═b99951e3-6292-42e4-801e-4824bca11720
-# ╠═92be24c9-e0a5-4539-9501-93a8d6c52f10
-# ╠═1723c48d-341f-4898-9b57-4202664a9415
-# ╠═4d1825ea-b5cd-4445-99d5-a218845e629c
-# ╠═3912fb58-7431-40f7-9823-9a4c91487bf6

@@ -8,8 +8,8 @@ Accuracy (Low Density),RMSE,0.495,0.585,3.704,
 Accuracy (Low Density),RMSD,0.494,0.575,2.299,
 Accuracy (Low Density),Best Fit Line,y = 1.002x + 0.016,y = 1.017x + -0.031,y = 0.781x + -1.609,
 Reproducibility,r^2,1.0,1.0,0.999,0.998
-Reproducibility,RMSE,0.708,0.783,0.963,5.335
-Reproducibility,RMSD,0.692,0.776,0.963,5.262
-Reproducibility,Best Fit Line,y = 1.002x + 0.083,y = 1.001x + 0.068,y = 1.0x + -0.011,y = 0.998x + 1.08
-Specificity,False Negatives,17 / 216,22 / 216,88 / 216,0 / 216
+Reproducibility,RMSE,0.708,0.783,0.963,5.373
+Reproducibility,RMSD,0.692,0.776,0.963,5.303
+Reproducibility,Best Fit Line,y = 1.002x + 0.083,y = 1.001x + 0.068,y = 1.0x + -0.011,y = 0.998x + 1.062
+Specificity,False Negatives,17 / 216,22 / 216,88 / 216,29 / 216
 Sensitivity,False Positives,0 / 72,0 / 72,0 / 72,0 / 72
