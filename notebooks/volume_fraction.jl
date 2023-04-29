@@ -42,9 +42,9 @@ begin
 
 	IMAGES = "images_new"
 
-	VENDOR = VENDORS[2]
+	VENDOR = VENDORS[3]
 	SIZE = SIZES[1]
-	DENSITY = DENSITIES[1]
+	DENSITY = DENSITIES[2]
 	
     BASE_PATH = joinpath(dirname(pwd()), IMAGES, SIZE, DENSITY)
 	root_path = joinpath(BASE_PATH, VENDOR)
@@ -177,6 +177,7 @@ let
 
     ax = Makie.Axis(f[1, 1])
     heatmap!(transpose(dcm_array[:, :, 2]); colormap=:grays)
+	hidedecorations!(ax)
 
 	save(joinpath(dirname(pwd()),"figures", "slice_rod_$(VENDOR)_$(SIZE)_$(DENSITY).png"), f)
     f
@@ -188,6 +189,7 @@ let
 
     ax = Makie.Axis(f[1, 1])
     heatmap!(transpose(dcm_array[:, :, 5]); colormap=:grays)
+	hidedecorations!(ax)
 
 	save(joinpath(dirname(pwd()),"figures", "slice_inserts_$(VENDOR)_$(SIZE)_$(DENSITY).png"), f)
     f

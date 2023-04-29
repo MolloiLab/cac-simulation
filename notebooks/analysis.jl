@@ -723,6 +723,161 @@ end
 # ╔═╡ 3f02194d-9c69-45d1-80fc-4cc50b1f3d8f
 with_theme(lin_reg_low, medphys_theme)
 
+# ╔═╡ b9f4b054-582f-4957-9601-6322ceb9a258
+function lin_reg_low_rsna()
+    f = Figure()
+    ##-- A --##
+    ax = Axis(
+		f[1, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+		yticks = [0, 15, 30],
+		xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Integrated (Low-Density)"
+	)
+
+    df2 = df_i_low
+    sc1 = scatter!(
+		df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large]
+	)
+    errorbars!(
+        df2[!, :ground_truth_mass_large],
+        df2[!, :calculated_mass_large],
+        rms(df2[!, :ground_truth_mass_large], df2[!, :calculated_mass_large]),
+    )
+    sc2 = scatter!(
+		df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium]
+	)
+    errorbars!(
+        df2[!, :ground_truth_mass_medium],
+        df2[!, :calculated_mass_medium],
+        rms(df2[!, :ground_truth_mass_medium], df2[!, :calculated_mass_medium]),
+    )
+    sc3 = scatter!(
+		df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        df2[!, :ground_truth_mass_small],
+        df2[!, :calculated_mass_small],
+        rms(df2[!, :ground_truth_mass_small], df2[!, :calculated_mass_small]),
+    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_i; linestyle=:dashdot)
+	create_textbox(f[1, 1], coefficient_low_i, r_squared_low_i, rms_values_low_i)
+
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-5, high=30)
+
+	##-- B --##
+    ax = Axis(
+		f[2, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+		yticks = [0, 15, 30],
+		xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Volume Fraction (Low-Density)"
+	)
+
+
+    df4 = df_vf_low
+    sc1 = scatter!(
+		df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]
+	)
+    errorbars!(
+        df4[!, :ground_truth_mass_large],
+        df4[!, :calculated_mass_large],
+        rms(df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]),
+    )
+    sc2 = scatter!(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]
+	)
+    errorbars!(
+        df4[!, :ground_truth_mass_medium],
+        df4[!, :calculated_mass_medium],
+        rms(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]),
+    )
+    sc3 = scatter!(
+		df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        df4[!, :ground_truth_mass_small],
+        df4[!, :calculated_mass_small],
+        rms(df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]),
+    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_vf; linestyle=:dashdot)
+	create_textbox(f[2, 1], coefficient_low_vf, r_squared_low_vf, rms_values_low_vf)
+	
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-5, high=30)
+
+    ##-- C --##
+    ax = Axis(
+		f[3, 1],
+		xticks = [0, 5, 10, 15, 20, 25],
+		yticks = [0, 15, 30],
+		xlabel = "Known Mass (mg)",
+    	ylabel = "Calculated Mass (mg)",
+    	title = "Agatston (Low-Density)"
+	)
+
+    df4 = df_a_low
+    sc1 = scatter!(
+		df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]
+	)
+    errorbars!(
+        df4[!, :ground_truth_mass_large],
+        df4[!, :calculated_mass_large],
+        rms(df4[!, :ground_truth_mass_large], df4[!, :calculated_mass_large]),
+    )
+    sc2 = scatter!(
+		df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]
+	)
+    errorbars!(
+        df4[!, :ground_truth_mass_medium],
+        df4[!, :calculated_mass_medium],
+        rms(df4[!, :ground_truth_mass_medium], df4[!, :calculated_mass_medium]),
+    )
+    sc3 = scatter!(
+		df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]; color=:red
+    )
+    errorbars!(
+        df4[!, :ground_truth_mass_small],
+        df4[!, :calculated_mass_small],
+        rms(df4[!, :ground_truth_mass_small], df4[!, :calculated_mass_small]),
+    )
+    ln1 = lines!([-1000, 1000], [-1000, 1000])
+    ln2 = lines!(collect(1:1000), fitted_line_low_a; linestyle=:dashdot)
+	create_textbox(f[3, 1], coefficient_low_a, r_squared_low_a, rms_values_low_a)
+
+    xlims!(ax; low=0, high=25)
+    ylims!(ax; low=-5, high=30)
+
+    ##-- LABELS --##
+
+    f[2, 2] = Legend(
+        f,
+        [sc1, sc2, sc3, ln1, ln2],
+        ["Large Inserts", "Medium Inserts", "Small Inserts", "Unity", "Fitted Line"];
+        framevisible=false,
+    )
+
+    for (label, layout) in zip(["C", "D", "E"], [f[1, 1], f[2, 1], f[3, 1]])
+        Label(
+            layout[1, 1, TopLeft()],
+            label;
+            fontsize=25,
+            padding=(0, 90, 25, 0),
+            halign=:right,
+        )
+    end
+
+    save(joinpath(dirname(pwd()),"figures", FIGURE_PATH, "accuracy_low_rsna.png"), f)
+    return f
+end
+
+# ╔═╡ c1d3110b-1bb0-4e0d-bb07-a73ab8ddf992
+with_theme(lin_reg_low_rsna, medphys_theme);
+
 # ╔═╡ 77f50463-59bc-477d-8a26-97aa08b0e21f
 md"""
 ### Patient Size
@@ -3448,6 +3603,9 @@ md"""
 ###### Integrated
 """
 
+# ╔═╡ 6c53fb85-36bc-438f-86bd-37926b88710c
+
+
 # ╔═╡ c389a74e-4ab1-48f4-ac37-fcc0b794affb
 begin
 	false_positive_i_nd = []
@@ -4679,6 +4837,8 @@ means_stds = DataFrame(
 # ╟─0fa91a0b-c205-4b10-9876-9a9e163f3d7e
 # ╟─bc9939d7-f3a8-48e5-ada4-8fcf0fc1137a
 # ╟─3f02194d-9c69-45d1-80fc-4cc50b1f3d8f
+# ╟─b9f4b054-582f-4957-9601-6322ceb9a258
+# ╠═c1d3110b-1bb0-4e0d-bb07-a73ab8ddf992
 # ╟─e3c5f720-adec-4b59-b8a7-a26385c002ff
 # ╟─0822b8d6-6285-4b69-80e1-23538044e6cc
 # ╟─9b3c6bda-5c21-4c07-be6f-939a1ac0496a
@@ -4915,8 +5075,9 @@ means_stds = DataFrame(
 # ╟─ac33fc36-b7c2-47f1-b513-8a02f5fdd0ad
 # ╟─ce3956ea-9947-4bc9-91df-39079eec40ee
 # ╟─6e0c8aa0-89ac-4e5b-b5e1-f83ad87c246a
-# ╟─8aae5583-bf94-42f2-a7b7-b6b9a3a3c3eb
+# ╟─ab20b172-35c7-49d6-8b57-ae8c2a310a26
 # ╟─e4c021dc-2fee-401f-8bb8-4f72f0186231
+# ╟─8aae5583-bf94-42f2-a7b7-b6b9a3a3c3eb
 # ╟─a1f3606e-69c9-45c6-9602-4367ca63ae48
 # ╟─32fb4eca-3ef6-4254-8fcf-79150c8ae39d
 # ╠═a894fc59-25b4-4536-bac6-eb2352c5baaf
@@ -4939,13 +5100,13 @@ means_stds = DataFrame(
 # ╠═ad1303e7-a9eb-4655-a176-4a54b77db1b7
 # ╠═ad25959e-0cda-4292-8052-070ba4d73b59
 # ╟─a94b4849-c2c9-4a22-b238-6212c9867f9f
+# ╠═6c53fb85-36bc-438f-86bd-37926b88710c
 # ╠═c389a74e-4ab1-48f4-ac37-fcc0b794affb
 # ╠═36b574e8-6eba-4038-b889-d472c4fdc824
 # ╟─a60d6f3e-7c31-47f9-901f-4b110d572b3b
 # ╠═0f60944f-e615-4117-bde6-9efaa9900806
 # ╠═f1434cec-5655-46fe-af66-8eea8f639d94
 # ╟─0eff2135-b37f-413a-add6-80a07197d346
-# ╟─ab20b172-35c7-49d6-8b57-ae8c2a310a26
 # ╟─8d88faa9-df59-4a4c-ad03-29612c2255a9
 # ╟─2a2de10a-4792-45bd-ab03-9679a46ff6cd
 # ╠═fb2828fa-0c4f-409e-b739-cb1f2c135f8f
